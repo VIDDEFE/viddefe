@@ -1,0 +1,25 @@
+package com.viddefe.viddefe_api.churches;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
+import lombok.Getter;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Entity
+@Getter
+public class ChurchModel {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    private String name;
+    private Long latitude;
+    private BigDecimal longitude;
+    private BigDecimal stateId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = true, cascade = CascadeType.ALL)
+    @JoinColumn(name = "parent_church_id")
+    @JsonBackReference
+    private ChurchModel parentChurch;
+}
