@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-types-people
+      author: juan
+      changes:
+        - createTable:
+            tableName: types_people
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(256)
+                  constraints:
+                    nullable: false

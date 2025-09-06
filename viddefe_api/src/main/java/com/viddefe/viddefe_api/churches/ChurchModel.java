@@ -3,12 +3,15 @@ package com.viddefe.viddefe_api.churches;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
 @Entity
+@Table(name = "churches")
 @Getter
+@Setter
 public class ChurchModel {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

@@ -1,0 +1,77 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-people
+      author: juan
+      changes:
+        - createTable:
+            tableName: people
+            columns:
+              - column:
+                  name: id
+                  type: varchar(40)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: cc
+                  type: varchar(40)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: birthdate
+                  type: date
+              - column:
+                  name: type_person_id
+                  type: bigint
+              - column:
+                  name: state_id
+                  type: bigint
+              - column:
+                  name: avatar
+                  type: varchar(256)
+              - column:
+                  name: church_id
+                  type: varchar(40)
+        - addForeignKeyConstraint:
+            baseTableName: people
+            baseColumnNames: type_person_id
+            referencedTableName: types_people
+            referencedColumnNames: id
+            constraintName: fk_people_types_people
+        - addForeignKeyConstraint:
+            baseTableName: people
+            baseColumnNames: state_id
+            referencedTableName: states
+            referencedColumnNames: id
+            constraintName: fk_people_states
+        - addForeignKeyConstraint:
+            baseTableName: people
+            baseColumnNames: church_id
+            referencedTableName: churches
+            referencedColumnNames: id
+            onDelete: CASCADE
+            constraintName: fk_people_churches
+        - addUniqueConstraint:
+            tableName: people
+            columnNames: cc, church_id
+            constraintName: uq_people_cc_church

@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-create-cities
+      author: juan
+      changes:
+        - createTable:
+            tableName: cities
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(250)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: state_id
+                  type: bigint
+
+        - addForeignKeyConstraint:
+            baseTableName: cities
+            baseColumnNames: state_id
+            referencedTableName: states
+            referencedColumnNames: id
+            constraintName: states_id_fk
+

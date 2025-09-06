@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-create-group-churches
+      author: juan
+      changes:
+        - createTable:
+            tableName: group_churches
+            columns:
+              - column:
+                  name: id
+                  type: varchar(40)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: latitude
+                  type: decimal(11,8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: longitude
+                  type: decimal(11,8)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: church_id
+                  type: varchar(40)
+              - column:
+                  name: leader_id
+                  type: varchar(40)
+        - addForeignKeyConstraint:
+            baseTableName: group_churches
+            baseColumnNames: church_id
+            referencedTableName: churches
+            referencedColumnNames: id
+            constraintName: fk_group_churches_churches
+        - addForeignKeyConstraint:
+            baseTableName: group_churches
+            baseColumnNames: leader_id
+            referencedTableName: people
+            referencedColumnNames: id
+            constraintName: fk_group_churches_people

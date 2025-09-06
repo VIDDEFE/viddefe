@@ -1,4 +1,7 @@
 package com.viddefe.viddefe_api.homeGroups;
 
-public class homeGroupsService {
+import org.springframework.stereotype.Service;
+
+@Service
+public class HomeGroupsService {
 }
