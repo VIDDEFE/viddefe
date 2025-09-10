@@ -27,6 +27,7 @@ public class StatesCitiesSeeder implements CommandLineRunner {
     public void run(String... args) throws Exception {
         if (!statesRepository.findAll().isEmpty()) {
             System.out.println("⚠️ States already seeded, skipping...");
+            return;
         }
         try (InputStream inputStream = jsonResource.getInputStream()) {
             List<StatesModel> states = objectMapper.readValue(

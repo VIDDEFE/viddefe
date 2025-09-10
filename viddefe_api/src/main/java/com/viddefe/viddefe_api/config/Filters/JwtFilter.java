@@ -21,8 +21,6 @@ import java.util.List;
 public class JwtFilter extends OncePerRequestFilter {
 
     private JwtUtil jwtUtil;
-    @Value("${api.prefix}")
-    private String apiPrefix;
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/error",
@@ -32,25 +30,17 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        System.out.println(apiPrefix);
-
         String path = request.getRequestURI();
-        System.out.println("iniciamos peticion para: "+path);
 
         // Permitir solicitudes OPTIONS para CORS
         if (request.getMethod().equals(HttpMethod.OPTIONS.name())) {
             return true;
         }
 
-        if(!path.startsWith(apiPrefix)) {
-            System.out.println("No inicia con api prefix" + apiPrefix + "!=" + path);
-            return false;
-        }
         // Verificar rutas públicas
         for (String publicPath : PUBLIC_PATHS) {
-            System.out.println("hey im here" + apiPrefix + publicPath);
 
-            if (path.startsWith(apiPrefix + publicPath)) {
+            if (path.startsWith(publicPath)) {
                 return true;
             }
         }
