@@ -18,6 +18,7 @@ public class RolUserSeeder implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         if(!rolUserRepository.findAll().isEmpty()) {
+            System.out.println("Rol users already exist - seeder");
             return;
         }
         List<RolUserModel> rolUserModels = Arrays.stream(RolesUser.values()).map( item -> {
@@ -26,5 +27,6 @@ public class RolUserSeeder implements CommandLineRunner {
             return rolUserModel;
         }).toList();
         rolUserRepository.saveAll(rolUserModels);
+        System.out.println("Rol users created - seeder");
     }
 }

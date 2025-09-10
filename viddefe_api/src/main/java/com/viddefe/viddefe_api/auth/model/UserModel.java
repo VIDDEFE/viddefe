@@ -16,4 +16,8 @@ public class UserModel {
     private UUID id;
 
     private String password;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "rol_user_id")
+    private RolUserModel rolUser;
 }

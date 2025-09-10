@@ -11,3 +11,7 @@ databaseChangeLog:
       file: db/changelog/changes/005-create-people.yaml
   - include:
       file: db/changelog/changes/006-create-group-churches.yaml
+  - include:
+      file: db/changelog/changes/007-create-roles-user.yaml
+  - include:
+      file: db/changelog/changes/008-create-users.yaml
