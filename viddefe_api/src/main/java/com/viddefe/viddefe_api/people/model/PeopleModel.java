@@ -2,11 +2,13 @@ package com.viddefe.viddefe_api.people.model;
 
 import com.viddefe.viddefe_api.catalogs.Model.StatesModel;
 import com.viddefe.viddefe_api.churches.ChurchModel;
+import com.viddefe.viddefe_api.people.dto.PeopleDTO;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 @Table(
@@ -20,8 +22,8 @@ import java.time.LocalDate;
 public class PeopleModel {
 
     @Id
-    @Column(length = 40)
-    private String id; // varchar(40) en YAML
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id; // varchar(40) en YAML
 
     @Column(length = 40, nullable = false)
     private String cc;
@@ -54,5 +56,15 @@ public class PeopleModel {
     @ManyToOne
     @JoinColumn(name = "church_id")
     private ChurchModel church;
+
+    public PeopleModel fromDto(PeopleDTO dto){
+        this.firstName = dto.getFirstName();
+        this.lastName = dto.getLastName();
+        this.cc = dto.getCc();
+        this.email = dto.getEmail();
+        this.phone = dto.getPhone();
+        this.birthdate = dto.getBirthdate();
+        return this;
+    }
 
 }

@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.churches;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 
 import java.math.BigDecimal;
