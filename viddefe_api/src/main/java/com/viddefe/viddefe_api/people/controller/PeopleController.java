@@ -7,9 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import java.net.URI;
 import java.util.UUID;
 
@@ -20,7 +18,7 @@ public class PeopleController {
     private final PeopleService peopleService;
     //
     @PostMapping
-    public ResponseEntity<PeopleModel> addPeople(@RequestBody @Validated PeopleDTO dto) {
+    public ResponseEntity<PeopleModel> addPeople(@RequestBody PeopleDTO dto) {
         try {
             PeopleModel person = peopleService.createPeople(dto);
             return ResponseEntity.created(URI.create(person.getId().toString())).body(person);
@@ -36,7 +34,7 @@ public class PeopleController {
     }
 
     @PutMapping("/:id")
-    public ResponseEntity<PeopleModel> updatePeople(@RequestBody @Validated PeopleDTO dto, @PathVariable UUID id) {
+    public ResponseEntity<PeopleModel> updatePeople(@RequestBody PeopleDTO dto, @PathVariable UUID id) {
         try{
             return ResponseEntity.ok(peopleService.updatePeople(dto,id));
         } catch (Exception e) {
