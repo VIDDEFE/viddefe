@@ -2,7 +2,7 @@ package com.viddefe.viddefe_api.people.service;
 
 import com.viddefe.viddefe_api.churches.ChurchModel;
 import com.viddefe.viddefe_api.churches.ChurchService;
-import com.viddefe.viddefe_api.people.config.TypesPeople;
+import com.viddefe.viddefe_api.common.exception.CustomExceptions;
 import com.viddefe.viddefe_api.people.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.model.PeopleModel;
 import com.viddefe.viddefe_api.people.model.PeopleTypeModel;
@@ -37,7 +37,7 @@ public class PeopleService {
 
     public PeopleModel updatePeople(@Valid PeopleDTO dto, UUID uuid){
         PeopleModel peopleModel = peopleRepository.findById(uuid)
-                .orElseThrow(() -> new RuntimeException("People not found"));
+                .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("People not found"));
         peopleModel.fromDto(dto);
         return peopleRepository.save(peopleModel);
     }

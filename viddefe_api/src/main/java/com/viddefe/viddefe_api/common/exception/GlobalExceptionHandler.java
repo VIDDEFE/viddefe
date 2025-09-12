@@ -9,14 +9,42 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Cuando no se encuentra un recurso
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleResourceNotFound(ResourceNotFoundException ex) {
+    // 404 Not Found
+    @ExceptionHandler(CustomExceptions.ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleResourceNotFound(CustomExceptions.ResourceNotFoundException ex) {
         ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
-    // Excepciones genéricas
+    // 401 Unauthorized
+    @ExceptionHandler(CustomExceptions.InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidCredentials(CustomExceptions.InvalidCredentialsException ex) {
+        ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    // 400 Bad Request
+    @ExceptionHandler(CustomExceptions.BadRequestException.class)
+    public ResponseEntity<ApiResponse<Object>> handleBadRequest(CustomExceptions.BadRequestException ex) {
+        ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    // 403 Forbidden
+    @ExceptionHandler(CustomExceptions.UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorized(CustomExceptions.UnauthorizedException ex) {
+        ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    // 409 Conflict
+    @ExceptionHandler(CustomExceptions.ConflictException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConflict(CustomExceptions.ConflictException ex) {
+        ApiResponse<Object> response = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    // 500 Internal Server Error (catch-all)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGeneralException(Exception ex) {
         ApiResponse<Object> response = ApiResponse.error("Internal server error: " + ex.getMessage());

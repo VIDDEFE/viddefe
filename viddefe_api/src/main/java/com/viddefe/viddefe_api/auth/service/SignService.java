@@ -5,6 +5,7 @@ import com.viddefe.viddefe_api.auth.dto.SignInResDTO;
 import com.viddefe.viddefe_api.auth.dto.SignUpDTO;
 import com.viddefe.viddefe_api.auth.model.UserModel;
 import com.viddefe.viddefe_api.auth.repository.UserRepository;
+import com.viddefe.viddefe_api.common.exception.CustomExceptions;
 import com.viddefe.viddefe_api.config.Components.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class SignService {
 
     public String singUp(@Valid SignUpDTO dto) {
         UserModel userModel = userRepository.findById(dto.getPeopleId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("User not found"));
         userModel.setPassword(passwordEncoder.encode(dto.getPassword()));
         userRepository.save(userModel);
         return userModel.getPeople().getId().toString();
@@ -28,9 +29,9 @@ public class SignService {
 
     public SignInResDTO signIn(@Valid SignInDTO dto) {
         UserModel userBd = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found by email" + dto.getEmail()));
+                .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("User not found by email" + dto.getEmail()));
         if(!passwordEncoder.matches(dto.getPassword(), userBd.getPassword())) {
-            throw new RuntimeException("Wrong password");
+            throw new CustomExceptions.InvalidCredentialsException("Wrong password");
         }
         return new SignInResDTO(userBd.getEmail(),
                 userBd.getRolUser(),
