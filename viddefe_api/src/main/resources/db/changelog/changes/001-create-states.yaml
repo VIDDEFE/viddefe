@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-states
+      author: juan
+      changes:
+        - createTable:
+            tableName: states
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false

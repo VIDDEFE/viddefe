@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 007-create-roles-user
+      author: juan
+      changes:
+        - createTable:
+            tableName: roles_user
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
