@@ -7,6 +7,7 @@ import com.viddefe.viddefe_api.common.response.ApiResponse;
 import jakarta.servlet.http.Cookie;
 import com.viddefe.viddefe_api.auth.service.SignService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
@@ -25,13 +26,13 @@ public class SignController {
     private final Environment env;
 
     @PostMapping("/sign-up")
-    public ResponseEntity<ApiResponse<String>> signUp(@RequestBody SignUpDTO signUpDTO) {
+    public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody SignUpDTO signUpDTO) {
         String response = signService.singUp(signUpDTO);
         return ResponseEntity.created(URI.create("/auth/sign-up/"+response)).body(ApiResponse.success(response));
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<ApiResponse<SignInResDTO>> signIn(@RequestBody SignInDTO signinDTO, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<SignInResDTO>> signIn (@Valid @RequestBody SignInDTO signinDTO, HttpServletResponse response) {
         SignInResDTO signInResDTO = signService.signIn(signinDTO);
         String jwt = signService.generateJwt(signInResDTO);
         Cookie cookie = new Cookie("access_token",jwt);
