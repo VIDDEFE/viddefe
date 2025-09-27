@@ -68,7 +68,7 @@ export default function SignInScreen() {
             activeOutlineColor={Colors.light.primary}
           />
 
-          {error ? <Text style={styles.errorText}>{error}</Text> : null} {/* 👈 muestra error */}
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
           <Button
             mode="contained"
