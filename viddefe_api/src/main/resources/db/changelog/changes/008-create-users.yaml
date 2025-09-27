@@ -23,7 +23,7 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: people_id
-                  type: varchar(40)
+                  type: uuid
                   constraints:
                     primaryKey: true
                     nullable: false

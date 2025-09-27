@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.catalogs.Model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -27,6 +28,7 @@ public class StatesModel {
     private String name; // mapeamos "departament"
 
     @OneToMany(mappedBy = "state", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<CitiesModel> cities = new ArrayList<>();
 
     @JsonProperty("departament")
