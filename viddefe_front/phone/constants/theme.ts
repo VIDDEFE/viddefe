@@ -1,62 +1,72 @@
+import {
+  DarkTheme as NavigationDarkTheme,
+  DefaultTheme as NavigationDefaultTheme,
+} from "@react-navigation/native";
+import { adaptNavigationTheme, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
+import colors from "./colors";
 
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * Using the custom palette (primary, secondary, neutral).
- */
-
-import { Platform } from 'react-native';
-import colors from './colors';
-
-export const Colors = {
-  light: {
-    text: colors.neutral[900],
-    background: '#ffffff',
-    tint: colors.primary[500],
-    icon: colors.neutral[500],
-    tabIconDefault: colors.neutral[400],
-    tabIconSelected: colors.primary[500],
-    primary: colors.primary[500],
-    secondary: colors.secondary[400],
-  },
-  dark: {
-    text: colors.neutral[50],
-    background: colors.neutral[950],
-    tint: colors.primary[300],
-    icon: colors.neutral[400],
-    tabIconDefault: colors.neutral[600],
-    tabIconSelected: colors.primary[300],
-    primary: colors.primary[300],
-    secondary: colors.secondary[300],
-  },
-};
-
-export const Fonts = Platform.select({
+// Tipografía multiplataforma
+/*export const Fonts = Platform.select({
   ios: {
-    // Clásicos y limpios
-    sans: 'system-ui',
-    serif: 'Times New Roman',
-    rounded: 'SF Pro Rounded',
-    mono: 'Menlo',
-
-    // Extras para títulos
-    display: 'Avenir Next',
+    sans: "system-ui",
+    serif: "ui-serif",
+    rounded: "ui-rounded",
+    mono: "ui-monospace",
   },
-  default: {
-    sans: 'sans-serif',
-    serif: 'serif',
-    rounded: 'sans-serif-rounded',
-    mono: 'monospace',
-
-    // Extras para títulos
-    display: 'sans-serif-medium',
+  android: {
+    sans: "normal",
+    serif: "serif",
+    rounded: "sans-serif-rounded",
+    mono: "monospace",
   },
   web: {
     sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
-
-    // Fuentes más “cheveres” para títulos
-    display: "'Poppins', 'Montserrat', 'Raleway', 'Nunito', sans-serif",
+    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, sans-serif",
+    mono: "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   },
+});*/
+
+// Adaptamos Navigation a Paper
+const { LightTheme, DarkTheme } = adaptNavigationTheme({
+  reactNavigationLight: NavigationDefaultTheme,
+  reactNavigationDark: NavigationDarkTheme,
 });
+
+// Tema claro
+export const paperLightTheme = {
+  ...MD3LightTheme,
+  roundness: 8,
+  colors: {
+    ...MD3LightTheme.colors,
+    ...LightTheme.colors,
+    primary: colors.primary[700],
+    onPrimary: colors.neutral[50],
+    secondary: colors.neutral[400],
+    onSecondary: colors.neutral[50],
+    background: colors.primary[50],
+    onBackground: colors.primary[900],
+    surface: colors.primary[50],
+    onSurface: colors.primary[900],
+    outline: colors.primary[400],
+  },
+};
+
+// Tema oscuro optimizado
+export const paperDarkTheme = {
+  ...MD3DarkTheme,
+  roundness: 8,
+  colors: {
+    ...MD3DarkTheme.colors,
+    ...DarkTheme.colors,
+    primary: colors.primary[500],      // azul vibrante (acento)
+    onPrimary: colors.neutral[50],     // texto blanco/gris claro sobre azul
+    secondary: colors.neutral[500],    // gris medio como color secundario
+    onSecondary: colors.neutral[50],   // texto claro sobre gris
+    background: colors.neutral[950],   // negro casi puro
+    onBackground: colors.neutral[50],  // texto blanco
+    surface: colors.neutral[900],      // gris muy oscuro (tarjetas, contenedores)
+    onSurface: colors.neutral[100],    // texto gris claro
+    outline: colors.neutral[400],      // gris medio para bordes
+  },
+};

@@ -1,21 +1,55 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import 'react-native-reanimated';
+// app/_layout.tsx (RootLayout)
+import { paperDarkTheme, paperLightTheme } from "@/constants/theme";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { PaperProvider } from "react-native-paper";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+// 👇 Encapsulamos la lógica de auth
+function AuthStack() {
+  const { user, loading } = useAuth();
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+  if (loading) return null; // o un splash/loading screen
+
+  // 🔹 Si no hay usuario → manda a SignIn
+  if (!user) {
+    return (
+      <Stack>
+        <Stack.Screen
+          name="Auth/sign-in"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Auth/sign-up"
+          options={{ headerShown: false }}
+        />
+      </Stack>
+    );
+  }
+
+  // 🔹 Si hay usuario → app normal (tabs, modals, etc.)
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="modal"
+        options={{ presentation: "modal", title: "Modal" }}
+      />
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const theme = colorScheme === "dark" ? paperDarkTheme : paperLightTheme;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
-    </ThemeProvider>
+    <AuthProvider>
+      <PaperProvider theme={theme}>
+        <AuthStack />
+        <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
+      </PaperProvider>
+    </AuthProvider>
   );
 }
