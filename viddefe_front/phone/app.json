@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "viddefe_front",
-    "slug": "viddefe_front",
+    "name": "phone",
+    "slug": "phone",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "viddefefront",
+    "scheme": "phone",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

@@ -1,28 +1,25 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { HapticTab } from "@/components/haptic-tab";
+import { Tabs } from "expo-router";
+import React from "react";
+import { useTheme } from "react-native-paper";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const theme = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
         headerShown: false,
         tabBarButton: HapticTab,
-      }}>
-        <Tabs.Screen
-          name='index'
-          options={{title: 'Inicio'}}
-        />
-        <Tabs.Screen
-          name='sigIn'
-          options={{title: 'Iniciar Sesión'}}
-        />
+        tabBarStyle: {
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.outlineVariant,
+        },
+      }}
+    >
+      <Tabs.Screen name="index" options={{ title: "Inicio" }} />
     </Tabs>
   );
 }
