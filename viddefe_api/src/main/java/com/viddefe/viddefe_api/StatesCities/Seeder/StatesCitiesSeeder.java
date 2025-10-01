@@ -1,9 +1,9 @@
-package com.viddefe.viddefe_api.catalogs.Seeder;
+package com.viddefe.viddefe_api.StatesCities.Seeder;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.viddefe.viddefe_api.catalogs.Model.StatesModel;
-import com.viddefe.viddefe_api.catalogs.Repository.StatesRepository;
+import com.viddefe.viddefe_api.StatesCities.Model.StatesModel;
+import com.viddefe.viddefe_api.StatesCities.Repository.StatesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;

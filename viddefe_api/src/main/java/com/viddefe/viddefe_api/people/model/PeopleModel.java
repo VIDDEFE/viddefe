@@ -1,6 +1,6 @@
 package com.viddefe.viddefe_api.people.model;
 
-import com.viddefe.viddefe_api.catalogs.Model.StatesModel;
+import com.viddefe.viddefe_api.StatesCities.Model.StatesModel;
 import com.viddefe.viddefe_api.churches.ChurchModel;
 import com.viddefe.viddefe_api.people.dto.PeopleDTO;
 import jakarta.persistence.*;

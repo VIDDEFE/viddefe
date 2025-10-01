@@ -1,91 +1,12 @@
 // screens/Auth/SignUpScreen.tsx
 import AuthForm from "@/components/AuthFormComponent";
-import { Person } from "@/types/models/People";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import PersonalDataForm from "@/components/PersonalDataForm";
+import useGeoData from "@/hooks/StatesGeo/StatesGeo";
+import { Person } from "@/types/People";
 import React from "react";
 import { Platform, StyleSheet } from "react-native";
 import { Button, Text, TextInput, useTheme } from "react-native-paper";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-type PersonalDataFormProps = {
-  person: Person | null;
-  setPerson: React.Dispatch<React.SetStateAction<Person | null>>;
-  showDatePicker: boolean;
-  setShowDatePicker: React.Dispatch<React.SetStateAction<boolean>>;
-  handleDateChange: (_event: any, selectedDate?: Date) => void;
-  theme: ReturnType<typeof useTheme>;
-};
-
-function PersonalDataForm({
-  person,
-  setPerson,
-  showDatePicker,
-  setShowDatePicker,
-  handleDateChange,
-  theme,
-}: PersonalDataFormProps) {
-  return (
-    <>
-      <TextInput
-        label="Primer Nombre"
-        value={person?.firstName || ""}
-        onChangeText={(text) =>
-          setPerson((prev) => ({ ...prev, firstName: text } as Person))
-        }
-        mode="outlined"
-        outlineColor={theme.colors.outline}
-        activeOutlineColor={theme.colors.primary}
-        style={styles.input}
-      />
-      <TextInput
-        label="Primer Apellido"
-        value={person?.lastName || ""}
-        onChangeText={(text) =>
-          setPerson((prev) => ({ ...prev, lastName: text } as Person))
-        }
-        mode="outlined"
-        outlineColor={theme.colors.outline}
-        activeOutlineColor={theme.colors.primary}
-        style={styles.input}
-      />
-      <TextInput
-        label="Número celular"
-        value={person?.phone || ""}
-        onChangeText={(text) =>
-          setPerson((prev) => ({ ...prev, phone: text } as Person))
-        }
-        mode="outlined"
-        outlineColor={theme.colors.outline}
-        activeOutlineColor={theme.colors.primary}
-        style={styles.input}
-      />
-
-      <TextInput
-        label="Fecha de Nacimiento"
-        value={
-          person?.birthDate
-            ? new Date(person.birthDate).toLocaleDateString()
-            : ""
-        }
-        mode="outlined"
-        outlineColor={theme.colors.outline}
-        activeOutlineColor={theme.colors.primary}
-        style={styles.input}
-        right={<TextInput.Icon icon="calendar" />}
-        onPress={() => setShowDatePicker(true)}
-      />
-
-      {showDatePicker && (
-        <DateTimePicker
-          value={person?.birthDate ? new Date(person.birthDate) : new Date()}
-          mode="date"
-          display="calendar"
-          onChange={handleDateChange}
-        />
-      )}
-    </>
-  );
-}
 
 export default function SignUpScreen() {
   const theme = useTheme();
@@ -94,6 +15,15 @@ export default function SignUpScreen() {
   const [person, setPerson] = React.useState<Person | null>(null);
   const [password, setPassword] = React.useState("");
   const [showDatePicker, setShowDatePicker] = React.useState(false);
+
+  const {
+    states,
+    cities,
+    selectedState,
+    setSelectedState,
+    selectedCity,
+    setSelectedCity,
+  } = useGeoData();
 
   const handleDateChange = (_event: any, selectedDate?: Date) => {
     setShowDatePicker(Platform.OS === "ios"); // en iOS puede quedarse abierto
@@ -113,6 +43,12 @@ export default function SignUpScreen() {
           setShowDatePicker={setShowDatePicker}
           handleDateChange={handleDateChange}
           theme={theme}
+          states={states}
+          cites={cities}
+          selectedState={selectedState}
+          selectedCity={selectedCity}
+          setSelectedState={setSelectedState}
+          setSelectedCity={setSelectedCity}
         />
       ),
     },
