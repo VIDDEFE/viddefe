@@ -21,8 +21,19 @@ public class ChurchModel {
     private Long latitude;
     private BigDecimal longitude;
     private BigDecimal stateId;
-    @ManyToOne(fetch = FetchType.LAZY, optional = true, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "parent_church_id")
     @JsonBackReference
     private ChurchModel parentChurch;
+
+    public static ChurchModel fromDto(ChurchDTO dto) {
+        ChurchModel model = new ChurchModel();
+        if (dto.getId() != null) {
+            model.setId(dto.getId());
+        }
+        model.setName(dto.getName());
+        model.setLongitude(dto.getLongitude());
+        model.setStateId(dto.getStateId());
+        return model;
+    }
 }

@@ -32,7 +32,7 @@ databaseChangeLog:
                   type: varchar(40)
               - column:
                   name: leader_id
-                  type: varchar(40)
+                  type: uuid
         - addForeignKeyConstraint:
             baseTableName: group_churches
             baseColumnNames: church_id

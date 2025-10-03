@@ -35,9 +35,6 @@ public class PeopleModel {
     private String lastName;
 
     @Column(length = 256, nullable = false)
-    private String email;
-
-    @Column(length = 256, nullable = false)
     private String phone;
 
     private LocalDate birthdate;
@@ -61,7 +58,6 @@ public class PeopleModel {
         this.firstName = dto.getFirstName();
         this.lastName = dto.getLastName();
         this.cc = dto.getCc();
-        this.email = dto.getEmail();
         this.phone = dto.getPhone();
         this.birthdate = dto.getBirthdate();
         return this;
