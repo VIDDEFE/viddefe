@@ -1,7 +1,7 @@
 package com.viddefe.viddefe_api.people.service;
 
-import com.viddefe.viddefe_api.catalogs.Model.StatesModel;
-import com.viddefe.viddefe_api.catalogs.Services.StatesCitiesService;
+import com.viddefe.viddefe_api.StatesCities.Model.StatesModel;
+import com.viddefe.viddefe_api.StatesCities.Services.StatesCitiesService;
 import com.viddefe.viddefe_api.churches.ChurchModel;
 import com.viddefe.viddefe_api.churches.ChurchService;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;

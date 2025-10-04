@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.catalogs.Model;
+package com.viddefe.viddefe_api.StatesCities.Model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
