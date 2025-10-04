@@ -39,7 +39,7 @@ public class PeopleDTO {
 
     @NotNull(message = "La fecha de nacimiento es obligatoria")
     @Past(message = "La fecha de nacimiento debe ser en el pasado")
-    private LocalDate birthdate;
+    private LocalDate birthDate;
 
     @NotNull(message = "El tipo de persona es obligatorio")
     private Long typePersonId;

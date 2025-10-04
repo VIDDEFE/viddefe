@@ -23,6 +23,7 @@ public class SignService {
         UserModel userModel = userRepository.findById(dto.getPeopleId())
                 .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("User not found"));
         userModel.setPassword(passwordEncoder.encode(dto.getPassword()));
+        userModel.setEmail(dto.getEmail());
         userRepository.save(userModel);
         return userModel.getPeople().getId().toString();
     }
