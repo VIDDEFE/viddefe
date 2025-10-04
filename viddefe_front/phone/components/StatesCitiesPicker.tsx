@@ -1,8 +1,8 @@
-// components/StateCityPicker.tsx
+// components/StateCityPicker.tsx  
 import { Cities, States } from "@/types/StatesGeo";
 import { Picker } from "@react-native-picker/picker";
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useTheme } from "react-native-paper";
 
 type Props = {
@@ -12,6 +12,7 @@ type Props = {
   cities: Cities[];
   selectedCity: Cities | null;
   onCityChange: (city: Cities) => void;
+  theme: ReturnType<typeof useTheme>;
 };
 
 export default function StateCityPicker({
@@ -21,47 +22,93 @@ export default function StateCityPicker({
   cities,
   selectedCity,
   onCityChange,
+  theme
 }: Props) {
-  const theme = useTheme();
   return (
     <>
-      <Picker
-        mode="dialog"
-        dropdownIconRippleColor={theme.colors.primary}
-        style={{...style.picker,borderColor:  theme.colors.outline}}
-        selectedValue={selectedState?.id}
-        onValueChange={(value) => {
-          const state = states.find((s) => s.id === Number(value));
-          if (state) onStateChange(state);
-        }}
+      <View
+        style={[
+          style.wrapper,
+          {
+            borderColor: theme.colors.outline,
+            backgroundColor: theme.colors.background,
+          },
+        ]}
       >
-        <Picker.Item label="Seleccione un estado" value={null} />
-        {states?.map((s) => (
-          <Picker.Item key={s.id.toString()} label={s.name} value={s.id.toString()} />
-        ))}
-      </Picker>
-
-      {selectedState && (
         <Picker
-          selectedValue={selectedCity?.id}
+          mode="dropdown"
+          style={{ color: theme.colors.onSurface }}
+          dropdownIconRippleColor={theme.colors.primary}
+          dropdownIconColor={theme.colors.secondary}
+          selectedValue={selectedState?.id?.toString() ?? null}
           onValueChange={(value) => {
-            const city = cities?.find((c) => c.id === value);
-            if (city) onCityChange(city);
+            const state = states.find((s) => s.id === Number(value));
+            if (state) onStateChange(state);
           }}
         >
-          <Picker.Item label="Seleccione una ciudad" value={null} />
-          {cities?.map((c) => (
-            <Picker.Item key={c.id.toString()} label={c.name} value={c.id.toString()} />
+          <Picker.Item
+            label="Seleccione un estado"
+            value={null}
+            style={{ color: theme.colors.secondary }}
+          />
+          {states?.map((s) => (
+            <Picker.Item
+              key={s.id.toString()}
+              label={s.name}
+              value={s.id.toString()}
+              style={{ color: theme.colors.secondary }}
+            />
           ))}
         </Picker>
+      </View>
+
+      {/* Picker de Ciudades */}
+      {selectedState && (
+        <View
+          style={[
+            style.wrapper,
+            {
+              borderColor: theme.colors.outline,
+              backgroundColor: theme.colors.background,
+            },
+          ]}
+        >
+          <Picker
+            mode="dropdown"
+            dropdownIconRippleColor={theme.colors.primary}
+            style={{ color: theme.colors.onSurface }}
+            dropdownIconColor={theme.colors.secondary}
+            selectedValue={selectedCity?.id?.toString() ?? null}
+            onValueChange={(value) => {
+              const city = cities?.find((c) => c.id.toString() === value);
+              if (city) onCityChange(city);
+            }}
+          >
+            <Picker.Item
+              label="Seleccione una ciudad"
+              value={null}
+              style={{ color: theme.colors.secondary }}
+            />
+            {cities?.map((c) => (
+              <Picker.Item
+                key={c.id.toString()}
+                label={c.name}
+                value={c.id.toString()}
+                style={{ color: theme.colors.secondary }}
+              />
+            ))}
+          </Picker>
+        </View>
       )}
     </>
   );
 }
 
 const style = StyleSheet.create({
-  picker: {
+  wrapper: {
     borderWidth: 1,
-    borderRadius: 4,
-  }
-})
+    borderRadius: 5,
+    marginBottom: 12,
+    height: 50
+  },
+});

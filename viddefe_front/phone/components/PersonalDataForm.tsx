@@ -32,10 +32,23 @@ export default function PersonalDataForm({
   cites,
   setSelectedCity,
   selectedState,
-  selectedCity
+  selectedCity,
 }: PersonalDataFormProps) {
   return (
     <>
+      <TextInput
+        label="Número de identificación"
+        value={person?.cc.toString() || ""}
+        onChangeText={(cc) =>
+          setPerson((prev) => ({ ...prev, cc: Number(cc) } as Person))
+        }
+        mode="outlined"
+        outlineColor={theme.colors.outline}
+        activeOutlineColor={theme.colors.primary}
+        style={styles.input}
+        keyboardType="numeric"
+      />
+
       <TextInput
         label="Primer Nombre"
         value={person?.firstName || ""}
@@ -47,6 +60,7 @@ export default function PersonalDataForm({
         activeOutlineColor={theme.colors.primary}
         style={styles.input}
       />
+
       <TextInput
         label="Primer Apellido"
         value={person?.lastName || ""}
@@ -58,6 +72,7 @@ export default function PersonalDataForm({
         activeOutlineColor={theme.colors.primary}
         style={styles.input}
       />
+
       <TextInput
         label="Número celular"
         value={person?.phone || ""}
@@ -68,6 +83,7 @@ export default function PersonalDataForm({
         outlineColor={theme.colors.outline}
         activeOutlineColor={theme.colors.primary}
         style={styles.input}
+        keyboardType="phone-pad"
       />
 
       <TextInput
@@ -81,8 +97,14 @@ export default function PersonalDataForm({
         outlineColor={theme.colors.outline}
         activeOutlineColor={theme.colors.primary}
         style={styles.input}
-        right={<TextInput.Icon icon="calendar" onPressIn={() => setShowDatePicker(true)}/>}
+        right={
+          <TextInput.Icon
+            icon="calendar"
+            onPressIn={() => setShowDatePicker(true)}
+          />
+        }
         onPressIn={() => setShowDatePicker(true)}
+        editable={false} // evita teclear manualmente, solo selecciona con el calendario
       />
 
       {showDatePicker && (
@@ -92,7 +114,8 @@ export default function PersonalDataForm({
           display="calendar"
           onChange={handleDateChange}
         />
-      )}      
+      )}
+
       {states && cites && (
         <StateCityPicker
           states={states}
@@ -102,8 +125,11 @@ export default function PersonalDataForm({
           }}
           cities={cites}
           selectedCity={selectedCity}
-          onCityChange={(city) => {}}
-      />
+          onCityChange={(city) => {
+            setSelectedCity(city);
+          }}
+          theme={theme}
+        />
       )}
     </>
   );

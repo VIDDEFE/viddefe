@@ -59,7 +59,7 @@ public class PeopleModel {
         this.lastName = dto.getLastName();
         this.cc = dto.getCc();
         this.phone = dto.getPhone();
-        this.birthdate = dto.getBirthdate();
+        this.birthdate = dto.getBirthDate();
         return this;
     }
 
