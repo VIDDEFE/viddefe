@@ -51,4 +51,8 @@ public class PeopleService {
     public void deletePeople(@NotNull UUID uuid){
         peopleRepository.deleteById(uuid);
     }
+
+    public PeopleModel getPeopleById(UUID id){
+        return peopleRepository.findById(id).orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("People not found"));
+    }
 }

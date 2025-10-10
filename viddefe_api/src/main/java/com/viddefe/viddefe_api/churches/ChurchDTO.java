@@ -25,5 +25,5 @@ public class ChurchDTO {
 
     @NotNull(message = "El stateId es obligatorio")
     @Positive(message = "El stateId debe ser un número positivo")
-    private BigDecimal stateId;
+    private Long citiesId;
 }

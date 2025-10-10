@@ -17,6 +17,7 @@ databaseChangeLog:
                   type: varchar(40)
                   constraints:
                     nullable: false
+                    unique: true
               - column:
                   name: first_name
                   type: varchar(256)

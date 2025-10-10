@@ -9,12 +9,12 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
+@Getter @Setter
 public class UserModel {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "people_id")
     private PeopleModel people;

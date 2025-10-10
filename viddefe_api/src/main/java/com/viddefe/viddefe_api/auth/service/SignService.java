@@ -3,10 +3,13 @@ package com.viddefe.viddefe_api.auth.service;
 import com.viddefe.viddefe_api.auth.dto.SignInDTO;
 import com.viddefe.viddefe_api.auth.dto.SignInResDTO;
 import com.viddefe.viddefe_api.auth.dto.SignUpDTO;
+import com.viddefe.viddefe_api.auth.model.RolUserModel;
 import com.viddefe.viddefe_api.auth.model.UserModel;
 import com.viddefe.viddefe_api.auth.repository.UserRepository;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;
 import com.viddefe.viddefe_api.config.Components.JwtUtil;
+import com.viddefe.viddefe_api.people.model.PeopleModel;
+import com.viddefe.viddefe_api.people.service.PeopleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,14 +20,29 @@ import org.springframework.stereotype.Service;
 public class SignService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RolesUserService rolesUserService;
     private final JwtUtil jwtUtil;
+    private final PeopleService peopleService;
 
-    public String singUp(@Valid SignUpDTO dto) {
-        UserModel userModel = userRepository.findById(dto.getPeopleId())
-                .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("User not found"));
+    public String signUp(@Valid SignUpDTO dto) {
+        userRepository.findByEmail(dto.getEmail())
+                .ifPresent(u -> {
+                    throw new CustomExceptions.ResourceAlreadyExistsException(
+                            "User with email " + dto.getEmail() + " already exists"
+                    );
+                });
+        Long roleId = dto.getRoleId() != null ? dto.getRoleId() : 2L;
+        // Crear y guardar el nuevo usuario
+        UserModel userModel = new UserModel();
+        RolUserModel rolUserModel = rolesUserService.foundRolUserById(roleId);
+        PeopleModel peopleModel = peopleService.getPeopleById(dto.getPeopleId());
+        userModel.setPeople(peopleModel);
         userModel.setPassword(passwordEncoder.encode(dto.getPassword()));
         userModel.setEmail(dto.getEmail());
+        userModel.setRolUser(rolUserModel);
+
         userRepository.save(userModel);
+
         return userModel.getPeople().getId().toString();
     }
 
