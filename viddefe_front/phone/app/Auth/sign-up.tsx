@@ -20,7 +20,7 @@ export default function SignUpScreen() {
   const [person, setPerson] = React.useState<Person | null>(null);
   const [showDatePicker, setShowDatePicker] = React.useState(false);
 
-  const [user, setUser ] = React.useState<User|null>();
+  const [user, setUser ] = React.useState<User | null>(null);
   const redirectTo = useRedirectTo();
 
   const {
@@ -100,31 +100,28 @@ export default function SignUpScreen() {
 
       // Paso 0: Datos personales → validamos antes de continuar
       if (!person?.firstName || !person?.lastName || !person?.phone || !selectedState || !selectedCity) {
-        console.log("Faltan datos personales");
         return; // no avanza si falta algo
       }
       
-      console.log("aqui toy   2 ", step)
-      if (step === 0) {
+        if (step === 0) {
         if (!person || !selectedState?.id) return;
         const response = await addPeople(person, selectedState.id, 1);
         if(!response || !response.id){ 
-          console.log("response in if: ",response)
           throw new Error(`La persona ${person.firstName} ${person.lastName} no pudo ser añadida`)
         }
         
-        setUser((prev) => prev && response?.id ? { ...prev, peopleId: response.id as string } : null)
+        setUser((prev) =>
+          prev
+            ? { ...prev, peopleId: response.id as string }
+            : { peopleId: response.id as string, email: "", password: "", rolUserId: 2 }
+        );
         return; // aquí ya no hay "next", termina
       }
-      console.log("aqui toy   3 ", step)
 
       if(step === 1){
-        console.log("user antes de signup: ", user)
         if(!user || !user.password || !user.password) throw new Error(`Datos insuficientes para crear el usuario`)
         await signUp(user); 
-        setStep((prev) => prev + 1)
-
-    }
+      }
     
       // Avanzar al siguiente paso si no es el último
 
