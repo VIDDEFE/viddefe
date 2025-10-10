@@ -1,6 +1,8 @@
 package com.viddefe.viddefe_api.churches;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.viddefe.viddefe_api.StatesCities.Model.CitiesModel;
+import com.viddefe.viddefe_api.StatesCities.Model.StatesModel;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +22,9 @@ public class ChurchModel {
     private String name;
     private Long latitude;
     private BigDecimal longitude;
-    private BigDecimal stateId;
+    @ManyToOne
+    @JoinColumn(name = "cities_id")
+    private CitiesModel city;
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "parent_church_id")
     @JsonBackReference
@@ -33,7 +37,6 @@ public class ChurchModel {
         }
         model.setName(dto.getName());
         model.setLongitude(dto.getLongitude());
-        model.setStateId(dto.getStateId());
         return model;
     }
 }

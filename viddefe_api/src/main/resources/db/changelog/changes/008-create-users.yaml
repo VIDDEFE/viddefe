@@ -7,6 +7,12 @@ databaseChangeLog:
             tableName: users
             columns:
               - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
                   name: email
                   type: varchar(256)
                   constraints:
@@ -27,6 +33,7 @@ databaseChangeLog:
                   constraints:
                     primaryKey: true
                     nullable: false
+
         - addForeignKeyConstraint:
             baseTableName: users
             baseColumnNames: rol_user_id

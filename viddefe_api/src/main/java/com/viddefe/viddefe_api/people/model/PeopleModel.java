@@ -20,12 +20,11 @@ import java.util.UUID;
 @Getter
 @Setter
 public class PeopleModel {
-
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id; // varchar(40) en YAML
+    private UUID id;
 
-    @Column(length = 40, nullable = false)
+    @Column(length = 40, nullable = false, unique = true)
     private String cc;
 
     @Column(name = "first_name", length = 256, nullable = false)

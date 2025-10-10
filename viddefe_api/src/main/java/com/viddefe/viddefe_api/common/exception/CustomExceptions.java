@@ -14,6 +14,14 @@ public class CustomExceptions {
         }
     }
 
+
+    public static class ResourceAlreadyExistsException extends RuntimeException {
+        public ResourceAlreadyExistsException(String message) {
+            super(message);
+        }
+    }
+
+
     public static class BadRequestException extends RuntimeException {
         public BadRequestException(String message) {
             super(message);

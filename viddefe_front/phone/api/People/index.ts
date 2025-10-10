@@ -1,3 +1,4 @@
+import { ApiResponse } from "@/types/api";
 import { Person } from "@/types/People";
 import api from "..";
 
@@ -8,8 +9,9 @@ export async function addPeople(person: Person, stateId: Number, typePersonId: N
             stateId,
             typePersonId
         }
-        const response = await api.post<Person>("/people",payload);
-        return response.data as Person;
+        const response = await api.post<ApiResponse<Person>>("/people",payload);
+        console.log("resultado: ",response.data)
+        return response.data.data as Person;
     }catch(error){
         return null;
     }

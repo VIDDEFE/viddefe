@@ -27,7 +27,7 @@ public class SignController {
 
     @PostMapping("/sign-up")
     public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody SignUpDTO signUpDTO) {
-        String response = signService.singUp(signUpDTO);
+        String response = signService.signUp(signUpDTO);
         return ResponseEntity.created(URI.create("/auth/sign-up/"+response)).body(ApiResponse.success(response));
     }
 
