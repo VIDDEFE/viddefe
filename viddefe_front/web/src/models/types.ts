@@ -1,0 +1,81 @@
+// Base interface para entidades con ID
+export interface BaseEntity {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Iglesia
+export interface Church extends BaseEntity {
+  name: string;
+  cityId: number;
+  phone: string;
+  email: string;
+  pastor: string;
+  foundedYear: number;
+  memberCount: number;
+  latitude: number;
+  longitude: number;
+}
+
+// Persona
+export interface Person extends BaseEntity {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate: Date;
+  role: PersonRole;
+  churchId: string;
+  status: 'active' | 'inactive' | 'suspended';
+}
+
+export type PersonRole = 'pastor' | 'deacon' | 'member' | 'visitor' | 'volunteer';
+
+// Servicio/Culto
+export interface Service extends BaseEntity {
+  name: string;
+  description: string;
+  churchId: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  type: ServiceType;
+  attendees: string[]; // IDs de personas
+  pastor: string; // ID de persona
+  location: string;
+}
+
+export type ServiceType = 'sunday_service' | 'wednesday_service' | 'prayer_night' | 'special_event' | 'youth_service';
+
+// Grupo
+export interface Group extends BaseEntity {
+  name: string;
+  description: string;
+  churchId: string;
+  type: GroupType;
+  leader: string; // ID de persona
+  members: string[]; // IDs de personas
+  meetingDay: string;
+  meetingTime: string;
+  location: string;
+}
+
+export type GroupType = 'home_group' | 'youth_group' | 'womens_group' | 'mens_group' | 'prayer_group' | 'study_group';
+
+// Evento
+export interface Event extends BaseEntity {
+  title: string;
+  description: string;
+  churchId: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  location: string;
+  organizer: string; // ID de persona
+  attendees: string[]; // IDs de personas
+  maxCapacity: number;
+  status: EventStatus;
+}
+
+export type EventStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';

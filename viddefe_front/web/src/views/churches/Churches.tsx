@@ -1,0 +1,162 @@
+import { useState } from 'react';
+import type { Church } from '../../models';
+import { Button, PageHeader, Table, Modal, Form, Input, DropDown } from '../../components/shared';
+import MapPicker from '../../components/shared/MapPicker';
+import { useChurches, useCreateChurch, useStates, useCities } from '../../hooks';
+
+export default function Churches() {
+  const { data: churches , isLoading } = useChurches()
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState<Partial<Church>>({});
+
+  const createChurch = useCreateChurch();
+  const { data: states } = useStates();
+  const [selectedStateId, setSelectedStateId] = useState<number | undefined>(undefined);
+  const { data: cities } = useCities(selectedStateId);
+  const [selectedCityId, setSelectedCityId] = useState<number | undefined>(undefined);
+
+  const handleAddChurch = () => {
+    if (!formData.name) return;
+    createChurch.mutate(
+      {
+        name: formData.name || '',
+        cityId: selectedCityId || '',
+        phone: formData.phone || '',
+        email: formData.email || '',
+        pastor: formData.pastor || '',
+        foundedYear: formData.foundedYear || new Date().getFullYear(),
+        memberCount: formData.memberCount || 0,
+        longitude: formData.longitude || 0,
+        latitude: formData.latitude || 0,
+      },
+      {
+        onSuccess() {
+          setFormData({});
+          setIsModalOpen(false);
+        },
+      }
+    )
+  };
+
+  const columns = [
+    { key: 'name' as const, label: 'Nombre' },
+    { key: 'city' as const, label: 'Ciudad' },
+    { key: 'pastor' as const, label: 'Pastor' },
+    { key: 'memberCount' as const, label: 'Miembros' },
+  ];
+
+  return (
+    <div className="container mx-auto px-2">
+      <PageHeader
+        title="Iglesias"
+        subtitle="Gestiona todas las iglesias"
+        actions={<Button variant="primary" onClick={() => setIsModalOpen(true)}>+ Nueva Iglesia</Button>}
+      />
+
+      <Table<Church>
+        data={Array.isArray(churches) ? churches : (churches?.content ?? [])}
+        columns={columns}
+      />
+
+      <Modal
+        isOpen={isModalOpen}
+        title="Agregar Nueva Iglesia"
+        onClose={() => setIsModalOpen(false)}
+        actions={
+          <div className="flex gap-2">
+            <Button variant="primary" onClick={handleAddChurch} disabled={isLoading}>
+              Guardar
+            </Button>
+            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+          </div>
+        }
+      >
+        <Form>
+          <Input
+            label="Nombre"
+            placeholder="Nombre de la iglesia"
+            value={formData.name || ''}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
+          
+          <Input
+            label="Pastor"
+            placeholder="Nombre del pastor"
+            value={formData.pastor || ''}
+            onChange={(e) => setFormData({ ...formData, pastor: e.target.value })}
+          />
+          <Input
+            label="Email"
+            type="email"
+            placeholder="correo@iglesia.com"
+            value={formData.email || ''}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          />
+          <Input
+            label="Teléfono"
+            placeholder="Teléfono"
+            value={formData.phone || ''}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          />
+
+          <div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <DropDown
+                label="Departamento"
+                options={(states ?? []).map((s) => ({ value: String(s.id), label: s.name }))}
+                value={selectedStateId ? String(selectedStateId) : ''}
+                onChangeValue={(val) => {
+                  const id = val ? Number(val) : undefined;
+                  setSelectedStateId(id);
+                  setSelectedCityId(undefined);
+                  setFormData(prev => ({ ...prev, city: undefined }));
+                }}
+                searchKey="label"
+              />
+
+              <DropDown
+                label="Ciudad"
+                options={(cities ?? []).map((c) => ({
+                  value: String(c.cityId),
+                  label: c.name,
+                }))}
+                value={selectedCityId ? String(selectedCityId) : ''}
+                onChangeValue={(val) => {
+                  const id = val ? Number(val) : undefined;
+                  setSelectedCityId(id);
+                  const cityName = cities?.find((c) => Number(c.cityId) === id)?.name ?? '';
+                  setFormData((prev) => ({ ...prev, city: id }));
+                }}
+                searchKey="label"
+              />
+            </div>
+
+            <label className="font-semibold text-primary-900 mb-2 text-base block">Mapa (click en el mapa para colocar marcador)</label>
+            <MapPicker
+              position={formData.latitude && formData.longitude ? { lat: formData.latitude, lng: formData.longitude } : null}
+              onChange={(p) => setFormData({ ...formData, latitude: p?.lat ?? 0, longitude: p?.lng ?? 0 })}
+              height={300}
+            />
+            <div className="flex gap-2 mt-2">
+              <Input
+                label="Latitud"
+                placeholder="Latitud"
+                value={formData.latitude ? String(formData.latitude) : ''}
+                onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value || '0') })}
+              />
+              <Input
+                label="Longitud"
+                placeholder="Longitud"
+                value={formData.longitude ? String(formData.longitude) : ''}
+                onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value || '0') })}
+              />
+            </div>
+          </div>
+        </Form>
+      </Modal>
+    </div>
+  );
+}
