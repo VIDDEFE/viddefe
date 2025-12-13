@@ -20,7 +20,7 @@ export default function Churches() {
     createChurch.mutate(
       {
         name: formData.name || '',
-        cityId: selectedCityId || '',
+        cityId: selectedCityId || 0,
         phone: formData.phone || '',
         email: formData.email || '',
         pastor: formData.pastor || '',
@@ -127,7 +127,6 @@ export default function Churches() {
                 onChangeValue={(val) => {
                   const id = val ? Number(val) : undefined;
                   setSelectedCityId(id);
-                  const cityName = cities?.find((c) => Number(c.cityId) === id)?.name ?? '';
                   setFormData((prev) => ({ ...prev, city: id }));
                 }}
                 searchKey="label"
@@ -140,7 +139,7 @@ export default function Churches() {
               onChange={(p) => setFormData({ ...formData, latitude: p?.lat ?? 0, longitude: p?.lng ?? 0 })}
               height={300}
             />
-            <div className="flex gap-2 mt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <Input
                 label="Latitud"
                 placeholder="Latitud"
@@ -148,7 +147,7 @@ export default function Churches() {
                 onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value || '0') })}
               />
               <Input
-                label="Longitud"
+                label="Longitud"               
                 placeholder="Longitud"
                 value={formData.longitude ? String(formData.longitude) : ''}
                 onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value || '0') })}

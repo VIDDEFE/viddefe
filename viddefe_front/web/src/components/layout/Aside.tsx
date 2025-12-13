@@ -1,28 +1,39 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import {
+  IconDashboard,
+  IconChurch,
+  IconPeople,
+  IconServices,
+  IconGroups,
+  IconEvents,
+  IconMenu,
+  IconClose,
+  IconLogout,
+} from "../../components/icons";
 
 const menuItems = [
-  { path: "/dashboard", label: "Dashboard", icon: "📊" },
-  { path: "/churches", label: "Iglesias", icon: "⛪" },
-  { path: "/people", label: "Personas", icon: "👥" },
-  { path: "/services", label: "Servicios", icon: "🙏" },
-  { path: "/groups", label: "Grupos", icon: "👫" },
-  { path: "/events", label: "Eventos", icon: "📅" },
+  { path: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
+  { path: "/churches", label: "Iglesias", icon: <IconChurch /> },
+  { path: "/people", label: "Personas", icon: <IconPeople /> },
+  { path: "/services", label: "Servicios", icon: <IconServices /> },
+  { path: "/groups", label: "Grupos", icon: <IconGroups /> },
+  { path: "/events", label: "Eventos", icon: <IconEvents /> },
 ];
 
 export default function Aside() {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Detectar si estamos en móvil
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-      // En móvil, forzar que no esté colapsado
-      if (window.innerWidth < 1024) {
-        setIsCollapsed(false);
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (mobile) {
+        setIsCollapsed(false); // En móvil no colapsar
       }
     };
 
@@ -37,103 +48,137 @@ export default function Aside() {
     }
   };
 
-  const toggleMobile = () => {
-    setMobileOpen(!mobileOpen);
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
   };
 
   const closeMobileMenu = () => {
-    if (isMobile) {
-      setMobileOpen(false);
-    }
-  };
-
-  // Determinar las clases del aside
-  const getAsideClasses = () => {
-    if (isMobile) {
-      return mobileOpen
-        ? "translate-x-0"
-        : "-translate-x-full lg:translate-x-0";
-    } else {
-      return isCollapsed ? "w-20" : "w-72";
-    }
+    setMobileMenuOpen(false);
   };
 
   return (
     <>
-      {/* Mobile toggle button - Solo visible en móvil */}
-      <button
-        className={`lg:hidden fixed top-4 left-4 z-50 bg-primary-700 text-white p-3 rounded-md shadow-lg transition-all duration-300 ${
-          mobileOpen ? "left-64" : "left-4"
-        }`}
-        onClick={toggleMobile}
-        aria-label="Toggle menu"
-      >
-        {mobileOpen ? "✖" : "☰"}
-      </button>
+      {/* NAVBAR PARA MÓVIL - SOLO VISIBLE EN MÓVIL */}
+      {isMobile && (
+        <nav className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-primary-100 shadow-sm z-50">
+          <div className="px-4 h-16 flex items-center justify-between">
+            <div className="flex items-center">
+              <button
+                onClick={toggleMobileMenu}
+                className="p-2 rounded-lg hover:bg-primary-50 text-primary-700"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <IconClose /> : <IconMenu />}
+              </button>
+              <h1 className="ml-3 text-xl font-bold text-primary-800">VIDDEFE</h1>
+            </div>
 
-      {/* Overlay para móvil */}
-      {mobileOpen && isMobile && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={closeMobileMenu}
-        />
+            {/* Perfil/Usuario (opcional) */}
+            <div className="flex items-center">
+              <button className="p-2 rounded-full bg-primary-50 hover:bg-primary-100 text-primary-700">
+                <span className="sr-only">Perfil</span>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {mobileMenuOpen && (
+            <div className="absolute top-full left-0 right-0 bg-white border-t border-primary-100 shadow-lg">
+              <ul className="py-2">
+                {menuItems.map((item) => {
+                  const isActive = location.pathname.startsWith(item.path);
+                  return (
+                    <li key={item.path}>
+                      <Link
+                        to={item.path}
+                        onClick={closeMobileMenu}
+                        className={`flex items-center px-6 py-4 border-l-4 transition-colors ${
+                          isActive
+                            ? "bg-primary-50 text-primary-800 border-primary-500 font-medium"
+                            : "text-primary-700 hover:bg-primary-25 border-transparent"
+                        }`}
+                      >
+                        <span className="mr-3 text-primary-700">{item.icon}</span>
+                        <span>{item.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+                
+                <li className="border-t border-primary-100 mt-2 pt-2">
+                  <button className="flex items-center w-full px-6 py-4 text-primary-700 hover:bg-primary-25">
+                    <span className="mr-3">
+                      <IconLogout />
+                    </span>
+                    <span>Cerrar Sesión</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
+        </nav>
       )}
 
       <aside
-        className={`fixed lg:relative bg-primary-700 text-white flex flex-col h-screen shadow-xl z-40
-          transition-all duration-300 overflow-hidden
-          ${getAsideClasses()}
-          ${isMobile ? "w-72" : ""}`}
+        className={`hidden lg:flex bg-white text-primary-900 flex-col h-screen shadow-sm shadow-primary-200
+          transition-all duration-300 overflow-hidden border-r border-primary-50
+          ${isCollapsed ? "w-20" : "w-72"}`}
       >
-        {/* Header */}
-        <div className="px-4 py-6 border-b border-white/10 flex items-center justify-between min-h-[80px]">
-          {(!isCollapsed || isMobile) && (
-            <h1 className="text-2xl font-bold tracking-wide whitespace-nowrap">
+        {/* Header Desktop */}
+        <div className="px-4 py-6 border-b border-primary-100 flex items-center justify-between min-h-[80px]">
+          {!isCollapsed && (
+            <h1 className="text-2xl font-bold tracking-wide whitespace-nowrap text-primary-800">
               VIDDEFE
             </h1>
           )}
 
-          {/* Collapse button - Solo visible en desktop */}
-          {!isMobile && (
-            <button
-              className="p-2 rounded-full hover:bg-white/10 transition-colors"
-              onClick={toggleCollapse}
-              aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
-            >
-              {isCollapsed ? "➡" : "⬅"}
-            </button>
-          )}
+          {/* Collapse button - Solo en desktop */}
+          <button
+            className="p-2 rounded-full hover:bg-primary-50 transition-colors border border-transparent"
+            onClick={toggleCollapse}
+            aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary-700">
+              {isCollapsed ? (
+                <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              ) : (
+                <path d="M15 6l-6 6 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              )}
+            </svg>
+          </button>
         </div>
 
+        {/* Navegación Desktop */}
         <nav className="flex-1 py-4 overflow-y-auto">
           <ul className="space-y-1 px-2">
             {menuItems.map((item) => {
               const isActive = location.pathname.startsWith(item.path);
 
               return (
-                <li key={item.path}>
+                <li key={item.path} className="relative">
                   <Link
                     to={item.path}
-                    onClick={closeMobileMenu}
                     className={`flex items-center px-4 py-3 rounded-lg mx-2 transition-all duration-200 group
                       ${
                         isActive
-                          ? "bg-white/20 text-white font-medium"
-                          : "text-white/80 hover:bg-white/10 hover:text-white"
+                          ? "bg-primary-50 text-primary-800 font-medium border-l-4 border-primary-500"
+                          : "text-primary-700 hover:bg-primary-25 hover:text-primary-800"
                       }
                     `}
-                    title={isCollapsed && !isMobile ? item.label : ""}
+                    title={isCollapsed ? item.label : ""}
                   >
-                    <span className="text-xl min-w-[40px] flex justify-center">
+                    <span className={`flex justify-center text-primary-800 ${isCollapsed ? "mx-auto" : ""}`}>
                       {item.icon}
                     </span>
-                    {(!isCollapsed || isMobile) && (
-                      <span className="whitespace-nowrap overflow-hidden">
+                    {!isCollapsed && (
+                      <span className="ml-3 whitespace-nowrap overflow-hidden">
                         {item.label}
                       </span>
                     )}
-                    {isCollapsed && !isMobile && isActive && (
-                      <div className="absolute left-0 w-1 h-6 bg-white rounded-r-full" />
+                    {isCollapsed && isActive && (
+                      <div className="absolute left-0 w-1 h-6 bg-primary-500 rounded-r-full" />
                     )}
                   </Link>
                 </li>
@@ -142,23 +187,25 @@ export default function Aside() {
           </ul>
         </nav>
 
-        {/* Footer con botón de logout */}
-        <div className="px-4 py-6 border-t border-white/10">
-          {(!isCollapsed || isMobile) && (
-            <button className="w-full py-3 text-white rounded-lg transition-all duration-300 bg-primary-800 hover:bg-primary-900 cursor-pointer">
+        {/* Footer con botón de logout - Desktop */}
+        <div className="px-4 py-6 border-t border-primary-100">
+          {!isCollapsed ? (
+            <button className="w-full py-3 text-primary-800 rounded-lg transition-all duration-300 bg-primary-50 hover:bg-primary-100 border border-primary-100 cursor-pointer flex items-center gap-2 justify-center">
+              <IconLogout />
               Cerrar Sesión
             </button>
-          )}
-          {isCollapsed && !isMobile && (
+          ) : (
             <button
-              className="w-full py-3 flex justify-center"
+              className="w-full py-3 flex justify-center hover:bg-primary-50 rounded-lg transition-colors"
               title="Cerrar Sesión"
             >
-              <span className="text-xl">🚪</span>
+              <IconLogout />
             </button>
           )}
         </div>
       </aside>
+
+      {isMobile && <div className="h-16 lg:hidden" />}
     </>
   );
 }
