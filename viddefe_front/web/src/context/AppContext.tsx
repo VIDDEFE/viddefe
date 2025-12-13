@@ -1,7 +1,22 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { Church, Person, Service, Group, Event } from '../models';
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+}
+
 interface AppContextType {
+  // Auth
+  isLoggedIn: boolean;
+  user: AuthUser | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  setUser: (user: AuthUser | null) => void;
+
   // Churches
   churches: Church[];
   addChurch: (church: Church) => void;
@@ -36,6 +51,47 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Auth
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUserState] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+
+  // Recuperar datos de localStorage al montar
+  useEffect(() => {
+    const savedToken = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+    if (savedToken && savedUser) {
+      setToken(savedToken);
+      setUserState(JSON.parse(savedUser));
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    // Será llamado desde authService en signin.tsx
+    // Este método se mantiene para compatibilidad pero no se usa directamente
+    throw new Error('Use authService.signIn() instead');
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUserState(null);
+    setIsLoggedIn(false);
+  };
+
+  const setUser = (newUser: AuthUser | null) => {
+    setUserState(newUser);
+    if (newUser) {
+      localStorage.setItem('user', JSON.stringify(newUser));
+      setIsLoggedIn(true);
+    } else {
+      localStorage.removeItem('user');
+      setIsLoggedIn(false);
+    }
+  };
+
   const [churches, setChurches] = useState<Church[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -73,6 +129,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const deleteEvent = (id: string) => setEvents(events.filter(e => e.id !== id));
 
   const value: AppContextType = {
+    isLoggedIn,
+    user,
+    token,
+    login,
+    logout,
+    setUser,
     churches,
     addChurch,
     updateChurch,

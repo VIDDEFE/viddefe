@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Card, Button, PageHeader } from "../../components/shared";
+import { FiBarChart2, FiUsers, FiCalendar } from "react-icons/fi";
+import { MdChurch } from "react-icons/md";
 
 interface StatCard {
   title: string;
@@ -10,10 +12,10 @@ interface StatCard {
 
 export default function Dashboard() {
   const [stats] = useState<StatCard[]>([
-    { title: "Total Iglesias", value: 5, icon: "⛪", bgColor: "bg-blue-400" },
-    { title: "Total Personas", value: 245, icon: "👥", bgColor: "bg-green-400" },
-    { title: "Servicios Este Mes", value: 12, icon: "🙏", bgColor: "bg-red-400" },
-    { title: "Grupos Activos", value: 8, icon: "👫", bgColor: "bg-yellow-400" },
+    { title: "Total Iglesias", value: 5, icon: "church", bgColor: "bg-blue-400" },
+    { title: "Total Personas", value: 245, icon: "people", bgColor: "bg-green-400" },
+    { title: "Servicios Este Mes", value: 12, icon: "services", bgColor: "bg-red-400" },
+    { title: "Grupos Activos", value: 8, icon: "groups", bgColor: "bg-yellow-400" },
   ]);
 
   return (
@@ -30,10 +32,12 @@ export default function Dashboard() {
             key={idx}
             className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-primary-100"
           >
-            <div
-              className={`text-2xl sm:text-3xl p-3 rounded-lg text-white ${stat.bgColor}`}
-            >
-              {stat.icon}
+            <div className={`text-2xl sm:text-3xl p-3 rounded-lg text-white ${stat.bgColor}`}>
+              {stat.icon === 'church' && <MdChurch size={28} className="text-white" />}
+              {stat.icon === 'people' && <FiUsers size={28} className="text-white" />}
+              {stat.icon === 'services' && <FiCalendar size={28} className="text-white" />}
+              {stat.icon === 'groups' && <FiUsers size={28} className="text-white" />}
+              {stat.icon === 'dashboard' && <FiBarChart2 size={28} className="text-white" />}
             </div>
 
             <h3 className="text-base sm:text-lg font-semibold text-primary-900">

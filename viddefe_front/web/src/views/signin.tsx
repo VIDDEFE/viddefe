@@ -1,16 +1,30 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button, Form, Input, Card } from '../components/shared';
+import { useAppContext } from '../context/AppContext';
+import { authService } from '../services/authService';
 import { validateEmail } from '../utils';
 
 export default function SignIn() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setUser } = useAppContext();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Mostrar mensaje de éxito si viene del signup
+    const state = location.state as { message?: string } | null;
+    if (state?.message) {
+      setSuccessMessage(state.message);
+      setTimeout(() => setSuccessMessage(''), 5000);
+    }
+  }, [location]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -25,23 +39,45 @@ export default function SignIn() {
     }
 
     setLoading(true);
-    // Simulación de login
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await authService.signIn({
+        email,
+        password,
+      });
+
+      // Guardar token y usuario en contexto y localStorage
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      
+      setUser(response.user);
       navigate('/dashboard');
-    }, 1000);
+    } catch (err: any) {
+      setError(err?.message || 'Error al iniciar sesión. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="signin-container">
-      <Card className="signin-card">
-        <div className="signin-header">
-          <h1>VIDDEFE</h1>
-          <p>Gestión de Iglesias</p>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-primary-800 mb-2">VIDDEFE</h1>
+          <p className="text-primary-600">Gestión de Iglesias</p>
         </div>
 
-        <Form onSubmit={handleSubmit}>
-          {error && <div className="form-error-message">{error}</div>}
+        <Form onSubmit={handleSubmit} className="gap-4">
+          {successMessage && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+              {successMessage}
+            </div>
+          )}
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
 
           <Input
             label="Correo Electrónico"
@@ -63,15 +99,21 @@ export default function SignIn() {
 
           <Button 
             variant="primary" 
-            className="signin-button w-full"
+            className="w-full"
             disabled={loading}
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
           </Button>
         </Form>
 
-        <div className="signin-footer">
-          <p>¿No tienes una cuenta? <a href="/signup" className="hover:text-secondary-400">Regístrate aquí</a></p>
+        <div className="mt-6 text-center text-sm text-primary-600">
+          <p>¿No tienes una cuenta? <Link to="/signup" className="text-primary-700 font-medium hover:underline">Regístrate aquí</Link></p>
+        </div>
+
+        {/* Demo hint */}
+        <div className="mt-6 p-3 bg-primary-50 border border-primary-100 rounded-lg text-xs text-primary-700">
+          <p className="font-semibold mb-1">Información:</p>
+          <p>Prueba registrándote primero en la sección de registro.</p>
         </div>
       </Card>
     </div>
