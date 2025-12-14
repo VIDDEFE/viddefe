@@ -20,8 +20,8 @@ export default function Table<T extends { id: string }>({
   actions,
 }: TableProps<T>) {
   return (
-    <div className="bg-white rounded-xl overflow-hidden shadow-md mb-8 border border-neutral-200">
-      <table className="w-full border-collapse">
+    <div className="bg-white rounded-xl shadow-md mb-8 border border-neutral-200 overflow-x-auto overflow-y-auto max-h-[70vh]">
+      <table className="w-full border-collapse min-w-max">
         <thead className="from-primary-50 to-primary-100 border-b-2 border-primary-300">
           <tr>
             {columns.map(col => (

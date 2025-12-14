@@ -26,10 +26,11 @@ public class JwtUtil {
         return  Keys.hmacShaKeyFor(SECRET.getBytes());
     }
 
-    public String generateToken(String email,String role, String fullName, UUID userId) {
+    public String generateToken(String email,String role, String firstName, String lastName, UUID userId) {
         Map<String, String > claims = Map.of(
                 "role", role,
-                "name", fullName,
+                "first_name", firstName,
+                "last_name", lastName,
                 "userId", userId.toString()
         );
 

@@ -4,4 +4,7 @@ export { Form, FormGroup, Input, TextArea, Select } from './Form';
 export { default as Table } from './Table';
 export { default as PageHeader } from './PageHeader';
 export { default as Modal } from './Modal';
-export { default as DropDown } from './DropDown';export { default as Stepper } from './Stepper';
+export { default as DropDown } from './DropDown';
+export { default as Stepper } from './Stepper';
+export { default as Avatar } from './Avatar';
+export { default as PastorSelector } from './PastorSelector';

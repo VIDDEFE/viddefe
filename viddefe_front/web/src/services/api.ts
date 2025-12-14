@@ -65,7 +65,7 @@ class ApiService {
   private client: AxiosInstance;
 
   constructor(baseURL: string = API_BASE_URL) {
-    this.client = axios.create({ baseURL, timeout: 10000 });
+    this.client = axios.create({ baseURL, timeout: 10000, withCredentials: true });
 
     // -------------------------------------------------------------------------
     // REQUEST INTERCEPTOR
@@ -137,12 +137,8 @@ class ApiService {
           // 401 - No autorizado
           // ---------------------------
           if (status === 401) {
-            toast.error("Sesión expirada. Redirigiendo...");
+            toast.error("No tienes permiso para esa acción.");
             localStorage.clear();
-
-            if (!window.location.pathname.includes("/login")) {
-              setTimeout(() => (window.location.href = "/login"), 800);
-            }
 
             return Promise.reject({
               success: false,

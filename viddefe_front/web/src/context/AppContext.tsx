@@ -1,21 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { Church, Person, Service, Group, Event } from '../models';
-
-export interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-  avatar?: string;
-}
+import type { SignInData } from '../services/authService';
 
 interface AppContextType {
   // Auth
   isLoggedIn: boolean;
-  user: AuthUser | null;
+  user: SignInData | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  setUser: (user: AuthUser | null) => void;
+  setUser: (user: SignInData | null) => void;
 
   // Churches
   churches: Church[];
@@ -53,7 +47,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Auth
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUserState] = useState<AuthUser | null>(null);
+  const [user, setUserState] = useState<SignInData | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   // Recuperar datos de localStorage al montar
@@ -81,7 +75,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLoggedIn(false);
   };
 
-  const setUser = (newUser: AuthUser | null) => {
+  const setUser = (newUser: SignInData | null) => {
     setUserState(newUser);
     if (newUser) {
       localStorage.setItem('user', JSON.stringify(newUser));

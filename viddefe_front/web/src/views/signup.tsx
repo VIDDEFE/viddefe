@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Button, Form, Input, Card, Stepper, DropDown } from '../components/shared';
+import { Button, Form, Input, Card, Stepper, DropDown, PastorSelector } from '../components/shared';
+import MapPicker from '../components/shared/MapPicker';
 import { authService, type PersonRequest } from '../services/authService';
 import { validateEmail } from '../utils';
-import { useStates } from '../hooks/useStateCities';
+import { useStates, useCities, useCreateChurch } from '../hooks';
 import { FiArrowLeft } from 'react-icons/fi';
 
-type Step = 1 | 2;
+type Step = 1 | 2 | 3;
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -30,6 +31,8 @@ export default function SignUp() {
 
   const [selectedStateId, setSelectedStateId] = useState<number | undefined>(undefined);
   const { data: states } = useStates();
+  const { data: cities } = useCities(selectedStateId);
+  const createChurch = useCreateChurch();
 
   // Step 2 - User credentials
   const [userData, setUserData] = useState({
@@ -38,6 +41,21 @@ export default function SignUp() {
     confirmPassword: '',
     roleId: 2,
   });
+
+  // Step 3 - Church data
+  const [churchData, setChurchData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    pastorId: '',
+    foundedDate: '',
+    latitude: 0,
+    longitude: 0,
+    cityId: 0,
+  });
+  const [churchStateId, setChurchStateId] = useState<number | undefined>(undefined);
+  const [churchCityId, setChurchCityId] = useState<number | undefined>(undefined);
+  const { data: churchCities } = useCities(churchStateId);
 
   const handlePersonChange = (field: keyof typeof personData, value: any) => {
     setPersonData((prev) => ({
@@ -118,11 +136,54 @@ export default function SignUp() {
         roleId: userData.roleId,
       });
 
+      // Si es pastor (typePersonId === 3), ir al paso 3 para crear iglesia
+      if (personData.typePersonId === 3) {
+        setChurchData(prev => ({ ...prev, pastorId: peopleId }));
+        setStep(3);
+        setLoading(false);
+        return;
+      }
+
       navigate('/signin', {
         state: { message: 'Registro exitoso. Por favor inicia sesión.' },
       });
     } catch (err: any) {
       setError(err?.message || 'Error al registrarse. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateChurch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!churchData.name) {
+      setError('Por favor ingresa el nombre de la iglesia');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await createChurch.mutateAsync({
+        name: churchData.name,
+        phone: churchData.phone,
+        email: churchData.email,
+        pastor: '',
+        pastorId: peopleId,
+        foundedDate: churchData.foundedDate,
+        foundedYear: churchData.foundedDate ? new Date(churchData.foundedDate).getFullYear() : new Date().getFullYear(),
+        cityId: churchCityId || 0,
+        latitude: churchData.latitude,
+        longitude: churchData.longitude,
+        memberCount: 0,
+      });
+
+      navigate('/signin', {
+        state: { message: 'Registro exitoso. Iglesia creada. Por favor inicia sesión.' },
+      });
+    } catch (err: any) {
+      setError(err?.message || 'Error al crear la iglesia. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }

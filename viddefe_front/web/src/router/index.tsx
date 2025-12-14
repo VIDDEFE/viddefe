@@ -9,6 +9,7 @@ import People from '../views/people/People';
 import Services from '../views/services/Services';
 import Groups from '../views/groups/Groups';
 import Events from '../views/events/Events';
+import type { JSX } from 'react';
 
 function ProtectedRoute({ element }: { element: JSX.Element }) {
   const { isLoggedIn } = useAppContext();

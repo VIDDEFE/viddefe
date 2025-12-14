@@ -1,8 +1,8 @@
 import { apiService, type Pageable } from './api';
-import type { Church } from '../models';
+import type { Church, ChurchSummary } from '../models';
 
 export const churchService = {
-  getAll: () => apiService.get<Pageable<Church>>('/churches'),
+  getAll: () => apiService.get<Pageable<ChurchSummary>>('/churches'),
   getById: (id: string) => apiService.get<Church>(`/churches/${id}`),
   create: (church: Omit<Church, 'id' | 'createdAt' | 'updatedAt'>) =>
     apiService.post<Church>('/churches', church),

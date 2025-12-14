@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button, Form, Input, Card } from '../components/shared';
 import { useAppContext } from '../context/AppContext';
-import { authService } from '../services/authService';
+import { authService, type SignInData } from '../services/authService';
 import { validateEmail } from '../utils';
 
 export default function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
   const { setUser } = useAppContext();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('jctobon@gmail.com');
+  const [password, setPassword] = useState('j1122920156T.');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,11 +45,17 @@ export default function SignIn() {
         password,
       });
 
-      // Guardar token y usuario en contexto y localStorage
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      
-      setUser(response.user);
+      // Extraer datos de la respuesta
+      const userData : SignInData = {
+        email: response.email ?? '',
+        firstName: response.firstName ?? '',
+        lastName: response.lastName ?? '',
+        personId: response.personId ?? '',
+        rolUserModel: response.rolUserModel ?? { id: 0, name: '' },
+        avatar: response.avatar ?? '',
+      };
+
+      setUser(userData);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err?.message || 'Error al iniciar sesión. Intenta de nuevo.');
@@ -59,7 +65,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
+    <div className="min-h-screen  bg-linear-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-primary-800 mb-2">VIDDEFE</h1>

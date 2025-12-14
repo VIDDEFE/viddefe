@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { Person } from '../../models';
-import { Button, PageHeader, Table, Modal, Form, Input, Select } from '../../components/shared';
+import { Button, PageHeader, Table, Modal, Form, Input, Select, Avatar } from '../../components/shared';
 import { usePeople, useCreatePerson } from '../../hooks';
+import type { States } from '../../services/stateCitiesService';
 
 const roleOptions = [
   { value: 'pastor', label: 'Pastor' },
@@ -12,7 +13,7 @@ const roleOptions = [
 ];
 
 export default function People() {
-  const { data: people = [], isLoading } = usePeople()
+  const { data: people = [] } = usePeople()
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<Person>>({});
 
@@ -29,6 +30,7 @@ export default function People() {
           birthDate: formData.birthDate || new Date(),
           role: (formData.role as any) || 'member',
           churchId: formData.churchId || '1',
+          state: formData.state || { id: 0, name: '' },
           status: 'active',
         },
         {
@@ -42,15 +44,29 @@ export default function People() {
   };
 
   const columns = [
+    {
+      key: 'id' as const,
+      label: 'imagen',
+      render: (_: any, person: Person) => (
+        <Avatar 
+          src={(person as any).avatar} 
+          name={`${person.firstName} ${person.lastName}`} 
+          size="sm" 
+        />
+      )
+    },
+    {key: 'cc' as const, label: 'CC' },
     { 
       key: 'firstName' as const, 
-      label: 'Nombre',
-      render: (_, person: Person) => `${person.firstName} ${person.lastName}`
+      label: 'Primer Nombre',
+      render: (_: any, person: Person) => `${person.firstName}`
     },
-    { key: 'email' as const, label: 'Email' },
+    { key: 'lastName' as const, label: 'Apellido', render: (_: any, person: Person) => `${person.lastName}` },
     { key: 'phone' as const, label: 'Teléfono' },
     { key: 'role' as const, label: 'Rol' },
     { key: 'status' as const, label: 'Estado' },
+    {key: 'birthdate' as const, label: 'Fecha de Nacimiento', render: (value: string) => new Date(value).toLocaleDateString() },
+    {key: 'state' as const, label: 'Departamento de Nacimiento', render: (_value: string | number | States, item: Person) => item.state?.name },
   ];
 
   return (
@@ -62,8 +78,8 @@ export default function People() {
       />
 
       <Table<Person>
-        data={people || []}
-        columns={columns}
+         data={Array.isArray(people) ? people : (people?.content ?? [])}
+          columns={columns}
       />
 
       <Modal
@@ -72,7 +88,7 @@ export default function People() {
         onClose={() => setIsModalOpen(false)}
         actions={
           <div className="flex gap-2">
-            <Button variant="primary" onClick={handleAddPerson} disabled={createPerson.isLoading}>
+            <Button variant="primary" onClick={handleAddPerson} disabled={createPerson.isPending}>
               Guardar
             </Button>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>

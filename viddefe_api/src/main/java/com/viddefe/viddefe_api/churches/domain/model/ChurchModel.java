@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.churches.domain.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
+import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -38,5 +39,18 @@ public class ChurchModel {
         model.setName(dto.getName());
         model.setLongitude(dto.getLongitude());
         return model;
+    }
+
+    public ChurchResDto toDto() {
+        {
+            return new ChurchResDto(
+                    this.id,
+                    this.name,
+                    this.longitude,
+                    BigDecimal.valueOf(this.latitude == null ? 0 : this.latitude),
+                    this.city.getState().toDto(),
+                    this.city.toDto()
+            );
+        }
     }
 }

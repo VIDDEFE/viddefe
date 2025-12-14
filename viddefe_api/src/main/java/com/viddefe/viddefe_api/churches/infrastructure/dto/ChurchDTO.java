@@ -30,4 +30,6 @@ public class ChurchDTO {
 
     @NotNull(message = "No se indico la ciudad perteneciente")
     private Long cityId;
+
+    private UUID pastorId;
 }

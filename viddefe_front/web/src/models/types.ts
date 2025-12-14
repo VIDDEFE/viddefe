@@ -1,3 +1,5 @@
+import type { Cities, States } from "../services/stateCitiesService";
+
 // Base interface para entidades con ID
 export interface BaseEntity {
   id: string;
@@ -12,10 +14,22 @@ export interface Church extends BaseEntity {
   phone: string;
   email: string;
   pastor: string;
+  pastorId?: string;
   foundedYear: number;
+  foundedDate?: string;
   memberCount: number;
   latitude: number;
   longitude: number;
+}
+
+export interface ChurchSummary {
+  id: string;
+  name: string;
+  longitude: number;
+  pastor: string;
+  latitude: number;
+  state: States;
+  city: Cities;
 }
 
 // Persona
@@ -27,6 +41,7 @@ export interface Person extends BaseEntity {
   birthDate: Date;
   role: PersonRole;
   churchId: string;
+  state: States;
   status: 'active' | 'inactive' | 'suspended';
 }
 

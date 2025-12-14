@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.auth.application;
 
+import com.viddefe.viddefe_api.auth.Infrastructure.dto.MetadataUserDto;
 import com.viddefe.viddefe_api.auth.contracts.AuthService;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInDTO;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInResDTO;
@@ -55,18 +56,22 @@ public class AuthServiceImpl implements AuthService {
         }
         return new SignInResDTO(userBd.getEmail(),
                 userBd.getRolUser(),
-                userBd.getPeople().getFirstName() + " " + userBd.getPeople().getLastName(),
+                userBd.getPeople().getFirstName(),
+                userBd.getPeople().getLastName(),
                 userBd.getPeople().getId()
         );
     }
 
     @Override
     public String generateJwt(SignInResDTO dto) {
-        return jwtUtil.generateToken(dto.getEmail(),
+        return jwtUtil.generateToken(
+                dto.getEmail(),
                 dto.getRolUserModel().getName(),
-                dto.getFullName(),
+                dto.getFirstName(),
+                dto.getLastName(),
                 dto.getPersonId()
         );
     }
+
 }
 

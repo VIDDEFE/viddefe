@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import type { Church } from '../../models';
-import { Button, PageHeader, Table, Modal, Form, Input, DropDown } from '../../components/shared';
+import type { Church, ChurchSummary } from '../../models';
+import { Button, PageHeader, Table, Modal, Form, Input, DropDown, PastorSelector } from '../../components/shared';
 import MapPicker from '../../components/shared/MapPicker';
 import { useChurches, useCreateChurch, useStates, useCities } from '../../hooks';
+import type { Cities, States } from '../../services/stateCitiesService';
 
 export default function Churches() {
   const { data: churches , isLoading } = useChurches()
@@ -15,6 +16,8 @@ export default function Churches() {
   const { data: cities } = useCities(selectedStateId);
   const [selectedCityId, setSelectedCityId] = useState<number | undefined>(undefined);
 
+  const [selectedPastorId, setSelectedPastorId] = useState<string>('');
+
   const handleAddChurch = () => {
     if (!formData.name) return;
     createChurch.mutate(
@@ -24,7 +27,9 @@ export default function Churches() {
         phone: formData.phone || '',
         email: formData.email || '',
         pastor: formData.pastor || '',
+        pastorId: selectedPastorId || undefined,
         foundedYear: formData.foundedYear || new Date().getFullYear(),
+        foundedDate: formData.foundedDate || undefined,
         memberCount: formData.memberCount || 0,
         longitude: formData.longitude || 0,
         latitude: formData.latitude || 0,
@@ -40,20 +45,20 @@ export default function Churches() {
 
   const columns = [
     { key: 'name' as const, label: 'Nombre' },
-    { key: 'city' as const, label: 'Ciudad' },
     { key: 'pastor' as const, label: 'Pastor' },
-    { key: 'memberCount' as const, label: 'Miembros' },
+    { key: 'state' as const, label: 'Departamento', render: (_value: string | number | States | Cities, item: ChurchSummary) => item.state.name },
+    { key: 'city' as const, label: 'Ciudad', render: (_value: string | number | States | Cities, item: ChurchSummary) => item.city.name },
   ];
 
   return (
     <div className="container mx-auto px-2">
       <PageHeader
-        title="Iglesias"
-        subtitle="Gestiona todas las iglesias"
+        title="Iglesias Hjas"
+        subtitle="Gestiona todas las iglesias hijas de tu organización desde este panel."
         actions={<Button variant="primary" onClick={() => setIsModalOpen(true)}>+ Nueva Iglesia</Button>}
       />
 
-      <Table<Church>
+      <Table<ChurchSummary>
         data={Array.isArray(churches) ? churches : (churches?.content ?? [])}
         columns={columns}
       />
@@ -81,11 +86,18 @@ export default function Churches() {
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           />
           
-          <Input
+          <PastorSelector
             label="Pastor"
-            placeholder="Nombre del pastor"
-            value={formData.pastor || ''}
-            onChange={(e) => setFormData({ ...formData, pastor: e.target.value })}
+            value={selectedPastorId}
+            onChangeValue={(val) => setSelectedPastorId(val)}
+            placeholder="Seleccionar pastor..."
+          />
+
+          <Input
+            label="Fecha de Fundación"
+            type="date"
+            value={formData.foundedDate || ''}
+            onChange={(e) => setFormData({ ...formData, foundedDate: e.target.value })}          
           />
           <Input
             label="Email"

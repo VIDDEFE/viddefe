@@ -3,7 +3,10 @@ package com.viddefe.viddefe_api.auth.Infrastructure.controller;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInDTO;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInResDTO;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignUpDTO;
+import com.viddefe.viddefe_api.auth.contracts.AuthMeService;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
+import com.viddefe.viddefe_api.config.Components.JwtUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import com.viddefe.viddefe_api.auth.contracts.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,11 +14,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.net.URI;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -23,6 +25,7 @@ import java.net.URI;
 public class SignController {
 
     private final AuthService signService;
+    private final AuthMeService authMeService;
     private final Environment env;
 
     @PostMapping("/sign-up")
@@ -42,5 +45,12 @@ public class SignController {
         cookie.setMaxAge(60 * 60);
         response.addCookie(cookie);
         return ResponseEntity.accepted().body(ApiResponse.ok(signInResDTO));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<Object>> me (@CookieValue(name = "access_token") String jwt) {
+        Claims claims = new JwtUtil().getClaims(jwt);
+        Map<String, Object> metadata = authMeService.getMetadataUserDto();
+        return ResponseEntity.ok(ApiResponse.noContent().withMeta(metadata));
     }
 }
