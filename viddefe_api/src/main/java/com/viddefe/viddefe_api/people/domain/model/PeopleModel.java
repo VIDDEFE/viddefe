@@ -49,7 +49,7 @@ public class PeopleModel {
     @Column(length = 256)
     private String avatar;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "church_id")
     private ChurchModel church;
 
@@ -60,6 +60,21 @@ public class PeopleModel {
         this.phone = dto.getPhone();
         this.birthdate = dto.getBirthDate();
         return this;
+    }
+
+    public PeopleDTO toDto(){
+        PeopleDTO dto = new PeopleDTO();
+        dto.setId(this.id);
+        dto.setFirstName(this.firstName);
+        dto.setLastName(this.lastName);
+        dto.setCc(this.cc);
+        dto.setPhone(this.phone);
+        dto.setBirthDate(this.birthdate);
+        dto.setTypePersonId(this.typePerson != null ? this.typePerson.getId() : null);
+        dto.setStateId(this.state != null ? this.state.getId() : null);
+        dto.setAvatar(this.avatar);
+        dto.setChurchId(this.church != null ? this.church.getId() : null);
+        return dto;
     }
 
 }

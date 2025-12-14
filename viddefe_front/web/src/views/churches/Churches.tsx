@@ -2,15 +2,21 @@ import { useState } from 'react';
 import type { Church, ChurchSummary } from '../../models';
 import { Button, PageHeader, Table, Modal, Form, Input, DropDown, PastorSelector } from '../../components/shared';
 import MapPicker from '../../components/shared/MapPicker';
-import { useChurches, useCreateChurch, useStates, useCities } from '../../hooks';
+import { useChurchChildren, useStates, useCities, useCreateChildrenChurch } from '../../hooks';
+import { useAppContext } from '../../context/AppContext';
 import type { Cities, States } from '../../services/stateCitiesService';
 
 export default function Churches() {
-  const { data: churches , isLoading } = useChurches()
+  const { user } = useAppContext();
+  const churchId = user?.church?.id;
+  
+  
+  const { data: churches, isLoading } = useChurchChildren(churchId);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState<Partial<Church>>({});
 
-  const createChurch = useCreateChurch();
+  const createChurch = useCreateChildrenChurch(churchId);
   const { data: states } = useStates();
   const [selectedStateId, setSelectedStateId] = useState<number | undefined>(undefined);
   const { data: cities } = useCities(selectedStateId);
@@ -148,7 +154,7 @@ export default function Churches() {
             <label className="font-semibold text-primary-900 mb-2 text-base block">Mapa (click en el mapa para colocar marcador)</label>
             <MapPicker
               position={formData.latitude && formData.longitude ? { lat: formData.latitude, lng: formData.longitude } : null}
-              onChange={(p) => setFormData({ ...formData, latitude: p?.lat ?? 0, longitude: p?.lng ?? 0 })}
+              onChange={(p) => setFormData(prev => ({ ...prev, latitude: p?.lat ?? 0, longitude: p?.lng ?? 0 }))}
               height={300}
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
@@ -156,13 +162,13 @@ export default function Churches() {
                 label="Latitud"
                 placeholder="Latitud"
                 value={formData.latitude ? String(formData.latitude) : ''}
-                onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value || '0') })}
+                onChange={(e) => setFormData(prev => ({ ...prev, latitude: parseFloat(e.target.value || '0') }))}
               />
               <Input
                 label="Longitud"               
                 placeholder="Longitud"
                 value={formData.longitude ? String(formData.longitude) : ''}
-                onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value || '0') })}
+                onChange={(e) => setFormData(prev => ({ ...prev, longitude: parseFloat(e.target.value || '0') }))}
               />
             </div>
           </div>

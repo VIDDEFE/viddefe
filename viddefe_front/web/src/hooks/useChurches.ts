@@ -17,6 +17,26 @@ export function useChurch(id?: string) {
   })
 }
 
+export function useChurchChildren(churchId?: string) {
+  return useQuery({
+    queryKey: ['churches', 'children', churchId],
+    queryFn: () => churchService.getChildren(churchId!),
+    enabled: !!churchId
+  })
+}
+
+export function useCreateChildrenChurch(churchId?: string) {
+  const qc = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: Omit<Church, 'id' | 'createdAt' | 'updatedAt'>) =>
+      churchService.createChildren(churchId!, data),
+    onSuccess() {
+      qc.invalidateQueries({ queryKey: ['churches'] })
+    }
+  })
+}
+
 export function useCreateChurch() {
   const qc = useQueryClient()
 

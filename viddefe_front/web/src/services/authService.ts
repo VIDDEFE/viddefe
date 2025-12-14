@@ -1,4 +1,5 @@
-import { apiService, type ApiResponse } from "./api";
+import type { ChurchSummary } from "../models";
+import { apiService } from "./api";
 
 export interface PersonRequest {
   cc: string;
@@ -56,6 +57,17 @@ export interface SignInData {
   avatar?: string;
 }
 
+export interface RolUserInterface {
+  id: number;
+  name: string;
+}
+
+export interface UserInfoInterface {
+  user: string;
+  person: PersonResponse;
+  church: ChurchSummary;
+  rolUser: RolUserInterface
+}
 
 export const authService = {
   createPerson: async (data: PersonRequest): Promise<PersonResponse> => {
@@ -68,6 +80,12 @@ export const authService = {
 
   signIn: async (data: SignInRequest): Promise<SignInData> => {
     return apiService.post<SignInData>("/auth/sign-in", data);
+  },
+
+  me: async (): Promise<UserInfoInterface> => {
+    const response = await apiService.get<UserInfoInterface>("/auth/me");
+    
+    return response;
   },
 
   logout: () => {

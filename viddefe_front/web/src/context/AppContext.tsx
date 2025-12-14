@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { Church, Person, Service, Group, Event } from '../models';
-import type { SignInData } from '../services/authService';
+import { authService, type UserInfoInterface } from '../services/authService';
 
 interface AppContextType {
   // Auth
   isLoggedIn: boolean;
-  user: SignInData | null;
+  user: UserInfoInterface | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  setUser: (user: SignInData | null) => void;
+  setUser: (user: UserInfoInterface | null) => void;
 
   // Churches
   churches: Church[];
@@ -47,7 +47,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Auth
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUserState] = useState<SignInData | null>(null);
+  const [user, setUserState] = useState<UserInfoInterface | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   // Recuperar datos de localStorage al montar
@@ -62,9 +62,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Será llamado desde authService en signin.tsx
-    // Este método se mantiene para compatibilidad pero no se usa directamente
-    throw new Error('Use authService.signIn() instead');
+    const response = await authService.signIn({ email, password });
+    if (!response && !(response as any).token) return;
+    const authToken = (response as any).token;
+    localStorage.setItem('token', authToken);
+    setToken(authToken);
+    
+    // Obtener info del usuario
+    const userInfo = await authService.me();
+    if (!userInfo) return;
+    localStorage.setItem('user', JSON.stringify(userInfo));
+    setUserState(userInfo);
+    setIsLoggedIn(true);
   };
 
   const logout = () => {
@@ -75,7 +84,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsLoggedIn(false);
   };
 
-  const setUser = (newUser: SignInData | null) => {
+  const setUser = (newUser: UserInfoInterface | null) => {
     setUserState(newUser);
     if (newUser) {
       localStorage.setItem('user', JSON.stringify(newUser));

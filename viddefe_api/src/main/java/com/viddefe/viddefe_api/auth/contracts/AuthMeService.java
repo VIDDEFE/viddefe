@@ -1,9 +1,10 @@
 package com.viddefe.viddefe_api.auth.contracts;
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.MetadataUserDto;
+import com.viddefe.viddefe_api.auth.Infrastructure.dto.UserInfo;
 
 import java.util.Map;
+import java.util.UUID;
 
 public interface AuthMeService {
-    Map<String, Object> getMetadataUserDto();
+    UserInfo getUserInfo(UUID userId);
 }

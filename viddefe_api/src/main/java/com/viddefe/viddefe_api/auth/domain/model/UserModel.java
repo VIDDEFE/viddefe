@@ -24,4 +24,5 @@ public class UserModel {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)
     private RolUserModel rolUser;
+
 }

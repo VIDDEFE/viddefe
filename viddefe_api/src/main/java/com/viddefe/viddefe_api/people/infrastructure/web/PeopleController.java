@@ -30,13 +30,13 @@ public class PeopleController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<PeopleModel>>> getPeople(Pageable pageable) {
-        Page<PeopleModel> people = peopleService.getAllPeople(pageable);
+    public ResponseEntity<ApiResponse<Page<PeopleDTO>>> getPeople(Pageable pageable) {
+        Page<PeopleDTO> people = peopleService.getAllPeople(pageable);
         return ResponseEntity.ok(ApiResponse.ok(people));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<PeopleModel>> updatePeople(@Valid @RequestBody PeopleDTO dto, @PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<PeopleDTO>> updatePeople(@Valid @RequestBody PeopleDTO dto, @PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(peopleService.updatePeople(dto,id)));
     }
 

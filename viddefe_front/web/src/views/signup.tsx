@@ -194,6 +194,17 @@ export default function SignUp() {
     setError('');
   };
 
+  const handleBackToStep2 = () => {
+    setStep(2);
+    setError('');
+  };
+
+  const handleSkipChurch = () => {
+    navigate('/signin', {
+      state: { message: 'Registro exitoso. Por favor inicia sesión.' },
+    });
+  };
+
   return (
     <div className="min-h-screen from-primary-50 to-primary-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl shadow-lg">
@@ -202,9 +213,121 @@ export default function SignUp() {
           <p className="text-primary-600">Crear Nueva Cuenta</p>
         </div>
 
-        <Stepper steps={['Información Personal', 'Credenciales']} currentStep={step - 1} />
+        <Stepper steps={['Información Personal', 'Credenciales', 'Crear Iglesia']} currentStep={step - 1} />
 
-        {step === 1 ? (
+        {step === 3 ? (
+          // Step 3: Create Church
+          <Form onSubmit={handleCreateChurch} className="gap-4">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm mb-2">
+              <p className="font-semibold">¡Usuario creado exitosamente!</p>
+              <p>Como pastor, puedes crear tu iglesia ahora o hacerlo después.</p>
+            </div>
+
+            <Input
+              label="Nombre de la Iglesia"
+              placeholder="Iglesia Vida en Fe"
+              value={churchData.name}
+              onChange={(e) => setChurchData({ ...churchData, name: e.target.value })}
+              disabled={loading}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Email de la Iglesia"
+                type="email"
+                placeholder="contacto@iglesia.com"
+                value={churchData.email}
+                onChange={(e) => setChurchData({ ...churchData, email: e.target.value })}
+                disabled={loading}
+              />
+              <Input
+                label="Teléfono"
+                placeholder="+569 1234 5678"
+                value={churchData.phone}
+                onChange={(e) => setChurchData({ ...churchData, phone: e.target.value })}
+                disabled={loading}
+              />
+            </div>
+
+            <Input
+              label="Fecha de Fundación"
+              type="date"
+              value={churchData.foundedDate}
+              onChange={(e) => setChurchData({ ...churchData, foundedDate: e.target.value })}
+              disabled={loading}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <DropDown
+                label="Departamento"
+                options={(states ?? []).map((s) => ({ value: String(s.id), label: s.name }))}
+                value={churchStateId ? String(churchStateId) : ''}
+                onChangeValue={(val) => {
+                  const id = val ? Number(val) : undefined;
+                  setChurchStateId(id);
+                  setChurchCityId(undefined);
+                }}
+                searchKey="label"
+              />
+
+              <DropDown
+                label="Ciudad"
+                options={(churchCities ?? []).map((c) => ({
+                  value: String(c.cityId),
+                  label: c.name,
+                }))}
+                value={churchCityId ? String(churchCityId) : ''}
+                onChangeValue={(val) => {
+                  const id = val ? Number(val) : undefined;
+                  setChurchCityId(id);
+                }}
+                searchKey="label"
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-primary-900 mb-2 text-base block">
+                Ubicación (click en el mapa para colocar marcador)
+              </label>
+              <MapPicker
+                position={churchData.latitude && churchData.longitude ? { lat: churchData.latitude, lng: churchData.longitude } : null}
+                onChange={(p) => setChurchData(prev => ({ ...prev, latitude: p?.lat ?? 0, longitude: p?.lng ?? 0 }))}
+                height={250}
+              />
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <Input
+                  label="Latitud"
+                  placeholder="Latitud"
+                  value={churchData.latitude ? String(churchData.latitude) : ''}
+                  onChange={(e) => setChurchData(prev => ({ ...prev, latitude: parseFloat(e.target.value || '0') }))}
+                />
+                <Input
+                  label="Longitud"
+                  placeholder="Longitud"
+                  value={churchData.longitude ? String(churchData.longitude) : ''}
+                  onChange={(e) => setChurchData(prev => ({ ...prev, longitude: parseFloat(e.target.value || '0') }))}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="primary"
+                className="flex-1"
+                disabled={loading}
+                type="submit"
+              >
+                {loading ? 'Creando...' : 'Crear Iglesia'}
+              </Button>
+            </div>
+          </Form>
+        ) : step === 1 ? (
           // Step 1: Personal Information
           <Form onSubmit={(e) => {
             e.preventDefault();

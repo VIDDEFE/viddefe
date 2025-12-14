@@ -46,7 +46,7 @@ export default function People() {
   const columns = [
     {
       key: 'id' as const,
-      label: 'imagen',
+      label: 'Imagen',
       render: (_: any, person: Person) => (
         <Avatar 
           src={(person as any).avatar} 
@@ -55,7 +55,6 @@ export default function People() {
         />
       )
     },
-    {key: 'cc' as const, label: 'CC' },
     { 
       key: 'firstName' as const, 
       label: 'Primer Nombre',
@@ -65,8 +64,8 @@ export default function People() {
     { key: 'phone' as const, label: 'Teléfono' },
     { key: 'role' as const, label: 'Rol' },
     { key: 'status' as const, label: 'Estado' },
-    {key: 'birthdate' as const, label: 'Fecha de Nacimiento', render: (value: string) => new Date(value).toLocaleDateString() },
-    {key: 'state' as const, label: 'Departamento de Nacimiento', render: (_value: string | number | States, item: Person) => item.state?.name },
+    { key: 'birthDate' as const, label: 'Fecha de Nacimiento', render: (value: string | Date) => value ? new Date(value).toLocaleDateString() : '' },
+    { key: 'state' as const, label: 'Departamento de Nacimiento', render: (_value: string | number | States, item: Person) => item.state?.name },
   ];
 
   return (

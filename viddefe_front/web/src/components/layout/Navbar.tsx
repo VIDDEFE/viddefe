@@ -16,11 +16,14 @@ export default function NavBar() {
 
   if (!user) return null;
 
+  const person = user.person;
+  const fullName = `${person.firstName} ${person.lastName}`;
+
   return (
     <nav className="bg-white border-b border-primary-100 shadow-sm px-6 py-4 flex items-center justify-between h-20">
       {/* Left side - Search or title */}
       <div className="hidden md:flex items-center">
-        <h2 className="text-lg font-semibold text-primary-900">Bienvenido, {user.firstName} {user.lastName}</h2>
+        <h2 className="text-lg font-semibold text-primary-900">Bienvenido, {fullName}</h2>
       </div>
 
       {/* Right side - User Profile */}
@@ -31,13 +34,13 @@ export default function NavBar() {
             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors"
           >
             <Avatar 
-              src={user.avatar} 
-              name={`${user.firstName} ${user.lastName}`} 
+              src={person.avatar} 
+              name={fullName} 
               size="md"
             />
             <div className="hidden sm:flex flex-col items-start">
-              <span className="text-sm font-medium text-primary-900">{user.firstName} {user.lastName}</span>
-              <span className="text-xs text-primary-600">{user.email}</span>
+              <span className="text-sm font-medium text-primary-900">{fullName}</span>
+              <span className="text-xs text-primary-600">{user.user}</span>
             </div>
             <FiChevronDown size={16} className="text-primary-700" />
           </button>
@@ -46,8 +49,8 @@ export default function NavBar() {
           {isProfileOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white border border-primary-100 rounded-lg shadow-lg z-50">
               <div className="px-4 py-3 border-b border-primary-100">
-                <p className="text-sm font-medium text-primary-900">{user.firstName} {user.lastName}</p>
-                <p className="text-xs text-primary-600">{user.email}</p>
+                <p className="text-sm font-medium text-primary-900">{fullName}</p>
+                <p className="text-xs text-primary-600">{user.user}</p>
               </div>
 
               <button

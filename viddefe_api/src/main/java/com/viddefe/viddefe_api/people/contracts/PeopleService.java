@@ -9,9 +9,9 @@ import java.util.UUID;
 
 public interface PeopleService {
     PeopleModel createPeople(PeopleDTO dto);
-    Page<PeopleModel> getAllPeople(Pageable pageable);
-    PeopleModel updatePeople(PeopleDTO dto, UUID id);
+    Page<PeopleDTO> getAllPeople(Pageable pageable);
+    PeopleDTO updatePeople(PeopleDTO dto, UUID id);
     void deletePeople(UUID id);
-    PeopleModel getPeopleById(UUID id);
+    PeopleDTO getPeopleById(UUID id);
 }
 

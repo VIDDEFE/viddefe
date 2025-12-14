@@ -1,6 +1,5 @@
 package com.viddefe.viddefe_api.auth.application;
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.MetadataUserDto;
 import com.viddefe.viddefe_api.auth.contracts.AuthService;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInDTO;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInResDTO;
@@ -10,7 +9,7 @@ import com.viddefe.viddefe_api.auth.domain.model.UserModel;
 import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;
 import com.viddefe.viddefe_api.config.Components.JwtUtil;
-import com.viddefe.viddefe_api.people.contracts.PeopleService;
+import com.viddefe.viddefe_api.people.contracts.PeopleLookup;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,7 +22,7 @@ public class AuthServiceImpl implements AuthService {
     private final RolesUserService rolesUserService;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-    private final PeopleService peopleService;
+    private final PeopleLookup peopleLookup;
     @Override
     public String signUp(SignUpDTO dto) {
         userRepository.findByEmail(dto.getEmail())
@@ -36,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
         // Crear y guardar el nuevo usuario
         UserModel userModel = new UserModel();
         RolUserModel rolUserModel = rolesUserService.foundRolUserById(roleId);
-        PeopleModel peopleModel = peopleService.getPeopleById(dto.getPeopleId());
+        PeopleModel peopleModel = peopleLookup.getPeopleById(dto.getPeopleId());
         userModel.setPeople(peopleModel);
         userModel.setPassword(passwordEncoder.encode(dto.getPassword()));
         userModel.setEmail(dto.getEmail());
@@ -58,7 +57,7 @@ public class AuthServiceImpl implements AuthService {
                 userBd.getRolUser(),
                 userBd.getPeople().getFirstName(),
                 userBd.getPeople().getLastName(),
-                userBd.getPeople().getId()
+                userBd.getId()
         );
     }
 
@@ -69,9 +68,8 @@ public class AuthServiceImpl implements AuthService {
                 dto.getRolUserModel().getName(),
                 dto.getFirstName(),
                 dto.getLastName(),
-                dto.getPersonId()
+                dto.getUserId()
         );
     }
 
 }
-

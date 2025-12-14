@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button, Form, Input, Card } from '../components/shared';
 import { useAppContext } from '../context/AppContext';
-import { authService, type SignInData } from '../services/authService';
+import { authService } from '../services/authService';
 import { validateEmail } from '../utils';
 
 export default function SignIn() {
@@ -40,23 +40,14 @@ export default function SignIn() {
 
     setLoading(true);
     try {
-      const response = await authService.signIn({
+      await authService.signIn({
         email,
         password,
       });
+      const userInfo = await authService.me();
+      setUser(userInfo);
+      navigate('/');
 
-      // Extraer datos de la respuesta
-      const userData : SignInData = {
-        email: response.email ?? '',
-        firstName: response.firstName ?? '',
-        lastName: response.lastName ?? '',
-        personId: response.personId ?? '',
-        rolUserModel: response.rolUserModel ?? { id: 0, name: '' },
-        avatar: response.avatar ?? '',
-      };
-
-      setUser(userData);
-      navigate('/dashboard');
     } catch (err: any) {
       setError(err?.message || 'Error al iniciar sesión. Intenta de nuevo.');
     } finally {

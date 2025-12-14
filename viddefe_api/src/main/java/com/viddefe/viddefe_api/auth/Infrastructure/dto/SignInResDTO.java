@@ -15,5 +15,5 @@ public class SignInResDTO {
     private RolUserModel rolUserModel;
     private String firstName;
     private String lastName;
-    private UUID personId;
+    private UUID userId;
 }

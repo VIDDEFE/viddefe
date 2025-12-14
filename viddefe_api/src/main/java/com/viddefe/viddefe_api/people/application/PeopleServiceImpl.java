@@ -38,16 +38,16 @@ public class PeopleServiceImpl implements PeopleService {
     }
 
     @Override
-    public Page<PeopleModel> getAllPeople(Pageable pageable) {
-        return peopleRepository.findAll(pageable);
+    public Page<PeopleDTO> getAllPeople(Pageable pageable) {
+        return peopleRepository.findAll(pageable).map(PeopleModel::toDto);
     }
 
     @Override
-    public PeopleModel updatePeople(PeopleDTO dto, UUID id) {
+    public PeopleDTO updatePeople(PeopleDTO dto, UUID id) {
         PeopleModel peopleModel = peopleRepository.findById(id)
                 .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("People not found"));
         peopleModel.fromDto(dto);
-        return peopleRepository.save(peopleModel);
+        return peopleRepository.save(peopleModel).toDto();
     }
 
     @Override
@@ -56,9 +56,9 @@ public class PeopleServiceImpl implements PeopleService {
     }
 
     @Override
-    public PeopleModel getPeopleById(UUID id) {
+    public PeopleDTO getPeopleById(UUID id) {
         return peopleRepository.findById(id).orElseThrow(
-                () -> new CustomExceptions.ResourceNotFoundException("People not found"));
+                () -> new CustomExceptions.ResourceNotFoundException("People not found")).toDto();
     }
 }
 

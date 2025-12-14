@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.auth.Infrastructure.controller;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInDTO;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInResDTO;
 import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignUpDTO;
+import com.viddefe.viddefe_api.auth.Infrastructure.dto.UserInfo;
 import com.viddefe.viddefe_api.auth.contracts.AuthMeService;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.config.Components.JwtUtil;
@@ -13,11 +14,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/auth")
@@ -27,6 +30,7 @@ public class SignController {
     private final AuthService signService;
     private final AuthMeService authMeService;
     private final Environment env;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/sign-up")
     public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody SignUpDTO signUpDTO) {
@@ -35,7 +39,7 @@ public class SignController {
     }
 
     @PostMapping("/sign-in")
-    public ResponseEntity<ApiResponse<SignInResDTO>> signIn (@Valid @RequestBody SignInDTO signinDTO, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<Void>> signIn (@Valid @RequestBody SignInDTO signinDTO, HttpServletResponse response) {
         SignInResDTO signInResDTO = signService.signIn(signinDTO);
         String jwt = signService.generateJwt(signInResDTO);
         Cookie cookie = new Cookie("access_token",jwt);
@@ -44,13 +48,13 @@ public class SignController {
         cookie.setPath("/");
         cookie.setMaxAge(60 * 60);
         response.addCookie(cookie);
-        return ResponseEntity.accepted().body(ApiResponse.ok(signInResDTO));
+        return new ResponseEntity<>(ApiResponse.ok(null), HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<Object>> me (@CookieValue(name = "access_token") String jwt) {
-        Claims claims = new JwtUtil().getClaims(jwt);
-        Map<String, Object> metadata = authMeService.getMetadataUserDto();
-        return ResponseEntity.ok(ApiResponse.noContent().withMeta(metadata));
+    public ResponseEntity<ApiResponse<UserInfo>> me (@CookieValue(name = "access_token") String jwt) {
+        UUID userId = jwtUtil.getUserId(jwt);
+        UserInfo userInfo = authMeService.getUserInfo(userId);
+        return ResponseEntity.ok(ApiResponse.ok(userInfo));
     }
 }

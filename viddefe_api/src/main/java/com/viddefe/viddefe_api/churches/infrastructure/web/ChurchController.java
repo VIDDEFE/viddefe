@@ -23,19 +23,29 @@ import java.util.UUID;
 public class ChurchController {
     private final ChurchService churchService;
     private final JwtUtil jwtUtil;
+
     @PostMapping
     public ResponseEntity<ApiResponse<ChurchResDto>> createChurch(@Valid @RequestBody ChurchDTO dto,
-                                                                  @CookieValue("access_token") String jwt){
-        Claims claims = jwtUtil.getClaims(jwt);
-        String strCreatorPastorId = claims.getSubject();
-        UUID creatorPastorId = UUID.fromString(strCreatorPastorId);
+                                                                  @CookieValue("access_token") String jwt){;
+        UUID creatorPastorId = jwtUtil.getUserId(jwt);
         ChurchResDto response = churchService.addChurch(dto, creatorPastorId);
         return new ResponseEntity<>(ApiResponse.created(response), HttpStatus.CREATED);
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<ChurchResDto>>> getChurches(Pageable pageable){
-        Page<ChurchResDto> churches = churchService.getChurches(pageable);
-        return ResponseEntity.ok(ApiResponse.ok(churches));
+    @GetMapping("/{churchId}/childrens")
+    public ResponseEntity<ApiResponse<Page<ChurchResDto>>> getChildChurches(
+            @PathVariable UUID churchId,
+            Pageable pageable
+    ) {
+        Page<ChurchResDto> response = churchService.getChildrenChurches(pageable, churchId);
+        return new ResponseEntity<>(ApiResponse.ok(response), HttpStatus.OK);
     }
+    @PostMapping("/{churchId}/childrens")
+    public ResponseEntity<ApiResponse<ChurchResDto>> addChildChurch(@PathVariable UUID churchId,
+                                                                    @Valid @RequestBody ChurchDTO dto,
+                                                                    @CookieValue("access_token") String jwt){
+        UUID creatorPastorId = jwtUtil.getUserId(jwt);
+        ChurchResDto response = churchService.addChildChurch(churchId, dto, creatorPastorId);
+        return new ResponseEntity<>(ApiResponse.created(response), HttpStatus.CREATED);
+        }
 }

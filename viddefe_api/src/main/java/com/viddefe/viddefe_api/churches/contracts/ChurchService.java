@@ -10,7 +10,8 @@ import java.util.UUID;
 
 public interface ChurchService {
     ChurchResDto addChurch(ChurchDTO dto, UUID creatorPastorId);
-    Page<ChurchResDto> getChurches(Pageable pageable);
+    ChurchResDto addChildChurch(UUID parentChurchId, ChurchDTO dto, UUID creatorPastorId);
+    Page<ChurchResDto> getChildrenChurches(Pageable pageable, UUID churchId);
     ChurchModel getChurchById(UUID id);
 }
 

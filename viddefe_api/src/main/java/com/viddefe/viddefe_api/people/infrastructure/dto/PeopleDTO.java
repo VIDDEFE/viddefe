@@ -10,7 +10,7 @@ import java.util.UUID;
 @Getter
 @Setter
 public class PeopleDTO {
-
+    private UUID id;
     @NotBlank(message = "La cédula (cc) es obligatoria")
     @Size(max = 20, message = "La cédula no debe superar los 20 caracteres")
     private String cc;

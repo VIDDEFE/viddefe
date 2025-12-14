@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.people.contracts;
 
+import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 
 import java.util.UUID;
@@ -10,5 +11,6 @@ import java.util.UUID;
  */
 public interface PeopleLookup {
     PeopleModel getPeopleById(UUID id);
+    Void enrollPersonToChurch(PeopleModel personId, ChurchModel churchModel);
 }
 

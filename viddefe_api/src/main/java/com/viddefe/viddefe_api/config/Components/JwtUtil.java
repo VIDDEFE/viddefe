@@ -58,6 +58,11 @@ public class JwtUtil {
                 .getPayload();
     }
 
+    public UUID getUserId(String token) {
+        String userIdStr = getClaims(token).get("userId", String.class);
+        return UUID.fromString(userIdStr);
+    }
+
     public boolean isTokenValid(String token) {
         try {
             getClaims(token);
