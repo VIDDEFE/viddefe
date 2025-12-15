@@ -48,4 +48,12 @@ public class PeopleController {
         peopleService.deletePeople(id);
         return new ResponseEntity<>(ApiResponse.<Void>noContent(), HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<PeopleDTO>> getPersonById(
+            @PathVariable UUID id
+    ){
+        PeopleDTO people = peopleService.getPeopleById(id);
+        return ResponseEntity.ok(ApiResponse.ok(people));
+    }
 }

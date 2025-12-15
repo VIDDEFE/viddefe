@@ -195,6 +195,7 @@ export default function Churches() {
         columns={columns}
         actions={tableActions}
         loading={isLoading}
+        pagination={{ mode: 'auto', pageSize: 10 }}
       />
 
       {/* Modal de Crear/Editar */}
