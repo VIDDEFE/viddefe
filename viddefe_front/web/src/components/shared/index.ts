@@ -8,3 +8,4 @@ export { default as DropDown } from './DropDown';
 export { default as Stepper } from './Stepper';
 export { default as Avatar } from './Avatar';
 export { default as PastorSelector } from './PastorSelector';
+export { PersonForm, initialPersonFormData, type PersonFormData } from './PersonForm';

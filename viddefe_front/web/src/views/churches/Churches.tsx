@@ -5,12 +5,14 @@ import MapPicker from '../../components/shared/MapPicker';
 import { useChurchChildren, useStates, useCities, useCreateChildrenChurch, useUpdateChurch, useDeleteChurch, useChurch } from '../../hooks';
 import { useAppContext } from '../../context/AppContext';
 import type { Cities, States } from '../../services/stateCitiesService';
+import { formatDate } from '../../utils';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
 
 export default function Churches() {
   const { user } = useAppContext();
-  const churchId = user?.church?.id;
+  const churchId = user?.church.id;
+  console.log('user: ', user);
   
   const { data: churches, isLoading } = useChurchChildren(churchId);
   
@@ -39,8 +41,7 @@ export default function Churches() {
         name: churchDetails.name,
         email: churchDetails.email,
         phone: churchDetails.phone,
-        foundedYear: churchDetails.foundedYear,
-        foundationDate: churchDetails.foundedDate,
+        foundationDate: churchDetails.foundationDate,
         memberCount: churchDetails.memberCount,
         latitude: churchDetails.latitude,
         longitude: churchDetails.longitude,
@@ -103,7 +104,6 @@ export default function Churches() {
         email: formData.email || '',
         pastor: formData.pastor || '',
         pastorId: selectedPastorId || undefined,
-        foundedYear: formData.foundedYear || new Date().getFullYear(),
         foundationDate: formData.foundationDate || undefined,
         memberCount: formData.memberCount || 0,
         longitude: formData.longitude || 0,
@@ -129,7 +129,6 @@ export default function Churches() {
           email: formData.email,
           pastor: formData.pastor,
           pastorId: selectedPastorId || undefined,
-          foundedYear: formData.foundedYear,
           foundationDate: formData.foundationDate,
           longitude: formData.longitude,
           latitude: formData.latitude,
@@ -242,7 +241,7 @@ export default function Churches() {
           <Input
             label="Fecha de Fundación"
             type="date"
-            value={formData.foundationDate || ''}
+            value={formData?.foundationDate ? new Date(formData.foundationDate).toISOString().split('T')[0] : ''}
             onChange={(e) => setFormData(prev => ({ ...prev, foundationDate: e.target.value }))}          
           />
           <Input
@@ -375,7 +374,7 @@ export default function Churches() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-neutral-500">Fecha de Fundación</label>
-                      <p className="text-neutral-800">{churchDetails.foundedDate || churchDetails.foundedYear || '-'}</p>
+                      <p className="text-neutral-800">{formatDate(churchDetails?.foundationDate) || churchDetails.foundedYear || '-'}</p>
                     </div>
                     <div>
                       <label className="text-sm font-medium text-neutral-500">Miembros</label>

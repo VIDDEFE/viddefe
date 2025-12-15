@@ -29,7 +29,6 @@ export interface Church extends BaseEntity {
   email: string;
   pastor: string;
   pastorId?: string;
-  foundedYear: number;
   foundationDate?: string;
   memberCount: number;
   latitude: number;
@@ -45,7 +44,7 @@ export interface ChurchDetail {
   phone?: string;
   email?: string;
   foundedYear?: number;
-  foundedDate?: string;
+  foundationDate?: string;
   memberCount?: number;
   city: Cities;
   states: States;

@@ -10,8 +10,10 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface ChurchService {
-    ChurchResDto addChurch(ChurchDTO dto, UUID creatorPastorId);
+    ChurchResDto addChurch(ChurchDTO dto);
     ChurchResDto addChildChurch(UUID parentChurchId, ChurchDTO dto, UUID creatorPastorId);
+    ChurchResDto updateChurch(UUID id, ChurchDTO dto, UUID updaterPastorId);
+    void deleteChurch(UUID id);
     Page<ChurchResDto> getChildrenChurches(Pageable pageable, UUID churchId);
     ChurchDetailedResDto getChurchById(UUID id);
 }

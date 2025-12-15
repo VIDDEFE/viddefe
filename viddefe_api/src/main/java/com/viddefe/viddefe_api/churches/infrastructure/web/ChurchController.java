@@ -26,10 +26,8 @@ public class ChurchController {
     private final JwtUtil jwtUtil;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ChurchResDto>> createChurch(@Valid @RequestBody ChurchDTO dto,
-                                                                  @CookieValue("access_token") String jwt){;
-        UUID creatorPastorId = jwtUtil.getUserId(jwt);
-        ChurchResDto response = churchService.addChurch(dto, creatorPastorId);
+    public ResponseEntity<ApiResponse<ChurchResDto>> createChurch(@Valid @RequestBody ChurchDTO dto){;
+        ChurchResDto response = churchService.addChurch(dto);
         return new ResponseEntity<>(ApiResponse.created(response), HttpStatus.CREATED);
     }
 
@@ -37,6 +35,21 @@ public class ChurchController {
     public ResponseEntity<ApiResponse<ChurchDetailedResDto>> getChurchById(@PathVariable UUID id){
         ChurchDetailedResDto church = churchService.getChurchById(id);
         return new ResponseEntity<>(ApiResponse.ok(church), HttpStatus.OK);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<ChurchResDto>> updateChurch(@PathVariable UUID id,
+                                                                  @Valid @RequestBody ChurchDTO dto,
+                                                                  @CookieValue("access_token") String jwt) {
+        UUID updaterPastorId = jwtUtil.getUserId(jwt);
+        ChurchResDto response = churchService.updateChurch(id, dto, updaterPastorId);
+        return new ResponseEntity<>(ApiResponse.ok(response), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteChurch(@PathVariable UUID id) {
+        churchService.deleteChurch(id);
+        return new ResponseEntity<>(ApiResponse.noContent(), HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/{churchId}/childrens")

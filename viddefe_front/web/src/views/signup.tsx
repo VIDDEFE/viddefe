@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Button, Form, Input, Card, Stepper, DropDown, PastorSelector } from '../components/shared';
+import { Button, Form, Input, Card, Stepper, DropDown, PersonForm, initialPersonFormData, type PersonFormData } from '../components/shared';
 import MapPicker from '../components/shared/MapPicker';
 import { authService, type PersonRequest } from '../services/authService';
 import { validateEmail } from '../utils';
 import { useStates, useCities, useCreateChurch } from '../hooks';
 import { FiArrowLeft } from 'react-icons/fi';
+import type { Church } from '../models';
 
 type Step = 1 | 2 | 3;
 
@@ -17,21 +18,9 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
 
   // Step 1 - Person data
-  const [personData, setPersonData] = useState({
-    cc: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    avatar: '',
-    birthDate: '',
-    typePersonId: 0,
-    stateId: 0,
-    churchId: '',
-  });
+  const [personData, setPersonData] = useState<PersonFormData>(initialPersonFormData);
 
-  const [selectedStateId, setSelectedStateId] = useState<number | undefined>(undefined);
   const { data: states } = useStates();
-  const { data: cities } = useCities(selectedStateId);
   const createChurch = useCreateChurch();
 
   // Step 2 - User credentials
@@ -43,12 +32,12 @@ export default function SignUp() {
   });
 
   // Step 3 - Church data
-  const [churchData, setChurchData] = useState({
+  const [churchData, setChurchData] = useState<Partial<Church>>({
     name: '',
     phone: '',
     email: '',
     pastorId: '',
-    foundedDate: '',
+    foundationDate: '',
     latitude: 0,
     longitude: 0,
     cityId: 0,
@@ -56,13 +45,6 @@ export default function SignUp() {
   const [churchStateId, setChurchStateId] = useState<number | undefined>(undefined);
   const [churchCityId, setChurchCityId] = useState<number | undefined>(undefined);
   const { data: churchCities } = useCities(churchStateId);
-
-  const handlePersonChange = (field: keyof typeof personData, value: any) => {
-    setPersonData((prev) => ({
-      ...prev,
-      [field]: field === 'stateId' || field === 'typePersonId' ? Number(value) : value,
-    }));
-  };
 
   const handleUserChange = (field: keyof typeof userData, value: string | number) => {
     setUserData((prev) => ({ ...prev, [field]: field === 'roleId' ? Number(value) : value }));
@@ -74,7 +56,11 @@ export default function SignUp() {
       return false;
     }
     if (!personData.stateId) {
-      setError('Por favor selecciona un estado');
+      setError('Por favor selecciona un departamento');
+      return false;
+    }
+    if (!personData.typePersonId) {
+      setError('Por favor selecciona el tipo de persona');
       return false;
     }
     return true;
@@ -167,15 +153,14 @@ export default function SignUp() {
     try {
       await createChurch.mutateAsync({
         name: churchData.name,
-        phone: churchData.phone,
-        email: churchData.email,
+        phone: churchData.phone || '',
+        email: churchData.email || '',
         pastor: '',
         pastorId: peopleId,
-        foundedDate: churchData.foundedDate,
-        foundedYear: churchData.foundedDate ? new Date(churchData.foundedDate).getFullYear() : new Date().getFullYear(),
+        foundationDate: churchData.foundationDate,
         cityId: churchCityId || 0,
-        latitude: churchData.latitude,
-        longitude: churchData.longitude,
+        latitude: churchData.latitude || 0,
+        longitude: churchData.longitude || 0,
         memberCount: 0,
       });
 
@@ -192,17 +177,6 @@ export default function SignUp() {
   const handleBackToStep1 = () => {
     setStep(1);
     setError('');
-  };
-
-  const handleBackToStep2 = () => {
-    setStep(2);
-    setError('');
-  };
-
-  const handleSkipChurch = () => {
-    navigate('/signin', {
-      state: { message: 'Registro exitoso. Por favor inicia sesión.' },
-    });
   };
 
   return (
@@ -258,8 +232,8 @@ export default function SignUp() {
             <Input
               label="Fecha de Fundación"
               type="date"
-              value={churchData.foundedDate}
-              onChange={(e) => setChurchData({ ...churchData, foundedDate: e.target.value })}
+              value={churchData.foundationDate}
+              onChange={(e) => setChurchData({ ...churchData, foundationDate: e.target.value })}
               disabled={loading}
             />
 
@@ -339,76 +313,12 @@ export default function SignUp() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Número de Cédula"
-                placeholder="12345678"
-                value={personData.cc}
-                onChange={(e) => handlePersonChange('cc', e.target.value)}
-                disabled={loading}
-              />
-              <Input
-                label="Nombres"
-                placeholder="Juan"
-                value={personData.firstName}
-                onChange={(e) => handlePersonChange('firstName', e.target.value)}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Apellidos"
-                placeholder="Pérez García"
-                value={personData.lastName}
-                onChange={(e) => handlePersonChange('lastName', e.target.value)}
-                disabled={loading}
-              />
-              <Input
-                label="Teléfono"
-                placeholder="+569 1234 5678"
-                value={personData.phone}
-                onChange={(e) => handlePersonChange('phone', e.target.value)}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Fecha de Nacimiento"
-                type="date"
-                value={personData.birthDate}
-                onChange={(e) => handlePersonChange('birthDate', e.target.value)}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DropDown
-                label="Tipo de Persona"
-                options={[
-                  { value: '1', label: 'Oveja' },
-                  { value: '2', label: 'Voluntario' },
-                  { value: '3', label: 'Pastor' },
-                ]}
-                value={String(personData.typePersonId)}
-                onChangeValue={(val) => handlePersonChange('typePersonId', val)}
-                searchKey="label"
-
-              />
-
-              <DropDown
-                label="Departamento/Estado"
-                options={(states ?? []).map((s) => ({ value: String(s.id), label: s.name }))}
-                value={personData.stateId ? String(personData.stateId) : ''}
-                onChangeValue={(val) => {
-                  const id = val ? Number(val) : 0;
-                  setSelectedStateId(id);
-                  handlePersonChange('stateId', id);
-                }}
-                searchKey="label"
-              />
-            </div>
+            <PersonForm
+              value={personData}
+              onChange={setPersonData}
+              disabled={loading}
+              showTypeSelector={true}
+            />
 
             <Button
               variant="primary"

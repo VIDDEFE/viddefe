@@ -1,6 +1,7 @@
 package com.viddefe.viddefe_api.common.exception;
 
 import com.viddefe.viddefe_api.common.response.ApiResponse;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,13 +28,20 @@ public class GlobalExceptionHandler {
     // ---------------------------------------------
     // 404 Not Found
     // ---------------------------------------------
-    @ExceptionHandler(CustomExceptions.ResourceNotFoundException.class)
+    @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleNotFound(
-            CustomExceptions.ResourceNotFoundException ex,
+            EntityNotFoundException ex,
             HttpServletRequest req
     ) {
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), "NOT_FOUND", req, null);
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage(),
+                "NOT_FOUND",
+                req,
+                null
+        );
     }
+
 
     // ---------------------------------------------
     // 401 Unauthorized

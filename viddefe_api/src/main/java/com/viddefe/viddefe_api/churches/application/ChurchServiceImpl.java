@@ -10,12 +10,14 @@ import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.contracts.PeopleLookup;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -32,15 +34,15 @@ public class ChurchServiceImpl implements ChurchService {
      * Crear una iglesia raíz.
      */
     @Override
-    public ChurchResDto addChurch(ChurchDTO dto, UUID creatorPastorId) {
-        UUID pastorId = resolvePastorId(dto, creatorPastorId);
-
-        ChurchModel church = createAndPersistChurch(
-                dto,
-                pastorId,
-                null
+    public ChurchResDto addChurch(ChurchDTO dto) {
+        UUID pastorId = dto.getPastorId();
+        ChurchModel church = new ChurchModel().fromDto(dto);
+        church = createAndPersistChurch(
+                church,
+                null,
+                dto.getCityId()
         );
-
+        churchPastorService.addPastorToChurch(pastorId, church);
         return church.toDto();
     }
 
@@ -48,18 +50,45 @@ public class ChurchServiceImpl implements ChurchService {
      * Crear una iglesia hija.
      */
     @Override
-    public ChurchResDto addChildChurch(UUID parentChurchId, ChurchDTO dto, UUID creatorPastorId) {
+    @Transactional
+    public ChurchResDto addChildChurch(
+            UUID parentChurchId,
+            ChurchDTO dto,
+            UUID creatorPastorId
+    ) {
         UUID pastorId = resolvePastorId(dto, creatorPastorId);
 
         ChurchModel parentChurch = churchRepository.getReferenceById(parentChurchId);
+        ChurchModel church = new ChurchModel().fromDto(dto);
+        church = createAndPersistChurch(church, parentChurch, dto.getCityId());
 
-        ChurchModel church = createAndPersistChurch(
-                dto,
-                pastorId,
-                parentChurch
-        );
+        churchPastorService.addPastorToChurch(pastorId, church);
 
         return church.toDto();
+    }
+
+
+    @Override
+    @Transactional
+    public ChurchResDto updateChurch(UUID id, ChurchDTO dto, UUID updaterPastorId) {
+        ChurchModel church = churchRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Iglesia no encontrada: " + id));
+
+        dto.setId(id);
+        UUID pastorId = resolvePastorId(dto, updaterPastorId);
+        church.fromDto(dto);
+        church = createAndPersistChurch(church, church.getParentChurch(), dto.getCityId());
+        churchPastorService.changeChurchPastor(pastorId,church);
+        return church.toDto();
+    }
+
+    @Transactional
+    @Override
+    public void deleteChurch(UUID id) {
+        ChurchModel church = churchRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Church not found"));
+        churchPastorService.removePastorFromChurch(church);
+        churchRepository.delete(church);
     }
 
     @Override
@@ -88,7 +117,7 @@ public class ChurchServiceImpl implements ChurchService {
     @Override
     public ChurchDetailedResDto getChurchById(UUID id) {
         ChurchModel church = churchRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Iglesia no encontrada: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Iglesia no encontrada: " + id));
         PeopleModel pastor = churchPastorService.getPastorFromChurch(church);
         return new ChurchDetailedResDto(
                 church.getId(),
@@ -121,23 +150,19 @@ public class ChurchServiceImpl implements ChurchService {
      * Construye, persiste y asigna el pastor a una iglesia.
      */
     private ChurchModel createAndPersistChurch(
-            ChurchDTO dto,
-            UUID pastorId,
-            ChurchModel parentChurch
+            ChurchModel childChurch,
+            ChurchModel parentChurch,
+            Long cityId
     ) {
-        ChurchModel church = ChurchModel.fromDto(dto);
 
         if (parentChurch != null) {
-            church.setParentChurch(parentChurch);
+            parentChurch.addChildChurch(childChurch);
         }
 
-        CitiesModel city = statesCitiesService.foundCitiesById(dto.getCityId());
-        church.setCity(city);
+        CitiesModel city = statesCitiesService.foundCitiesById(cityId);
+        childChurch.setCity(city);
 
-        church = churchRepository.save(church);
-
-        churchPastorService.addPastorToChurch(pastorId, church);
-
-        return church;
+        childChurch = churchRepository.save(childChurch);
+        return childChurch;
     }
 }

@@ -11,6 +11,6 @@ import java.util.UUID;
  */
 public interface PeopleLookup {
     PeopleModel getPeopleById(UUID id);
-    Void enrollPersonToChurch(PeopleModel personId, ChurchModel churchModel);
+    void enrollPersonToChurch(PeopleModel personId, ChurchModel churchModel);
 }
 

@@ -1,45 +1,42 @@
 import { useState } from 'react';
 import type { Person } from '../../models';
-import { Button, PageHeader, Table, Modal, Form, Input, Select, Avatar } from '../../components/shared';
+import { Button, PageHeader, Table, Modal, Avatar, PersonForm, initialPersonFormData, type PersonFormData } from '../../components/shared';
 import { usePeople, useCreatePerson } from '../../hooks';
 import type { States } from '../../services/stateCitiesService';
-
-const roleOptions = [
-  { value: 'pastor', label: 'Pastor' },
-  { value: 'deacon', label: 'Diácono' },
-  { value: 'member', label: 'Miembro' },
-  { value: 'visitor', label: 'Visitante' },
-  { value: 'volunteer', label: 'Voluntario' },
-];
+import { authService, type PersonRequest } from '../../services/authService';
 
 export default function People() {
-  const { data: people = [] } = usePeople()
+  const { data: people = [], refetch } = usePeople()
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState<Partial<Person>>({});
+  const [personData, setPersonData] = useState<PersonFormData>(initialPersonFormData);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const createPerson = useCreatePerson();
 
-  const handleAddPerson = () => {
-    if (formData.firstName && formData.lastName) {
-      createPerson.mutate(
-        {
-          firstName: formData.firstName || '',
-          lastName: formData.lastName || '',
-          email: formData.email || '',
-          phone: formData.phone || '',
-          birthDate: formData.birthDate || new Date(),
-          role: (formData.role as any) || 'member',
-          churchId: formData.churchId || '1',
-          state: formData.state || { id: 0, name: '' },
-          status: 'active',
-        },
-        {
-          onSuccess() {
-            setFormData({});
-            setIsModalOpen(false);
-          },
-        }
-      )
+  const handleAddPerson = async () => {
+    setError('');
+
+    if (!personData.cc || !personData.firstName || !personData.lastName || !personData.phone || !personData.birthDate) {
+      setError('Por favor completa todos los campos requeridos');
+      return;
+    }
+
+    if (!personData.stateId) {
+      setError('Por favor selecciona un departamento');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.createPerson(personData as PersonRequest);
+      setPersonData(initialPersonFormData);
+      setIsModalOpen(false);
+      refetch();
+    } catch (err: any) {
+      setError(err?.message || 'Error al crear la persona. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -68,6 +65,12 @@ export default function People() {
     { key: 'state' as const, label: 'Departamento de Nacimiento', render: (_value: string | number | States, item: Person) => item.state?.name },
   ];
 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setPersonData(initialPersonFormData);
+    setError('');
+  };
+
   return (
     <div className="page-container">
       <PageHeader
@@ -84,57 +87,29 @@ export default function People() {
       <Modal
         isOpen={isModalOpen}
         title="Agregar Nueva Persona"
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         actions={
           <div className="flex gap-2">
-            <Button variant="primary" onClick={handleAddPerson} disabled={createPerson.isPending}>
-              Guardar
+            <Button variant="primary" onClick={handleAddPerson} disabled={loading}>
+              {loading ? 'Guardando...' : 'Guardar'}
             </Button>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+            <Button variant="secondary" onClick={handleCloseModal}>
               Cancelar
             </Button>
           </div>
         }
       >
-        <Form>
-          <Input
-            label="Nombre"
-            placeholder="Nombre"
-            value={formData.firstName || ''}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-          />
-          <Input
-            label="Apellido"
-            placeholder="Apellido"
-            value={formData.lastName || ''}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-          />
-          <Input
-            label="Email"
-            type="email"
-            placeholder="correo@example.com"
-            value={formData.email || ''}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-          <Input
-            label="Teléfono"
-            placeholder="Teléfono"
-            value={formData.phone || ''}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          />
-          <Input
-            label="Fecha de Nacimiento"
-            type="date"
-            value={formData.birthDate instanceof Date ? formData.birthDate.toISOString().split('T')[0] : ''}
-            onChange={(e) => setFormData({ ...formData, birthDate: new Date(e.target.value) })}
-          />
-          <Select
-            label="Rol"
-            options={roleOptions}
-            value={formData.role || 'member'}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-          />
-        </Form>
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm mb-4">
+            {error}
+          </div>
+        )}
+        <PersonForm
+          value={personData}
+          onChange={setPersonData}
+          disabled={loading}
+          showTypeSelector={true}
+        />
       </Modal>
     </div>
   );

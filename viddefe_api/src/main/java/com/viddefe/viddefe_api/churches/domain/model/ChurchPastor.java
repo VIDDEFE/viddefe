@@ -7,19 +7,21 @@ import lombok.Setter;
 
 import java.util.UUID;
 
-@Table(name = "church_pastors")
 @Entity
-@Getter @Setter
+@Table(name = "church_pastors")
+@Getter
+@Setter
 public class ChurchPastor {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "pastor_id", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "pastor_id", nullable = false)
     private PeopleModel pastor;
 
-    @ManyToOne
-    @JoinColumn(name = "church_id", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "church_id", nullable = false)
     private ChurchModel church;
 }

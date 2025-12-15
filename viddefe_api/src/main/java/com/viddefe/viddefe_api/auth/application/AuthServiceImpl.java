@@ -11,6 +11,7 @@ import com.viddefe.viddefe_api.common.exception.CustomExceptions;
 import com.viddefe.viddefe_api.config.Components.JwtUtil;
 import com.viddefe.viddefe_api.people.contracts.PeopleLookup;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public SignInResDTO signIn(SignInDTO dto) {
         UserModel userBd = userRepository.findByEmail(dto.getEmail())
-                .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("User not found by email" + dto.getEmail()));
+                .orElseThrow(() -> new EntityNotFoundException("User not found by email: " + dto.getEmail()));
         if(!passwordEncoder.matches(dto.getPassword(), userBd.getPassword())) {
             throw new CustomExceptions.InvalidCredentialsException("Wrong password");
         }

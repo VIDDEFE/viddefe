@@ -1,22 +1,24 @@
 package com.viddefe.viddefe_api.churches.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
+import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Table(name = "churches")
 @Getter
 @Setter
 public class ChurchModel {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -27,38 +29,58 @@ public class ChurchModel {
     private Date foundationDate;
     private BigDecimal latitude;
     private BigDecimal longitude;
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cities_id")
     private CitiesModel city;
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+
+    // -------- JERARQUÍA --------
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_church_id")
     @JsonBackReference
     private ChurchModel parentChurch;
 
-    public static ChurchModel fromDto(ChurchDTO dto) {
-        ChurchModel model = new ChurchModel();
-        if (dto.getId() != null) {
-            model.setId(dto.getId());
-        }
-        model.setName(dto.getName());
-        model.setLongitude(dto.getLongitude());
-        model.setLatitude(dto.getLatitude());
-        model.setPhone(dto.getPhone());
-        model.setEmail(dto.getEmail());
-        model.setFoundationDate(dto.getFoundationDate());
-        return model;
+    @OneToMany(
+            mappedBy = "parentChurch",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    @JsonManagedReference
+    private Collection<ChurchModel> children = new ArrayList<>();
+
+    // -------- HELPERS --------
+
+    public void addChildChurch(ChurchModel childChurch) {
+        children.add(childChurch);
+        childChurch.setParentChurch(this);
+    }
+
+    public void removeChildChurch(ChurchModel childChurch) {
+        children.remove(childChurch);
+        childChurch.setParentChurch(null);
+    }
+
+    // -------- MAPPERS --------
+
+    public  ChurchModel fromDto(ChurchDTO dto) {
+        this.setName(dto.getName());
+        this.setLongitude(dto.getLongitude());
+        this.setLatitude(dto.getLatitude());
+        this.setPhone(dto.getPhone());
+        this.setEmail(dto.getEmail());
+        this.setFoundationDate(dto.getFoundationDate());
+        return this;
     }
 
     public ChurchResDto toDto() {
-        {
-            return new ChurchResDto(
-                    this.id,
-                    this.name,
-                    this.longitude,
-                    this.latitude,
-                    this.city.getState().toDto(),
-                    this.city.toDto()
-            );
-        }
+        return new ChurchResDto(
+                id,
+                name,
+                longitude,
+                latitude,
+                city.getState().toDto(),
+                city.toDto()
+        );
     }
 }
