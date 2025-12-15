@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.people.application;
 
 import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.StatesCities.application.StatesCitiesService;
+import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.contracts.ChurchService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;
@@ -22,7 +23,7 @@ import java.util.UUID;
 public class PeopleServiceImpl implements PeopleService {
     private final PeopleRepository peopleRepository;
     private final PeopleTypeService peopleTypeService;
-    private final ChurchService churchService;
+    private final ChurchLookup churchLookup;
     private final StatesCitiesService statesCitiesService;
 
     @Override
@@ -30,7 +31,7 @@ public class PeopleServiceImpl implements PeopleService {
         PeopleModel peopleModel = new PeopleModel().fromDto(dto);
         PeopleTypeModel peopleType = peopleTypeService.getPeopleTypeById(dto.getTypePersonId());
         StatesModel state = statesCitiesService.foundStatesById(dto.getStateId());
-        ChurchModel church = dto.getChurchId() != null ? churchService.getChurchById(dto.getChurchId()) : null;
+        ChurchModel church = dto.getChurchId() != null ? churchLookup.getChurchById(dto.getChurchId()) : null;
         peopleModel.setTypePerson(peopleType);
         peopleModel.setChurch(church);
         peopleModel.setState(state);

@@ -27,4 +27,10 @@ public class ChurchPastorService {
         peopleLookup.enrollPersonToChurch(pastor, church);
         churchPastorRepository.save(churchPastor);
     }
+
+    public PeopleModel getPastorFromChurch(@NonNull ChurchModel church) {
+        ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
+                .orElseThrow(() -> new IllegalArgumentException("Church has no assigned pastor"));
+        return churchPastor.getPastor();
+    }
 }

@@ -6,8 +6,10 @@ import com.viddefe.viddefe_api.churches.contracts.ChurchService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.domain.repository.ChurchRepository;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
+import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.contracts.PeopleLookup;
+import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -84,9 +86,22 @@ public class ChurchServiceImpl implements ChurchService {
      * Obtener iglesia por ID.
      */
     @Override
-    public ChurchModel getChurchById(UUID id) {
-        return churchRepository.findById(id)
+    public ChurchDetailedResDto getChurchById(UUID id) {
+        ChurchModel church = churchRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Iglesia no encontrada: " + id));
+        PeopleModel pastor = churchPastorService.getPastorFromChurch(church);
+        return new ChurchDetailedResDto(
+                church.getId(),
+                church.getName(),
+                church.getLongitude(),
+                church.getLatitude(),
+                church.getCity().toDto(),
+                church.getCity().getState().toDto(),
+                pastor.toDto(),
+                church.getFoundationDate(),
+                church.getPhone(),
+                church.getEmail()
+        );
     }
 
     /* ===========================

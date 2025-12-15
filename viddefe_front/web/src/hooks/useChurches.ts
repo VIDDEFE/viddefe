@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { churchService } from '../services/churchService'
-import type { Church } from '../models'
+import type { Church, ChurchDetail } from '../models'
 
 export function useChurches() {
   return useQuery({
@@ -10,7 +10,7 @@ export function useChurches() {
 }
 
 export function useChurch(id?: string) {
-  return useQuery({
+  return useQuery<ChurchDetail>({
     queryKey: ['church', id],
     queryFn: () => churchService.getById(id!),
     enabled: !!id

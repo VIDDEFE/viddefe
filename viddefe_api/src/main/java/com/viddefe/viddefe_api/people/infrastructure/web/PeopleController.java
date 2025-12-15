@@ -30,7 +30,10 @@ public class PeopleController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<PeopleDTO>>> getPeople(Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<PeopleDTO>>> getPeople(
+            Pageable pageable,
+            @RequestParam(required = false) UUID rolId
+    ){
         Page<PeopleDTO> people = peopleService.getAllPeople(pageable);
         return ResponseEntity.ok(ApiResponse.ok(people));
     }

@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.churches.infrastructure.web;
 
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
+import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.config.Components.JwtUtil;
@@ -30,6 +31,12 @@ public class ChurchController {
         UUID creatorPastorId = jwtUtil.getUserId(jwt);
         ChurchResDto response = churchService.addChurch(dto, creatorPastorId);
         return new ResponseEntity<>(ApiResponse.created(response), HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ChurchDetailedResDto>> getChurchById(@PathVariable UUID id){
+        ChurchDetailedResDto church = churchService.getChurchById(id);
+        return new ResponseEntity<>(ApiResponse.ok(church), HttpStatus.OK);
     }
 
     @GetMapping("/{churchId}/childrens")

@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
 @Entity
@@ -21,7 +22,10 @@ public class ChurchModel {
     private UUID id;
 
     private String name;
-    private Long latitude;
+    private String email;
+    private Long phone;
+    private Date foundationDate;
+    private BigDecimal latitude;
     private BigDecimal longitude;
     @ManyToOne
     @JoinColumn(name = "cities_id")
@@ -38,6 +42,10 @@ public class ChurchModel {
         }
         model.setName(dto.getName());
         model.setLongitude(dto.getLongitude());
+        model.setLatitude(dto.getLatitude());
+        model.setPhone(dto.getPhone());
+        model.setEmail(dto.getEmail());
+        model.setFoundationDate(dto.getFoundationDate());
         return model;
     }
 
@@ -47,7 +55,7 @@ public class ChurchModel {
                     this.id,
                     this.name,
                     this.longitude,
-                    BigDecimal.valueOf(this.latitude == null ? 0 : this.latitude),
+                    this.latitude,
                     this.city.getState().toDto(),
                     this.city.toDto()
             );
