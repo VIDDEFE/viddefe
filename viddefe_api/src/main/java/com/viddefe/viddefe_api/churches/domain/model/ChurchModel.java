@@ -8,6 +8,7 @@ import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Digits;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,7 +29,10 @@ public class ChurchModel {
     private String email;
     private Long phone;
     private Date foundationDate;
+    @Column(precision = 10, scale = 6)
     private BigDecimal latitude;
+
+    @Column(precision = 10, scale = 6)
     private BigDecimal longitude;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -32,39 +32,63 @@ export default function Churches() {
   const updateChurch = useUpdateChurch();
   const deleteChurch = useDeleteChurch();
 
+  // Track if form was already populated to prevent overwriting user changes
+  const [formPopulated, setFormPopulated] = useState(false);
+
   // Load church details when editing/viewing
-  useEffect(() => {
-    if (!churchDetails || !(modalMode === 'edit' || modalMode === 'view')) return;
-    
-    setFormData({
-      name: churchDetails.name || '',
-      email: churchDetails.email || '',
-      phone: churchDetails.phone || '',
-      foundationDate: churchDetails.foundationDate || '',
-      latitude: churchDetails?.latitude,
-      longitude: churchDetails?.longitude,
-      pastorId: churchDetails.pastor?.id || '',
-      stateId: churchDetails.states?.id,
-      cityId: churchDetails.city?.cityId,
-    });
-    console.log('Loaded church details into form:', churchDetails);
-  }, [churchDetails, modalMode]);
+  // En Churches.tsx, reemplazar el useEffect problemático:
+useEffect(() => {
+  if (!churchDetails || !(modalMode === 'edit' || modalMode === 'view')) return;
+  if (formPopulated && modalMode === 'edit') return; // No sobrescribir en modo edición una vez cargado
+  
+  
+  setFormData(prev => ({
+    name: churchDetails.name ?? prev.name ?? '',
+    email: churchDetails.email ?? prev.email ?? '',
+    phone: churchDetails.phone ?? prev.phone ?? '',
+    foundationDate: churchDetails.foundationDate ?? prev.foundationDate ?? '',
+    latitude: churchDetails.latitude !== undefined ? Number(churchDetails.latitude) : prev.latitude,
+    longitude: churchDetails.longitude !== undefined ? Number(churchDetails.longitude) : prev.longitude,
+    pastorId: churchDetails.pastor?.id ?? prev.pastorId ?? '',
+    stateId: churchDetails.states?.id ?? prev.stateId,
+    cityId: churchDetails.city?.cityId ?? prev.cityId,
+  }));
+
+  
+  if (modalMode === 'edit') {
+    setFormPopulated(true);
+  }
+}, [churchDetails, modalMode]);
+
+// Modificar openModal para manejar mejor el estado:
+const openModal = (mode: ModalMode, church?: ChurchSummary) => {
+  if (church) {
+    setSelectedChurch(church);
+    setFormPopulated(mode !== 'edit'); // Solo resetear si no es edición
+  } else {
+    resetForm();
+  }
+  setModalMode(mode);
+};
 
   // Modal handlers
   const resetForm = () => {
     setFormData(initialChurchFormData);
     setSelectedChurch(null);
-  };
-
-  const openModal = (mode: ModalMode, church?: ChurchSummary) => {
-    if (church) setSelectedChurch(church);
-    else resetForm();
-    setModalMode(mode);
+    setFormPopulated(false);
   };
 
   const closeModal = () => {
     setModalMode(null);
     resetForm();
+  };
+
+  // Handle form changes from ChurchFormModal (receives partial updates)
+  const handleFormChange = (patch: Partial<ChurchFormData>) => {
+    setFormData(prev => {
+      const updated = { ...prev, ...patch };
+      return updated;
+    });
   };
 
   // CRUD handlers
@@ -124,9 +148,9 @@ export default function Churches() {
           : '-',
     },
     {
-      key: 'state' as const,
+      key: 'states' as const,
       label: 'Departamento',
-      render: (_: unknown, item: ChurchSummary) => item.state?.name || '-',
+      render: (_: unknown, item: ChurchSummary) => item.states?.name || '-',
     },
     {
       key: 'city' as const,
@@ -163,7 +187,7 @@ export default function Churches() {
         isOpen={modalMode === 'create' || modalMode === 'edit'}
         mode={modalMode === 'edit' ? 'edit' : 'create'}
         formData={formData}
-        onFormChange={setFormData}
+        onFormChange={handleFormChange}
         onSave={modalMode === 'create' ? handleCreate : handleUpdate}
         onClose={closeModal}
         isLoading={modalMode === 'edit' && isLoadingDetails}

@@ -2,6 +2,7 @@ import { Modal, Button } from '../shared';
 import MapPicker from '../shared/MapPicker';
 import type { ChurchSummary, ChurchDetail } from '../../models';
 import { formatDate } from '../../utils';
+import { useEffect, useState } from 'react';
 
 interface ChurchViewModalProps {
   isOpen: boolean;
@@ -30,14 +31,20 @@ export default function ChurchViewModal({
     return '-';
   };
 
-  const position =
-  churchDetails?.latitude != null &&
-  churchDetails?.longitude != null
-    ? {
-        lat: churchDetails.latitude,     // ← latitude REAL
-        lng: churchDetails.longitude,    // ← longitude REAL
-      }
-    : null;
+  const [isLoadingMap, setIsLoadingMap] =  useState<boolean>(false);
+  const [mapPosition, setMapPosition] = useState<{lat:number,lng:number} | null>(null);
+  const constructPosition = () => {
+      const position = church?.latitude !== undefined && church?.longitude !== undefined
+        ?  { lat: church?.latitude, lng: church?.longitude } // 👈 swap
+        :  null;
+      return position;
+  }
+  useEffect(()=>{
+    setIsLoadingMap(true);
+    const pos = constructPosition();
+    setIsLoadingMap(false);
+    setMapPosition(pos);
+  },[church?.latitude, church?.longitude])
 
   return (
     <Modal
@@ -67,7 +74,7 @@ export default function ChurchViewModal({
               <div>
                 <label className="text-sm font-medium text-neutral-500">Nombre</label>
                 <p className="text-lg font-semibold text-primary-900">
-                  {churchDetails?.name || church.name}
+                  {church?.name || church.name}
                 </p>
               </div>
               <div>
@@ -80,13 +87,13 @@ export default function ChurchViewModal({
               <div>
                 <label className="text-sm font-medium text-neutral-500">Departamento</label>
                 <p className="text-neutral-800">
-                  {churchDetails?.states?.name || church.state?.name || '-'}
+                  {church?.states?.name || church.states?.name || '-'}
                 </p>
               </div>
               <div>
                 <label className="text-sm font-medium text-neutral-500">Ciudad</label>
                 <p className="text-neutral-800">
-                  {churchDetails?.city?.name || church.city?.name || '-'}
+                  {church?.city?.name || church.city?.name || '-'}
                 </p>
               </div>
             </div>
@@ -119,14 +126,14 @@ export default function ChurchViewModal({
               </>
             )}
 
-            {position && (
+            {!isLoadingMap && (
               <div>
                 <label className="text-sm font-medium text-neutral-500 mb-2 block">
                   Ubicación
                 </label>
 
                 <MapPicker
-                  position={position}
+                  position={mapPosition}
                   height={300}
                   onChange={() => {}}
                 />

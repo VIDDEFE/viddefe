@@ -6,13 +6,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.jpa.JpaObjectRetrievalFailureException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.TransactionSystemException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -25,11 +31,12 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     private static final String TRACE_KEY = "traceId";
 
-    // ---------------------------------------------
-    // 404 Not Found
-    // ---------------------------------------------
+    // =====================================================
+    //  DOMAIN / APPLICATION
+    // =====================================================
+
     @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleNotFound(
+    public ResponseEntity<ApiResponse<Object>> handleEntityNotFound(
             EntityNotFoundException ex,
             HttpServletRequest req
     ) {
@@ -42,67 +49,12 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // =====================================================
+    //  VALIDATION
+    // =====================================================
 
-    // ---------------------------------------------
-    // 401 Unauthorized
-    // ---------------------------------------------
-    @ExceptionHandler(CustomExceptions.InvalidCredentialsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleInvalidCredentials(
-            CustomExceptions.InvalidCredentialsException ex,
-            HttpServletRequest req
-    ) {
-        return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), "INVALID_CREDENTIALS", req, null);
-    }
-
-    // ---------------------------------------------
-    // 400 Bad Request
-    // ---------------------------------------------
-    @ExceptionHandler(CustomExceptions.BadRequestException.class)
-    public ResponseEntity<ApiResponse<Object>> handleBadRequest(
-            CustomExceptions.BadRequestException ex,
-            HttpServletRequest req
-    ) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), "BAD_REQUEST", req, null);
-    }
-
-    // ---------------------------------------------
-    // 409 Conflict (Already exists)
-    // ---------------------------------------------
-    @ExceptionHandler(CustomExceptions.ResourceAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleAlreadyExists(
-            CustomExceptions.ResourceAlreadyExistsException ex,
-            HttpServletRequest req
-    ) {
-        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), "RESOURCE_ALREADY_EXISTS", req, null);
-    }
-
-    // ---------------------------------------------
-    // 403 Forbidden
-    // ---------------------------------------------
-    @ExceptionHandler(CustomExceptions.UnauthorizedException.class)
-    public ResponseEntity<ApiResponse<Object>> handleForbidden(
-            CustomExceptions.UnauthorizedException ex,
-            HttpServletRequest req
-    ) {
-        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), "FORBIDDEN", req, null);
-    }
-
-    // ---------------------------------------------
-    // 409 Conflict genérico
-    // ---------------------------------------------
-    @ExceptionHandler(CustomExceptions.ConflictException.class)
-    public ResponseEntity<ApiResponse<Object>> handleConflict(
-            CustomExceptions.ConflictException ex,
-            HttpServletRequest req
-    ) {
-        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), "CONFLICT", req, null);
-    }
-
-    // ---------------------------------------------
-    // Validation (400) → devuelve errores normalizados
-    // ---------------------------------------------
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Object>> handleValidationException(
+    public ResponseEntity<ApiResponse<Object>> handleValidation(
             MethodArgumentNotValidException ex,
             HttpServletRequest req
     ) {
@@ -124,11 +76,114 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // ---------------------------------------------
-    // Catch-all 500
-    // ---------------------------------------------
+    // =====================================================
+    //  PERSISTENCE / DATABASE
+    // =====================================================
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDataIntegrity(
+            DataIntegrityViolationException ex,
+            HttpServletRequest req
+    ) {
+        log.warn("Data integrity violation", ex);
+        return buildResponse(
+                HttpStatus.CONFLICT,
+                "Operation violates database constraints",
+                "DATA_INTEGRITY_VIOLATION",
+                req,
+                null
+        );
+    }
+
+    @ExceptionHandler(JpaObjectRetrievalFailureException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJpaRetrieval(
+            JpaObjectRetrievalFailureException ex,
+            HttpServletRequest req
+    ) {
+        log.warn("JPA retrieval failure", ex);
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                "Related resource not found",
+                "JPA_RETRIEVAL_FAILURE",
+                req,
+                null
+        );
+    }
+
+    @ExceptionHandler(TransactionSystemException.class)
+    public ResponseEntity<ApiResponse<Object>> handleTransaction(
+            TransactionSystemException ex,
+            HttpServletRequest req
+    ) {
+        log.error("Transaction error", ex);
+        return buildResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Transaction failed",
+                "TRANSACTION_ERROR",
+                req,
+                null
+        );
+    }
+
+    // =====================================================
+    //  INFRA / FRAMEWORK
+    // =====================================================
+
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleNoHandler(
+            NoHandlerFoundException ex,
+            HttpServletRequest req
+    ) {
+        return buildResponse(
+                HttpStatus.NOT_FOUND,
+                "Endpoint not found",
+                "ENDPOINT_NOT_FOUND",
+                req,
+                null
+        );
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMethodNotAllowed(
+            HttpRequestMethodNotSupportedException ex,
+            HttpServletRequest req
+    ) {
+        return buildResponse(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                "HTTP method not allowed for this endpoint",
+                "METHOD_NOT_ALLOWED",
+                req,
+                null
+        );
+    }
+
+    // =====================================================
+    //  404 - Static resource not found (Spring 6)
+    // =====================================================
+        @ExceptionHandler(NoResourceFoundException.class)
+        public ResponseEntity<ApiResponse<Object>> handleNoResourceFound(
+                NoResourceFoundException ex,
+                HttpServletRequest req
+        ) {
+            return buildResponse(
+                    HttpStatus.NOT_FOUND,
+                    "Endpoint not found",
+                    "ENDPOINT_NOT_FOUND",
+                    req,
+                    null
+            );
+        }
+
+
+    // =====================================================
+    //  FALLBACK 500
+    // =====================================================
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Object>> handleGeneralException(Exception ex, HttpServletRequest req) {
+    public ResponseEntity<ApiResponse<Object>> handleUnhandled(
+            Exception ex,
+            HttpServletRequest req
+    ) {
         log.error("Unhandled exception", ex);
         return buildResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR,
@@ -139,9 +194,10 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // =============================================
-    //  CENTRALIZADOR
-    // =============================================
+    // =====================================================
+    //  RESPONSE BUILDER (CENTRALIZED)
+    // =====================================================
+
     private ResponseEntity<ApiResponse<Object>> buildResponse(
             HttpStatus status,
             String message,
@@ -165,7 +221,7 @@ public class GlobalExceptionHandler {
 
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && auth.getPrincipal() != null) {
+            if (auth != null && auth.isAuthenticated()) {
                 meta.put("user", auth.getName());
             }
         } catch (Exception ignored) {}

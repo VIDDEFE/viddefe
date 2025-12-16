@@ -1,3 +1,4 @@
+// ChurchFormModal.tsx
 import type { Cities, States } from '../../services/stateCitiesService';
 import { Modal, Button } from '../shared';
 import ChurchForm, { type ChurchFormData } from './ChurchForm';
@@ -6,7 +7,7 @@ interface ChurchFormModalProps {
   isOpen: boolean;
   mode: 'create' | 'edit';
   formData: ChurchFormData;
-  onFormChange: (data: ChurchFormData) => void;
+  onFormChange: (patch: Partial<ChurchFormData>) => void;
   onSave: () => void;
   onClose: () => void;
   isLoading?: boolean;
@@ -49,7 +50,7 @@ export default function ChurchFormModal({
     >
       {mode === 'edit' && isLoading ? (
         <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
           <span className="ml-2 text-neutral-600">Cargando datos...</span>
         </div>
       ) : (

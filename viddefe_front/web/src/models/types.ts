@@ -57,7 +57,7 @@ export interface ChurchSummary {
   longitude: number;
   pastor: Person | null;
   latitude: number;
-  state: States;
+  states: States;
   city: Cities;
 }
 
