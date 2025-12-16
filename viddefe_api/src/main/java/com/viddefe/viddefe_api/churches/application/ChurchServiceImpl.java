@@ -44,7 +44,9 @@ public class ChurchServiceImpl implements ChurchService {
                 dto.getCityId()
         );
         ChurchPastor churchPastor = churchPastorService.addPastorToChurch(pastorId, church);
-        return church.toDto(churchPastor.getPastor().toDto());
+        ChurchResDto churchResDto = church.toDto();
+        churchResDto.setPastor(churchPastor.getPastor().toDto());
+        return churchResDto;
     }
 
     /**
@@ -65,7 +67,9 @@ public class ChurchServiceImpl implements ChurchService {
 
         ChurchPastor churchPastor = churchPastorService.addPastorToChurch(pastorId, church);
 
-        return church.toDto(churchPastor.getPastor().toDto());
+        ChurchResDto churchResDto = church.toDto();
+        churchResDto.setPastor(churchPastor.getPastor().toDto());
+        return churchResDto;
     }
 
 
@@ -80,7 +84,9 @@ public class ChurchServiceImpl implements ChurchService {
         church.fromDto(dto);
         church = createAndPersistChurch(church, church.getParentChurch(), dto.getCityId());
         ChurchPastor churchPastor = churchPastorService.changeChurchPastor(pastorId,church);
-        return church.toDto(churchPastor.getPastor().toDto());
+        ChurchResDto churchResDto = church.toDto();
+        churchResDto.setPastor(churchPastor.getPastor().toDto());
+        return churchResDto;
     }
 
     @Transactional
@@ -115,8 +121,8 @@ public class ChurchServiceImpl implements ChurchService {
         return new ChurchDetailedResDto(
                 church.getId(),
                 church.getName(),
-                church.getLongitude(),
                 church.getLatitude(),
+                church.getLongitude(),
                 church.getCity().toDto(),
                 church.getCity().getState().toDto(),
                 pastor.toDto(),

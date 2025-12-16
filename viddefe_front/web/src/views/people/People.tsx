@@ -175,7 +175,7 @@ export default function People() {
     { 
       key: 'birthDate' as const, 
       label: 'Fecha de Nacimiento', 
-      render: (value: string | Date) => value ? formatDate(value) : '-' 
+      render: (value: string | Date) => value ? formatDate(value) : '-',
     },
     { 
       key: 'state' as const, 
@@ -332,10 +332,6 @@ export default function People() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-neutral-500">Email</label>
-                  <p className="text-neutral-800">{personDetails?.email || selectedPerson.email || '-'}</p>
-                </div>
                 <div>
                   <label className="text-sm font-medium text-neutral-500">Estado</label>
                   <p className="text-neutral-800">

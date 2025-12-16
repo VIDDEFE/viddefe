@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { Cities, States } from '../../services/stateCitiesService';
 import { Form, Input, DropDown, PastorSelector } from '../shared';
-import MapPicker from '../shared/MapPicker';
+import MapPicker, { type Position } from '../shared/MapPicker';
+
 export interface ChurchFormData {
   name: string;
   email: string;
@@ -50,10 +51,10 @@ export default function ChurchForm({
     onChange({ [field]: val });
   };
   const [isLoadingMap, setIsLoadingMap] =  useState<boolean>(false);
-  const [mapPosition, setMapPosition] = useState<{lat:number,lng:number} | null>(null);
+  const [mapPosition, setMapPosition] = useState<Position | null>(null);
   const constructPosition = () => {
       const position = value.latitude !== undefined && value.longitude !== undefined
-        ?  { lat: value.latitude, lng: value.longitude } // 👈 swap
+        ?  { lat: value.latitude, lng: value.longitude }
         :  null;
       return position;
   }
@@ -147,7 +148,7 @@ export default function ChurchForm({
         Mapa (click en el mapa para colocar marcador)
       </label>
 
-      {!isLoadingMap &&
+      {!isLoadingMap && mapPosition &&
       <MapPicker
           mode='operate'
           position={mapPosition}
@@ -175,7 +176,7 @@ export default function ChurchForm({
       <Input
         label="Longitud"
         placeholder="Longitud"
-        value={value.latitude !== undefined ? String(value.latitude) : ''}
+        value={value.longitude !== undefined ? String(value.longitude) : ''}
         onChange={(e) => {
           const v = e.target.value;
           updateField('longitude', v === '' ? undefined : Number(v));

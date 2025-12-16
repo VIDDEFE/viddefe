@@ -6,7 +6,7 @@ import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-type Position = { lat: number; lng: number } | null;
+export type Position = { lat: number; lng: number } | null;
 type Mode = 'operate' | 'view';
 
 const DEFAULT_POSITION: Position = { lat: 4.5726, lng: -74.190 };
@@ -142,7 +142,7 @@ export default function MapPicker({
     // Círculo pequeño en el centro
     if (!smallCircleRef.current) {
       smallCircleRef.current = L.circle([p.lat, p.lng], {
-        radius: 20, // 20 metros como “punto central”
+        radius: 30, // 30 metros como “punto central”
         color: '#3B82F6',
         fillColor: '#3B82F6',
         fillOpacity: 0.3,

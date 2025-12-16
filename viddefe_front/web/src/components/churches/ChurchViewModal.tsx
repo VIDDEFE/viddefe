@@ -1,5 +1,5 @@
 import { Modal, Button } from '../shared';
-import MapPicker from '../shared/MapPicker';
+import MapPicker, { type Position } from '../shared/MapPicker';
 import type { ChurchSummary, ChurchDetail } from '../../models';
 import { formatDate } from '../../utils';
 import { useEffect, useState } from 'react';
@@ -32,7 +32,7 @@ export default function ChurchViewModal({
   };
 
   const [isLoadingMap, setIsLoadingMap] =  useState<boolean>(false);
-  const [mapPosition, setMapPosition] = useState<{lat:number,lng:number} | null>(null);
+  const [mapPosition, setMapPosition] = useState<Position | null>(null);
   const constructPosition = () => {
       const position = church?.latitude !== undefined && church?.longitude !== undefined
         ?  { lat: church?.latitude, lng: church?.longitude } // 👈 swap

@@ -37,28 +37,27 @@ export default function Churches() {
 
   // Load church details when editing/viewing
   // En Churches.tsx, reemplazar el useEffect problemático:
-useEffect(() => {
-  if (!churchDetails || !(modalMode === 'edit' || modalMode === 'view')) return;
-  if (formPopulated && modalMode === 'edit') return; // No sobrescribir en modo edición una vez cargado
-  
-  
-  setFormData(prev => ({
-    name: churchDetails.name ?? prev.name ?? '',
-    email: churchDetails.email ?? prev.email ?? '',
-    phone: churchDetails.phone ?? prev.phone ?? '',
-    foundationDate: churchDetails.foundationDate ?? prev.foundationDate ?? '',
-    latitude: churchDetails.latitude !== undefined ? Number(churchDetails.latitude) : prev.latitude,
-    longitude: churchDetails.longitude !== undefined ? Number(churchDetails.longitude) : prev.longitude,
-    pastorId: churchDetails.pastor?.id ?? prev.pastorId ?? '',
-    stateId: churchDetails.states?.id ?? prev.stateId,
-    cityId: churchDetails.city?.cityId ?? prev.cityId,
-  }));
+  useEffect(() => {
+    if (!churchDetails || !selectedChurch || !(modalMode === 'edit' || modalMode === 'view')) return;
+    if (formPopulated && modalMode === 'edit') return;
+    
+    setFormData(prev => ({
+      name: churchDetails.name ?? prev.name ?? '',
+      email: churchDetails.email ?? prev.email ?? '',
+      phone: churchDetails.phone ?? prev.phone ?? '',
+      foundationDate: churchDetails.foundationDate ?? prev.foundationDate ?? '',
+      latitude: churchDetails.latitude !== undefined ? Number(churchDetails.latitude) : prev.latitude,
+      longitude: churchDetails.longitude !== undefined ? Number(churchDetails.longitude) : prev.longitude,
+      pastorId: churchDetails.pastor?.id ?? prev.pastorId ?? '',
+      stateId: churchDetails.states?.id ?? prev.stateId,
+      cityId: churchDetails.city?.cityId ?? prev.cityId,
+    }));
 
-  
-  if (modalMode === 'edit') {
-    setFormPopulated(true);
-  }
-}, [churchDetails, modalMode]);
+    
+    if (modalMode === 'edit') {
+      setFormPopulated(true);
+    }
+  }, [churchDetails, modalMode]);
 
 // Modificar openModal para manejar mejor el estado:
 const openModal = (mode: ModalMode, church?: ChurchSummary) => {
@@ -123,8 +122,8 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
           email: formData.email,
           pastorId: formData.pastorId || undefined,
           foundationDate: formData.foundationDate,
-          longitude: formData.longitude,
           latitude: formData.latitude,
+          longitude: formData.longitude,
         },
       },
       { onSuccess: closeModal }

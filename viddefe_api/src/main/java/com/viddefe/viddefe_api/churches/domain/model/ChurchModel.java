@@ -78,15 +78,20 @@ public class ChurchModel {
         return this;
     }
 
-    public ChurchResDto toDto(PeopleResDto pastor) {
-        return new ChurchResDto(
+    public ChurchResDto toDto() {
+        ChurchResDto dto = new ChurchResDto(
                 id,
                 name,
                 longitude,
                 latitude,
                 city.getState().toDto(),
                 city.toDto(),
-                pastor
+                null
         );
+
+        dto.setLongitude(longitude);
+        dto.setLatitude(latitude);
+
+        return dto;
     }
 }

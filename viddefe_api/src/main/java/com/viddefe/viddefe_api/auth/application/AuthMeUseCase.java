@@ -31,9 +31,8 @@ public class AuthMeUseCase implements AuthMeService {
         );
         ChurchModel church = user.getPeople().getChurch();
         PeopleModel pastor = churchLookup.getPastorByChurch(church);
-        System.out.println("Name: " + user.getPeople().getFirstName() + " " + user.getPeople().getLastName());
-        System.out.println("Church found: " + (church != null ? church.getName() : "No church"));
-        ChurchResDto churchResDto = church != null ? church.toDto(pastor.toDto()) : null;
+        ChurchResDto churchResDto = church != null ? church.toDto() : null;
+        churchResDto.setPastor(pastor != null ? pastor.toDto() : null);
         return new UserInfo(churchResDto, user.getEmail(), user.getRolUser(), user.getPeople().toDto());
     }
 }
