@@ -4,6 +4,7 @@ import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.contracts.PeopleService;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,24 +23,24 @@ public class PeopleController {
     private final PeopleService peopleService;
     //
     @PostMapping
-    public ResponseEntity<ApiResponse<PeopleModel>> addPeople(
+    public ResponseEntity<ApiResponse<PeopleResDto>> addPeople(
             @RequestBody @Valid PeopleDTO dto
     ) {
-        PeopleModel person = peopleService.createPeople(dto);
+        PeopleResDto person = peopleService.createPeople(dto);
         return new ResponseEntity<>(ApiResponse.created(person), HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<PeopleDTO>>> getPeople(
+    public ResponseEntity<ApiResponse<Page<PeopleResDto>>> getPeople(
             Pageable pageable,
             @RequestParam(required = false) UUID rolId
     ){
-        Page<PeopleDTO> people = peopleService.getAllPeople(pageable);
+        Page<PeopleResDto> people = peopleService.getAllPeople(pageable);
         return ResponseEntity.ok(ApiResponse.ok(people));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<PeopleDTO>> updatePeople(@Valid @RequestBody PeopleDTO dto, @PathVariable UUID id) {
+    public ResponseEntity<ApiResponse<PeopleResDto>> updatePeople(@Valid @RequestBody PeopleDTO dto, @PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.ok(peopleService.updatePeople(dto,id)));
     }
 
@@ -50,10 +51,10 @@ public class PeopleController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PeopleDTO>> getPersonById(
+    public ResponseEntity<ApiResponse<PeopleResDto>> getPersonById(
             @PathVariable UUID id
     ){
-        PeopleDTO people = peopleService.getPeopleById(id);
+        PeopleResDto people = peopleService.getPeopleById(id);
         return ResponseEntity.ok(ApiResponse.ok(people));
     }
 }

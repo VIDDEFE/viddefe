@@ -11,6 +11,7 @@ import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
 import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +28,7 @@ public class PeopleServiceImpl implements PeopleService {
     private final StatesCitiesService statesCitiesService;
 
     @Override
-    public PeopleModel createPeople(PeopleDTO dto) {
+    public PeopleResDto createPeople(PeopleDTO dto) {
         PeopleModel peopleModel = new PeopleModel().fromDto(dto);
         PeopleTypeModel peopleType = peopleTypeService.getPeopleTypeById(dto.getTypePersonId());
         StatesModel state = statesCitiesService.foundStatesById(dto.getStateId());
@@ -35,16 +36,16 @@ public class PeopleServiceImpl implements PeopleService {
         peopleModel.setTypePerson(peopleType);
         peopleModel.setChurch(church);
         peopleModel.setState(state);
-        return peopleRepository.save(peopleModel);
+        return peopleRepository.save(peopleModel).toDto();
     }
 
     @Override
-    public Page<PeopleDTO> getAllPeople(Pageable pageable) {
+    public Page<PeopleResDto> getAllPeople(Pageable pageable) {
         return peopleRepository.findAll(pageable).map(PeopleModel::toDto);
     }
 
     @Override
-    public PeopleDTO updatePeople(PeopleDTO dto, UUID id) {
+    public PeopleResDto updatePeople(PeopleDTO dto, UUID id) {
         PeopleModel peopleModel = peopleRepository.findById(id)
                 .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("People not found"));
         peopleModel.fromDto(dto);
@@ -57,7 +58,7 @@ public class PeopleServiceImpl implements PeopleService {
     }
 
     @Override
-    public PeopleDTO getPeopleById(UUID id) {
+    public PeopleResDto getPeopleById(UUID id) {
         return peopleRepository.findById(id).orElseThrow(
                 () -> new CustomExceptions.ResourceNotFoundException("People not found")).toDto();
     }

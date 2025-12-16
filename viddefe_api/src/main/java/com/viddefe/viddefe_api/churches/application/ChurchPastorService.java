@@ -22,14 +22,15 @@ public class ChurchPastorService {
     private final PeopleLookup peopleLookup;
 
     @Transactional
-    public void addPastorToChurch(@NonNull UUID pastorId, @NonNull ChurchModel church) {
+    public ChurchPastor addPastorToChurch(@NonNull UUID pastorId, @NonNull ChurchModel church) {
         PeopleModel pastor = peopleLookup.getPeopleById(pastorId);
         pastor.setChurch(church);
         ChurchPastor churchPastor = new ChurchPastor();
         churchPastor.setPastor(pastor);
         churchPastor.setChurch(church);
-        churchPastorRepository.save(churchPastor);
+        churchPastor = churchPastorRepository.save(churchPastor);
         peopleLookup.enrollPersonToChurch(pastor, church);
+        return churchPastor;
     }
 
     public void removePastorFromChurch(@NonNull ChurchModel church) {
@@ -47,7 +48,7 @@ public class ChurchPastorService {
         return churchPastor.getPastor();
     }
 
-    public void changeChurchPastor(@NonNull UUID newPastorId, @NonNull ChurchModel church) {
+    public ChurchPastor changeChurchPastor(@NonNull UUID newPastorId, @NonNull ChurchModel church) {
         PeopleModel newPastor = peopleLookup.getPeopleById(newPastorId);
         ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
                 .orElseThrow(() -> new EntityNotFoundException("Church has no assigned pastor"));
@@ -55,6 +56,6 @@ public class ChurchPastorService {
         oldPastor.setChurch(null);
         peopleLookup.enrollPersonToChurch(newPastor, church);
         churchPastor.setPastor(newPastor);
-        churchPastorRepository.save(churchPastor);
+        return  churchPastorRepository.save(churchPastor);
     }
 }

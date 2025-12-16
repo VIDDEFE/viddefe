@@ -6,6 +6,7 @@ import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -73,14 +74,15 @@ public class ChurchModel {
         return this;
     }
 
-    public ChurchResDto toDto() {
+    public ChurchResDto toDto(PeopleResDto pastor) {
         return new ChurchResDto(
                 id,
                 name,
                 longitude,
                 latitude,
                 city.getState().toDto(),
-                city.toDto()
+                city.toDto(),
+                pastor
         );
     }
 }

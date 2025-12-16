@@ -4,6 +4,7 @@ import com.viddefe.viddefe_api.StatesCities.application.StatesCitiesService;
 import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
 import com.viddefe.viddefe_api.churches.contracts.ChurchService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
+import com.viddefe.viddefe_api.churches.domain.model.ChurchPastor;
 import com.viddefe.viddefe_api.churches.domain.repository.ChurchRepository;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
@@ -42,8 +43,8 @@ public class ChurchServiceImpl implements ChurchService {
                 null,
                 dto.getCityId()
         );
-        churchPastorService.addPastorToChurch(pastorId, church);
-        return church.toDto();
+        ChurchPastor churchPastor = churchPastorService.addPastorToChurch(pastorId, church);
+        return church.toDto(churchPastor.getPastor().toDto());
     }
 
     /**
@@ -62,9 +63,9 @@ public class ChurchServiceImpl implements ChurchService {
         ChurchModel church = new ChurchModel().fromDto(dto);
         church = createAndPersistChurch(church, parentChurch, dto.getCityId());
 
-        churchPastorService.addPastorToChurch(pastorId, church);
+        ChurchPastor churchPastor = churchPastorService.addPastorToChurch(pastorId, church);
 
-        return church.toDto();
+        return church.toDto(churchPastor.getPastor().toDto());
     }
 
 
@@ -78,8 +79,8 @@ public class ChurchServiceImpl implements ChurchService {
         UUID pastorId = resolvePastorId(dto, updaterPastorId);
         church.fromDto(dto);
         church = createAndPersistChurch(church, church.getParentChurch(), dto.getCityId());
-        churchPastorService.changeChurchPastor(pastorId,church);
-        return church.toDto();
+        ChurchPastor churchPastor = churchPastorService.changeChurchPastor(pastorId,church);
+        return church.toDto(churchPastor.getPastor().toDto());
     }
 
     @Transactional
@@ -93,22 +94,14 @@ public class ChurchServiceImpl implements ChurchService {
 
     @Override
     public Page<ChurchResDto> getChildrenChurches(Pageable pageable, UUID churchId) {
-        return churchRepository.findByParentChurchId(churchId, pageable)
-                .map(ChurchModel::toDto);
+        return churchRepository.findAllChurchesDtoByParentChurchId(churchId,pageable);
     }
 
     /**
      * Listar iglesias paginadas.
      */
-    public Page<ChurchResDto> getChurches(Pageable pageable, @NonNull UUID pastorId) {
-        Page<ChurchModel> page = churchRepository.findAll(pageable);
-
-        List<ChurchResDto> content = page.getContent()
-                .stream()
-                .map(ChurchModel::toDto)
-                .toList();
-
-        return new PageImpl<>(content, pageable, page.getTotalElements());
+    public Page<ChurchResDto> getChurches(Pageable pageable) {
+        return churchRepository.findAllChurchesDtoByParentChurchId(null, pageable);
     }
 
     /**

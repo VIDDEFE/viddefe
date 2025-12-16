@@ -2,7 +2,7 @@ package com.viddefe.viddefe_api.churches.infrastructure.dto;
 
 import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.CitiesDto;
 import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
-import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -15,7 +15,7 @@ public record ChurchDetailedResDto(
         BigDecimal longitude,
         CitiesDto city,
         StatesDto states,
-        PeopleDTO pastor,
+        PeopleResDto pastor,
         Date foundationDate,
         Long phone,
         String email

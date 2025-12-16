@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.people.domain.model;
 import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -62,19 +63,18 @@ public class PeopleModel {
         return this;
     }
 
-    public PeopleDTO toDto(){
-        PeopleDTO dto = new PeopleDTO();
-        dto.setId(this.id);
-        dto.setFirstName(this.firstName);
-        dto.setLastName(this.lastName);
-        dto.setCc(this.cc);
-        dto.setPhone(this.phone);
-        dto.setBirthDate(this.birthdate);
-        dto.setTypePersonId(this.typePerson != null ? this.typePerson.getId() : null);
-        dto.setStateId(this.state != null ? this.state.getId() : null);
-        dto.setAvatar(this.avatar);
-        dto.setChurchId(this.church != null ? this.church.getId() : null);
-        return dto;
+    public PeopleResDto toDto(){
+        return new PeopleResDto(
+                this.id,
+                this.cc,
+                this.firstName,
+                this.lastName,
+                this.phone,
+                this.avatar,
+                java.sql.Date.valueOf(this.birthdate),
+                this.typePerson,
+                this.state.toDto()
+        );
     }
 
 }
