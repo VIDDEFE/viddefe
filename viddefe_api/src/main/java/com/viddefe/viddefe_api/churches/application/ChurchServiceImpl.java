@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.churches.application;
 
 import com.viddefe.viddefe_api.StatesCities.application.StatesCitiesService;
 import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
+import com.viddefe.viddefe_api.churches.contracts.ChurchPastorService;
 import com.viddefe.viddefe_api.churches.contracts.ChurchService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchPastor;
@@ -9,18 +10,14 @@ import com.viddefe.viddefe_api.churches.domain.repository.ChurchRepository;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
-import com.viddefe.viddefe_api.people.contracts.PeopleLookup;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.EntityNotFoundException;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service

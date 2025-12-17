@@ -3,7 +3,6 @@ package com.viddefe.viddefe_api.people.application;
 import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.StatesCities.application.StatesCitiesService;
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
-import com.viddefe.viddefe_api.churches.contracts.ChurchService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;
 import com.viddefe.viddefe_api.people.contracts.PeopleService;
@@ -29,6 +28,10 @@ public class PeopleServiceImpl implements PeopleService {
 
     @Override
     public PeopleResDto createPeople(PeopleDTO dto) {
+        return savePeople(dto, peopleTypeService, statesCitiesService, churchLookup, peopleRepository).toDto();
+    }
+
+     static PeopleModel savePeople(PeopleDTO dto, PeopleTypeService peopleTypeService, StatesCitiesService statesCitiesService, ChurchLookup churchLookup, PeopleRepository peopleRepository) {
         PeopleModel peopleModel = new PeopleModel().fromDto(dto);
         PeopleTypeModel peopleType = peopleTypeService.getPeopleTypeById(dto.getTypePersonId());
         StatesModel state = statesCitiesService.foundStatesById(dto.getStateId());
@@ -36,7 +39,7 @@ public class PeopleServiceImpl implements PeopleService {
         peopleModel.setTypePerson(peopleType);
         peopleModel.setChurch(church);
         peopleModel.setState(state);
-        return peopleRepository.save(peopleModel).toDto();
+        return peopleRepository.save(peopleModel);
     }
 
     @Override

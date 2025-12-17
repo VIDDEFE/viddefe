@@ -14,6 +14,7 @@ interface DropDownProps {
   valueKey?: string;
   searchKey?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 export default function DropDown({
@@ -27,6 +28,7 @@ export default function DropDown({
   valueKey = "value",
   searchKey,
   className = "",
+  disabled = false,
 }: DropDownProps) {
   const searchField = searchKey ?? labelKey;
 
@@ -66,14 +68,21 @@ export default function DropDown({
         {/* Trigger */}
         <button
           type="button"
-          onClick={() => setOpen((o) => !o)}
-          className={`px-3 py-3 w-full text-left border-2 border-neutral-200 rounded-lg 
-            text-base transition-all duration-300 font-inherit focus:outline-none
-            focus:border-primary-500 focus:ring-2 focus:ring-primary-300 cursor-pointer bg-white
+          disabled={disabled}
+          onClick={() => {
+            if (!disabled) setOpen(o => !o);
+          }}
+          className={`px-3 py-3 w-full text-left border-2 rounded-lg 
+            text-base transition-all duration-300 font-inherit bg-white
+            ${disabled
+              ? "bg-neutral-100 border-neutral-200 text-neutral-400 cursor-not-allowed"
+              : "border-neutral-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-300 cursor-pointer"
+            }
             ${className}`}
         >
           {currentLabel}
         </button>
+
 
         {/* Dropdown panel */}
         {open && (

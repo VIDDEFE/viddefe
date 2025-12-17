@@ -3,7 +3,6 @@ package com.viddefe.viddefe_api.config.Filters;
 import com.viddefe.viddefe_api.config.Components.JwtUtil;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,57 +23,66 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
 
+    private static final String TOKEN_COOKIE = "access_token";
+
     private static final List<String> PUBLIC_PATHS = List.of(
             "/error",
-            "/usuarios",
-            "/people"
+            "/auth"
     );
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        // Permitir solicitudes OPTIONS para CORS
         if (request.getMethod().equals(HttpMethod.OPTIONS.name())) {
             return true;
         }
 
-        // Verificar rutas públicas
-        for (String publicPath : PUBLIC_PATHS) {
-
-            if (path.startsWith(publicPath)) {
-                return true;
-            }
-        }
-
-        return false;
+        return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws IOException, jakarta.servlet.ServletException {
+                                    FilterChain filterChain)
+            throws IOException, jakarta.servlet.ServletException {
 
-        String authHeader = request.getHeader("Authorization");
+        String token = resolveToken(request);
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        if (token != null && jwtUtil.isTokenValid(token)) {
+            Claims claims = jwtUtil.getClaims(token);
 
-            if (jwtUtil.isTokenValid(token)) {
-                Claims claims = jwtUtil.getClaims(token);
-                String email = claims.getSubject();
-                String role = claims.get("role", String.class);
+            String email = claims.getSubject();
+            String role = claims.get("role", String.class);
 
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                );
+            var authToken = new UsernamePasswordAuthenticationToken(
+                    email,
+                    null,
+                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
+            );
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+            SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        // 1️⃣ Authorization header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        // 2️⃣ Cookie
+        if (request.getCookies() != null) {
+            for (var cookie : request.getCookies()) {
+                if (TOKEN_COOKIE.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        return null;
     }
 }

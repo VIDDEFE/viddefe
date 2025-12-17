@@ -22,6 +22,7 @@ interface PersonFormProps {
   showTypeSelector?: boolean;
   showChurchSelector?: boolean;
   errors?: Partial<Record<keyof PersonFormData, string>>;
+  disabledTypePerson?: boolean;
 }
 
 const TYPE_PERSON_OPTIONS = [
@@ -36,6 +37,7 @@ export function PersonForm({
   disabled = false,
   showTypeSelector = true,
   errors = {},
+  disabledTypePerson = false,
 }: PersonFormProps) {
   const { data: states } = useStates();
   const [, setSelectedStateId] = useState<number | undefined>(value.stateId || undefined);
@@ -109,9 +111,10 @@ export function PersonForm({
           <DropDown
             label="Tipo de Persona"
             options={TYPE_PERSON_OPTIONS}
-            value={value.typePersonId ? String(value.typePersonId) : ''}
+            value={value.typePersonId ? String(3) : '3'}
             onChangeValue={(val: string) => handleChange('typePersonId', val)}
             searchKey="label"
+            disabled={disabledTypePerson}
           />
         )}
       </div>

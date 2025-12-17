@@ -318,6 +318,7 @@ export default function SignUp() {
               onChange={setPersonData}
               disabled={loading}
               showTypeSelector={true}
+              disabledTypePerson={true}
             />
 
             <Button

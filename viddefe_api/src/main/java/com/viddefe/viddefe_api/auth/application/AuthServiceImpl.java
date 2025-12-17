@@ -11,6 +11,8 @@ import com.viddefe.viddefe_api.common.exception.CustomExceptions;
 import com.viddefe.viddefe_api.config.Components.JwtUtil;
 import com.viddefe.viddefe_api.people.contracts.PeopleLookup;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -45,6 +47,17 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(userModel);
 
         return userModel.getPeople().getId().toString();
+    }
+
+    @Override
+    public PeopleResDto registerPastor(PeopleDTO peopleDTO) {
+        Boolean verifyExistingPastor = AuthFlowSignUpPastorCase.pastorHasPreviousPersonalCreation(peopleLookup,peopleDTO.getCc());
+        if(verifyExistingPastor) {
+            PeopleModel pastorModel = peopleLookup.getPastorByCcWithoutChurch(peopleDTO.getCc());
+            return pastorModel.toDto();
+        }
+
+        return peopleLookup.save(peopleDTO).toDto();
     }
 
     @Override

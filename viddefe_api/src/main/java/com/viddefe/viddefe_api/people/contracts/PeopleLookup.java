@@ -2,6 +2,8 @@ package com.viddefe.viddefe_api.people.contracts;
 
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 
 import java.util.UUID;
 
@@ -12,5 +14,7 @@ import java.util.UUID;
 public interface PeopleLookup {
     PeopleModel getPeopleById(UUID id);
     void enrollPersonToChurch(PeopleModel personId, ChurchModel churchModel);
+    PeopleModel getPastorByCcWithoutChurch(String cc);
+    PeopleModel save(PeopleDTO dto);
 }
 

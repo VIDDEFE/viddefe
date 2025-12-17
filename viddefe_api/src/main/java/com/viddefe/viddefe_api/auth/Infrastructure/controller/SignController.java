@@ -7,6 +7,8 @@ import com.viddefe.viddefe_api.auth.Infrastructure.dto.UserInfo;
 import com.viddefe.viddefe_api.auth.contracts.AuthMeService;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.config.Components.JwtUtil;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import com.viddefe.viddefe_api.auth.contracts.AuthService;
@@ -35,6 +37,12 @@ public class SignController {
     @PostMapping("/sign-up")
     public ResponseEntity<ApiResponse<String>> signUp(@Valid @RequestBody SignUpDTO signUpDTO) {
         String response = signService.signUp(signUpDTO);
+        return ResponseEntity.created(URI.create("/auth/sign-up/"+response)).body(ApiResponse.ok(response));
+    }
+
+    @PostMapping("/sign-up/pastor")
+    public ResponseEntity<ApiResponse<PeopleResDto>> signUpPastor(@Valid @RequestBody PeopleDTO dto) {
+        PeopleResDto response = signService.registerPastor(dto);
         return ResponseEntity.created(URI.create("/auth/sign-up/"+response)).body(ApiResponse.ok(response));
     }
 

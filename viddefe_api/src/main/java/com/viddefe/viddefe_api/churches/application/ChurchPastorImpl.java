@@ -1,9 +1,9 @@
 package com.viddefe.viddefe_api.churches.application;
 
+import com.viddefe.viddefe_api.churches.contracts.ChurchPastorService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchPastor;
 import com.viddefe.viddefe_api.churches.domain.repository.ChurchPastorRepository;
-import com.viddefe.viddefe_api.churches.domain.repository.ChurchRepository;
 import com.viddefe.viddefe_api.people.contracts.PeopleLookup;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,11 +16,11 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class ChurchPastorService {
+public class ChurchPastorImpl implements ChurchPastorService {
     private final ChurchPastorRepository churchPastorRepository;
-    private final ChurchRepository churchRepository;
     private final PeopleLookup peopleLookup;
 
+    @Override
     @Transactional
     public ChurchPastor addPastorToChurch(@NonNull UUID pastorId, @NonNull ChurchModel church) {
         PeopleModel pastor = peopleLookup.getPeopleById(pastorId);
@@ -33,6 +33,7 @@ public class ChurchPastorService {
         return churchPastor;
     }
 
+    @Override
     public void removePastorFromChurch(@NonNull ChurchModel church) {
         ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
                 .orElseThrow(() -> new EntityNotFoundException("Church has no assigned pastor"));
@@ -41,6 +42,7 @@ public class ChurchPastorService {
         churchPastorRepository.delete(churchPastor);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public PeopleModel getPastorFromChurch(@NonNull ChurchModel church) {
         ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
@@ -48,6 +50,7 @@ public class ChurchPastorService {
         return churchPastor.getPastor();
     }
 
+    @Override
     public ChurchPastor changeChurchPastor(@NonNull UUID newPastorId, @NonNull ChurchModel church) {
         PeopleModel newPastor = peopleLookup.getPeopleById(newPastorId);
         ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
