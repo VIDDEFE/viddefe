@@ -1,6 +1,6 @@
 package com.viddefe.viddefe_api.config.Filters;
 
-import com.viddefe.viddefe_api.config.Components.JwtUtil;
+import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

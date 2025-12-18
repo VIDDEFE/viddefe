@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { FiEdit2, FiTrash2, FiEye, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiEye, FiChevronLeft, FiChevronRight, FiChevronsLeft, FiChevronsRight, FiUserPlus } from 'react-icons/fi';
 
 interface TableColumn<T> {
   key: keyof T;
@@ -8,10 +8,11 @@ interface TableColumn<T> {
 }
 
 interface TableAction<T> {
-  icon: 'edit' | 'delete' | 'view';
+  icon: 'edit' | 'delete' | 'view' | 'user';
   label: string;
   onClick: (item: T) => void;
   variant?: 'primary' | 'danger' | 'secondary';
+  hidden?: (item: T) => boolean;
 }
 
 // Paginación manual (backend)
@@ -47,6 +48,7 @@ const iconMap = {
   edit: FiEdit2,
   delete: FiTrash2,
   view: FiEye,
+  user: FiUserPlus,
 };
 
 const variantClasses = {
@@ -176,6 +178,10 @@ export default function Table<T extends { id: string }>({
                     <td className="px-4 py-4 border-b border-neutral-200" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-center gap-1">
                         {actions.map((action, idx) => {
+                          // Si la acción tiene hidden y retorna true, no mostrar
+                          if (action.hidden && action.hidden(item)) {
+                            return null;
+                          }
                           const Icon = iconMap[action.icon];
                           const variant = action.variant || (action.icon === 'delete' ? 'danger' : 'primary');
                           return (

@@ -8,8 +8,10 @@ import com.viddefe.viddefe_api.churches.contracts.ChurchPastorService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +26,7 @@ public class AuthMeUseCase implements AuthMeService {
     @Transactional(readOnly = true)
     public UserInfo getUserInfo(@NonNull UUID userId) {
         UserModel user = userRepository.findById(userId).orElseThrow(
-                () -> new IllegalArgumentException("User not found")
+                () -> new EntityNotFoundException("User not found")
         );
         ChurchModel church = user.getPeople().getChurch();
         PeopleModel pastor = churchPastorService.getPastorFromChurch(church);

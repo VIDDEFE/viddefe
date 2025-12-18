@@ -1,27 +1,39 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Button, Form, Input, Card, Stepper, DropDown, PersonForm, initialPersonFormData, type PersonFormData } from '../components/shared';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Button, Form, Input, Card, Stepper, DropDown, PersonForm, initialPersonPastorFormData, type PersonFormData } from '../components/shared';
 import MapPicker from '../components/shared/MapPicker';
-import { authService, type PersonRequest } from '../services/authService';
+import { authService, type PersonRequest, type ChurchRequest, type SignUpStep, type PersonResponse } from '../services/authService';
 import { validateEmail } from '../utils';
-import { useStates, useCities, useCreateChurch } from '../hooks';
+import { useStates, useCities } from '../hooks';
 import { FiArrowLeft } from 'react-icons/fi';
-import type { Church } from '../models';
 
 type Step = 1 | 2 | 3;
 
+// Estado de reanudación desde signin
+interface ResumeState {
+  resumeProcess: boolean;
+  nextStep: SignUpStep;
+  peopleId: string;
+  userId?: string;
+  email?: string;
+  person?: PersonResponse;
+}
+
 export default function SignUp() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState<Step>(1);
   const [peopleId, setPeopleId] = useState<string>('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Track de pasos completados (para deshabilitar botón de volver)
+  const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
+
   // Step 1 - Person data
-  const [personData, setPersonData] = useState<PersonFormData>(initialPersonFormData);
+  const [personData, setPersonData] = useState<PersonFormData>(initialPersonPastorFormData);
 
   const { data: states } = useStates();
-  const createChurch = useCreateChurch();
 
   // Step 2 - User credentials
   const [userData, setUserData] = useState({
@@ -32,7 +44,7 @@ export default function SignUp() {
   });
 
   // Step 3 - Church data
-  const [churchData, setChurchData] = useState<Partial<Church>>({
+  const [churchData, setChurchData] = useState<ChurchRequest>({
     name: '',
     phone: '',
     email: '',
@@ -45,6 +57,35 @@ export default function SignUp() {
   const [churchStateId, setChurchStateId] = useState<number | undefined>(undefined);
   const [churchCityId, setChurchCityId] = useState<number | undefined>(undefined);
   const { data: churchCities } = useCities(churchStateId);
+
+  // Efecto para manejar la reanudación del proceso desde signin
+  useEffect(() => {
+    const state = location.state as ResumeState | null;
+    if (state?.resumeProcess && state.nextStep) {
+      // Determinar el paso basado en nextStep
+      if (state.nextStep === 'CREATION_USER') {
+        setStep(2);
+        setPeopleId(state.peopleId);
+        // Marcar paso 1 como completado
+        setCompletedSteps(new Set([1]));
+      } else if (state.nextStep === 'CREATION_CHURCH') {
+        setStep(3);
+        setPeopleId(state.peopleId);
+        // Pre-llenar email si está disponible
+        if (state.email) {
+          setUserData(prev => ({ ...prev, email: state.email! }));
+        }
+        // Marcar pasos 1 y 2 como completados
+        setCompletedSteps(new Set([1, 2]));
+        // Configurar pastorId para la iglesia
+        setChurchData(prev => ({ ...prev, pastorId: state.peopleId }));
+      }
+
+      // Limpiar el state para evitar re-ejecutar en navegaciones futuras
+      window.history.replaceState({}, document.title);
+    }
+    console.log('Resume state:', location.state);
+  }, [location.state]);
 
   const handleUserChange = (field: keyof typeof userData, value: string | number) => {
     setUserData((prev) => ({ ...prev, [field]: field === 'roleId' ? Number(value) : value }));
@@ -97,9 +138,14 @@ export default function SignUp() {
 
     setLoading(true);
     try {
-      const response = await authService.createPerson(personData as PersonRequest);
-      setPeopleId(response.id);
-      setStep(2);
+      // Step 1: Crear pastor usando el nuevo endpoint
+      const response = await authService.signUpPastor(personData as PersonRequest);
+      
+      if (response.nextStep === 'CREATION_USER') {
+        setPeopleId(response.data.id);
+        setCompletedSteps(prev => new Set([...prev, 1]));
+        setStep(2);
+      }
     } catch (err: any) {
       setError(err?.message || 'Error al crear el perfil. Intenta de nuevo.');
     } finally {
@@ -115,24 +161,31 @@ export default function SignUp() {
 
     setLoading(true);
     try {
-      await authService.signUp({
+      // Step 2: Crear usuario usando el nuevo endpoint
+      const response = await authService.signUpUser({
         email: userData.email,
         password: userData.password,
         peopleId,
         roleId: userData.roleId,
       });
 
-      // Si es pastor (typePersonId === 3), ir al paso 3 para crear iglesia
-      if (personData.typePersonId === 3) {
+      // Marcar paso 2 como completado
+      setCompletedSteps(prev => new Set([...prev, 2]));
+
+      // Si el siguiente paso es crear iglesia
+      if (response.nextStep === 'CREATION_CHURCH') {
         setChurchData(prev => ({ ...prev, pastorId: peopleId }));
         setStep(3);
         setLoading(false);
         return;
       }
 
-      navigate('/signin', {
-        state: { message: 'Registro exitoso. Por favor inicia sesión.' },
-      });
+      // Si está completo
+      if (response.nextStep === 'DONE' || response.completed === true) {
+        navigate('/signin', {
+          state: { message: 'Registro exitoso. Por favor inicia sesión.' },
+        });
+      }
     } catch (err: any) {
       setError(err?.message || 'Error al registrarse. Intenta de nuevo.');
     } finally {
@@ -151,22 +204,23 @@ export default function SignUp() {
 
     setLoading(true);
     try {
-      await createChurch.mutateAsync({
+      // Step 3: Crear iglesia usando el nuevo endpoint
+      const response = await authService.signUpChurch({
         name: churchData.name,
         phone: churchData.phone || '',
         email: churchData.email || '',
-        pastor: '',
         pastorId: peopleId,
         foundationDate: churchData.foundationDate,
         cityId: churchCityId || 0,
         latitude: churchData.latitude || 0,
         longitude: churchData.longitude || 0,
-        memberCount: 0,
       });
 
-      navigate('/signin', {
-        state: { message: 'Registro exitoso. Iglesia creada. Por favor inicia sesión.' },
-      });
+      if (response.nextStep === 'DONE') {
+        navigate('/signin', {
+          state: { message: 'Registro exitoso. Iglesia creada. Por favor inicia sesión.' },
+        });
+      }
     } catch (err: any) {
       setError(err?.message || 'Error al crear la iglesia. Intenta de nuevo.');
     } finally {
@@ -175,8 +229,16 @@ export default function SignUp() {
   };
 
   const handleBackToStep1 = () => {
+    // Solo permitir volver si el paso 1 no está completado
+    if (completedSteps.has(1)) return;
     setStep(1);
     setError('');
+  };
+
+  // Verificar si se puede volver atrás
+  const canGoBack = (fromStep: Step): boolean => {
+    const previousStep = (fromStep - 1) as Step;
+    return !completedSteps.has(previousStep);
   };
 
   return (
@@ -270,6 +332,7 @@ export default function SignUp() {
                 Ubicación (click en el mapa para colocar marcador)
               </label>
               <MapPicker
+                mode='operate'
                 position={churchData.latitude && churchData.longitude ? { lat: churchData.latitude, lng: churchData.longitude } : null}
                 onChange={(p) => setChurchData(prev => ({ ...prev, latitude: p?.lat ?? 0, longitude: p?.lng ?? 0 }))}
                 height={250}
@@ -386,7 +449,7 @@ export default function SignUp() {
                 variant="secondary"
                 className="flex-1"
                 onClick={handleBackToStep1}
-                disabled={loading}
+                disabled={loading || !canGoBack(2)}
                 type="button"
               >
                 <FiArrowLeft className="inline mr-2" />

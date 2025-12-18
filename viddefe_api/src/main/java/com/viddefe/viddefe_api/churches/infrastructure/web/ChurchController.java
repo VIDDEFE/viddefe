@@ -1,12 +1,10 @@
 package com.viddefe.viddefe_api.churches.infrastructure.web;
 
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
-import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
-import com.viddefe.viddefe_api.config.Components.JwtUtil;
-import io.jsonwebtoken.Claims;
+import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

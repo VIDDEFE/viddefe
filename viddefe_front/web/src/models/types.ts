@@ -72,6 +72,9 @@ export interface Person extends BaseEntity {
   churchId: string;
   state: States;
   status: 'active' | 'inactive' | 'suspended';
+  // Campos para la gestión de usuarios
+  hasUser?: boolean;
+  userId?: string;
 }
 
 export type PersonRole = 'pastor' | 'deacon' | 'member' | 'visitor' | 'volunteer';

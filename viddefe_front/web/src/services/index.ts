@@ -4,3 +4,4 @@ export * from './personService';
 export * from './serviceService';
 export * from './groupService';
 export * from './eventService';
+export * from './userService';

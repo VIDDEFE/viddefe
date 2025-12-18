@@ -4,41 +4,67 @@ import com.viddefe.viddefe_api.churches.contracts.ChurchPastorService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchPastor;
 import com.viddefe.viddefe_api.churches.domain.repository.ChurchPastorRepository;
-import com.viddefe.viddefe_api.people.contracts.PeopleLookup;
+import com.viddefe.viddefe_api.people.contracts.ChurchMembershipService;
+import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
+/**
+ * Servicio para gestionar la relación Pastor-Iglesia.
+ * 
+ * ARQUITECTURA SIN CICLOS:
+ * - PeopleReader: Solo lectura, sin dependencias externas → SEGURO
+ * - ChurchMembershipService: Pertenece a People domain, usa ChurchLookup (solo lectura) → SEGURO
+ * 
+ * Flujo de dependencias:
+ * ChurchPastorImpl → PeopleReader (sin dependencias circulares)
+ *                 → ChurchMembershipService → ChurchLookup (sin dependencias circulares)
+ */
 @Service
 @RequiredArgsConstructor
 public class ChurchPastorImpl implements ChurchPastorService {
+    
     private final ChurchPastorRepository churchPastorRepository;
-    private final PeopleLookup peopleLookup;
+    private final PeopleReader peopleReader;
+    private final ChurchMembershipService churchMembershipService;
 
     @Override
     @Transactional
     public ChurchPastor addPastorToChurch(@NonNull UUID pastorId, @NonNull ChurchModel church) {
-        PeopleModel pastor = peopleLookup.getPeopleById(pastorId);
-        pastor.setChurch(church);
+        // Verificar que el pastor existe
+        PeopleModel pastor = peopleReader.getPeopleById(pastorId);
+
+        // Crear la relación ChurchPastor
         ChurchPastor churchPastor = new ChurchPastor();
         churchPastor.setPastor(pastor);
         churchPastor.setChurch(church);
         churchPastor = churchPastorRepository.save(churchPastor);
-        peopleLookup.enrollPersonToChurch(pastor, church);
+        
+        // Actualizar la membresía del pastor (delegar al servicio apropiado)
+        churchMembershipService.assignPersonToChurchAsPastor(pastorId, church.getId());
+        
         return churchPastor;
     }
 
     @Override
+    @Transactional
     public void removePastorFromChurch(@NonNull ChurchModel church) {
         ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
                 .orElseThrow(() -> new EntityNotFoundException("Church has no assigned pastor"));
-        PeopleModel pastor = churchPastor.getPastor();
-        pastor.setChurch(null);
+        
+        UUID pastorId = churchPastor.getPastor().getId();
+        
+        // Remover asignación de iglesia del pastor
+        churchMembershipService.removeChurchAssignment(pastorId);
+        
+        // Eliminar la relación ChurchPastor
         churchPastorRepository.delete(churchPastor);
     }
 
@@ -51,14 +77,24 @@ public class ChurchPastorImpl implements ChurchPastorService {
     }
 
     @Override
+    @Transactional
     public ChurchPastor changeChurchPastor(@NonNull UUID newPastorId, @NonNull ChurchModel church) {
-        PeopleModel newPastor = peopleLookup.getPeopleById(newPastorId);
+        // Verificar que el nuevo pastor existe
+        peopleReader.getPeopleById(newPastorId);
+        
         ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
                 .orElseThrow(() -> new EntityNotFoundException("Church has no assigned pastor"));
-        PeopleModel oldPastor = churchPastor.getPastor();
-        oldPastor.setChurch(null);
-        peopleLookup.enrollPersonToChurch(newPastor, church);
+        
+        UUID oldPastorId = churchPastor.getPastor().getId();
+        
+        // Remover iglesia del pastor antiguo
+        churchMembershipService.removeChurchAssignment(oldPastorId);
+        
+        // Asignar iglesia al nuevo pastor
+        PeopleModel newPastor = churchMembershipService.assignPersonToChurchAsPastor(newPastorId, church.getId());
+        
+        // Actualizar la relación ChurchPastor
         churchPastor.setPastor(newPastor);
-        return  churchPastorRepository.save(churchPastor);
+        return churchPastorRepository.save(churchPastor);
     }
 }

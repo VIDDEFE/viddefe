@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.config.Components;
+package com.viddefe.viddefe_api.common.Components;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

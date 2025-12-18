@@ -147,3 +147,15 @@ export const initialPersonFormData: PersonFormData = {
   stateId: 0,
   churchId: '',
 };
+
+export const initialPersonPastorFormData: PersonFormData = {
+  cc: '',
+  firstName: '',
+  lastName: '',
+  phone: '',
+  avatar: '',
+  birthDate: '',
+  typePersonId: 3,
+  stateId: 0,
+  churchId: '',
+};

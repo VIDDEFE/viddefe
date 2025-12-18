@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button, Form, Input, Card } from '../components/shared';
 import { useAppContext } from '../context/AppContext';
-import { authService } from '../services/authService';
+import { authService, type SignInIncompleteData, type SignInCompleteData } from '../services/authService';
 import { validateEmail } from '../utils';
 
 export default function SignIn() {
@@ -40,10 +40,30 @@ export default function SignIn() {
 
     setLoading(true);
     try {
-      await authService.signIn({
+      const response = await authService.signIn({
         email,
         password,
       });
+
+      // Si el proceso no está completo, redirigir a signup con el paso correspondiente
+      if (!response.completed && response.nextStep !== 'DONE') {
+        const incompleteData = response.data as SignInIncompleteData;
+        
+        navigate('/signup', {
+          state: {
+            resumeProcess: true,
+            nextStep: response.nextStep,
+            peopleId: incompleteData.peopleId,
+            userId: incompleteData.userId,
+            email: incompleteData.email || email,
+            person: incompleteData.person,
+          },
+        });
+        return;
+      }
+
+      // Proceso completo - continuar con login normal
+      const completeData = response.data as SignInCompleteData;
       const userInfo = await authService.me();
       setUser(userInfo);
       navigate('/');

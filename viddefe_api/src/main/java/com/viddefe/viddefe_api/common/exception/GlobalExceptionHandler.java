@@ -86,14 +86,23 @@ public class GlobalExceptionHandler {
             HttpServletRequest req
     ) {
         log.warn("Data integrity violation", ex);
+
+        String message = "Operation violates database constraints";
+
+        Throwable cause = ex.getMostSpecificCause();
+        if (cause.getMessage() != null) {
+            message = cause.getMessage();
+        }
+
         return buildResponse(
                 HttpStatus.CONFLICT,
-                "Operation violates database constraints",
+                message,
                 "DATA_INTEGRITY_VIOLATION",
                 req,
                 null
         );
     }
+
 
     @ExceptionHandler(JpaObjectRetrievalFailureException.class)
     public ResponseEntity<ApiResponse<Object>> handleJpaRetrieval(

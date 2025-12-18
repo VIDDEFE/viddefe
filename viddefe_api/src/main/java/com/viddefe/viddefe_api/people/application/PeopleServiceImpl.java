@@ -1,14 +1,11 @@
 package com.viddefe.viddefe_api.people.application;
 
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
-import com.viddefe.viddefe_api.StatesCities.application.StatesCitiesService;
-import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
-import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;
+import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.contracts.PeopleService;
+import com.viddefe.viddefe_api.people.contracts.PeopleWriter;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
 import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import lombok.RequiredArgsConstructor;
@@ -18,28 +15,27 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+/**
+ * Servicio de fachada para operaciones de personas.
+ * 
+ * Este servicio ahora delega a las interfaces segregadas:
+ * - PeopleReader: Para consultas
+ * - PeopleWriter: Para escrituras
+ * 
+ * Sigue el patrón Facade para mantener compatibilidad con los controladores
+ * existentes mientras internamente usa la arquitectura mejorada.
+ */
 @Service
 @RequiredArgsConstructor
 public class PeopleServiceImpl implements PeopleService {
+    
     private final PeopleRepository peopleRepository;
-    private final PeopleTypeService peopleTypeService;
-    private final ChurchLookup churchLookup;
-    private final StatesCitiesService statesCitiesService;
+    private final PeopleWriter peopleWriter;
+    private final PeopleReader peopleReader;
 
     @Override
     public PeopleResDto createPeople(PeopleDTO dto) {
-        return savePeople(dto, peopleTypeService, statesCitiesService, churchLookup, peopleRepository).toDto();
-    }
-
-     static PeopleModel savePeople(PeopleDTO dto, PeopleTypeService peopleTypeService, StatesCitiesService statesCitiesService, ChurchLookup churchLookup, PeopleRepository peopleRepository) {
-        PeopleModel peopleModel = new PeopleModel().fromDto(dto);
-        PeopleTypeModel peopleType = peopleTypeService.getPeopleTypeById(dto.getTypePersonId());
-        StatesModel state = statesCitiesService.foundStatesById(dto.getStateId());
-        ChurchModel church = dto.getChurchId() != null ? churchLookup.getChurchById(dto.getChurchId()) : null;
-        peopleModel.setTypePerson(peopleType);
-        peopleModel.setChurch(church);
-        peopleModel.setState(state);
-        return peopleRepository.save(peopleModel);
+        return peopleWriter.createPerson(dto).toDto();
     }
 
     @Override
@@ -49,21 +45,17 @@ public class PeopleServiceImpl implements PeopleService {
 
     @Override
     public PeopleResDto updatePeople(PeopleDTO dto, UUID id) {
-        PeopleModel peopleModel = peopleRepository.findById(id)
-                .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("People not found"));
-        peopleModel.fromDto(dto);
-        return peopleRepository.save(peopleModel).toDto();
+        return peopleWriter.updatePerson(dto, id).toDto();
     }
 
     @Override
     public void deletePeople(UUID id) {
-        peopleRepository.deleteById(id);
+        peopleWriter.deletePerson(id);
     }
 
     @Override
     public PeopleResDto getPeopleById(UUID id) {
-        return peopleRepository.findById(id).orElseThrow(
-                () -> new CustomExceptions.ResourceNotFoundException("People not found")).toDto();
+        return peopleReader.getPeopleById(id).toDto();
     }
 }
 

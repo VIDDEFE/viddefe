@@ -2,25 +2,32 @@ import { useState, useEffect } from 'react';
 import type { Person } from '../../models';
 import { Button, PageHeader, Table, Modal, Avatar, PersonForm, initialPersonFormData, type PersonFormData } from '../../components/shared';
 import { usePeople, usePerson, useUpdatePerson, useDeletePerson } from '../../hooks';
-import type { States } from '../../services/stateCitiesService';
 import { authService, type PersonRequest } from '../../services/authService';
 import { formatDate } from '../../utils';
+import CreateUserModal from '../../components/people/CreateUserModal';
+import { useAppContext } from '../../context/AppContext';
 
-type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
+type ModalMode = 'create' | 'edit' | 'view' | 'delete' | 'createUser' | null;
 
 export default function People() {
   const { data: people, isLoading, refetch } = usePeople();
+  const { user } = useAppContext();
   
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [personData, setPersonData] = useState<PersonFormData>(initialPersonFormData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Hook para obtener detalles de la persona seleccionada
   const { data: personDetails, isLoading: isLoadingDetails } = usePerson(selectedPerson?.id);
   const updatePerson = useUpdatePerson();
   const deletePerson = useDeletePerson();
+
+  // Verificar si el usuario tiene permiso para crear usuarios
+  // TODO: Ajustar según la estructura real de permisos del backend
+  const canCreateUser = user?.rolUser?.id === 1 || user?.rolUser?.name?.toLowerCase() === 'administrador';
 
   // Cargar datos de personDetails cuando se obtienen (para edición)
   useEffect(() => {
@@ -65,9 +72,21 @@ export default function People() {
     setModalMode('delete');
   };
 
+  const openCreateUserModal = (person: Person) => {
+    setSelectedPerson(person);
+    setModalMode('createUser');
+  };
+
   const closeModal = () => {
     setModalMode(null);
     resetForm();
+  };
+
+  const handleUserCreated = () => {
+    setSuccessMessage(`Usuario creado exitosamente para ${selectedPerson?.firstName} ${selectedPerson?.lastName}`);
+    setTimeout(() => setSuccessMessage(''), 5000);
+    closeModal();
+    refetch();
   };
 
   const validateForm = (): boolean => {
@@ -153,7 +172,7 @@ export default function People() {
     {
       key: 'id' as const,
       label: 'Imagen',
-      render: (_: any, person: Person) => (
+      render: (_: unknown, person: Person) => (
         <Avatar 
           src={(person as any).avatar} 
           name={`${person.firstName} ${person.lastName}`} 
@@ -164,46 +183,66 @@ export default function People() {
     { 
       key: 'firstName' as const, 
       label: 'Nombres',
-      render: (_: any, person: Person) => `${person.firstName}`
+      render: (_: unknown, person: Person) => `${person.firstName}`
     },
     { 
       key: 'lastName' as const, 
       label: 'Apellidos', 
-      render: (_: any, person: Person) => `${person.lastName}` 
+      render: (_: unknown, person: Person) => `${person.lastName}` 
     },
     { key: 'phone' as const, label: 'Teléfono' },
     { 
       key: 'birthDate' as const, 
       label: 'Fecha de Nacimiento', 
-      render: (value: string | Date) => value ? formatDate(value) : '-',
+      render: (value: unknown, _item: Person) => value ? formatDate(value as string | Date) : '-',
     },
     { 
       key: 'state' as const, 
       label: 'Departamento', 
-      render: (_value: string | number | States, item: Person) => item.state?.name || '-' 
+      render: (_value: unknown, item: Person) => item.state?.name || '-' 
     },
   ];
 
-  const tableActions = [
+  // Construir acciones de la tabla dinámicamente
+  const tableActions: Array<{
+    icon: 'edit' | 'delete' | 'view' | 'user';
+    label: string;
+    onClick: (item: Person) => void;
+    variant?: 'primary' | 'danger' | 'secondary';
+    hidden?: (item: Person) => boolean;
+  }> = [
     {
-      icon: 'view' as const,
+      icon: 'view',
       label: 'Ver detalles',
       onClick: openViewModal,
-      variant: 'secondary' as const,
+      variant: 'secondary',
     },
     {
-      icon: 'edit' as const,
+      icon: 'edit',
       label: 'Editar',
       onClick: openEditModal,
-      variant: 'primary' as const,
-    },
-    {
-      icon: 'delete' as const,
-      label: 'Eliminar',
-      onClick: openDeleteModal,
-      variant: 'danger' as const,
+      variant: 'primary',
     },
   ];
+
+  // Agregar acción de crear usuario si tiene permiso
+  if (canCreateUser) {
+    tableActions.push({
+      icon: 'user',
+      label: 'Crear Usuario',
+      onClick: openCreateUserModal,
+      variant: 'secondary',
+      // Solo mostrar si la persona no tiene usuario
+      hidden: (person: Person) => person.hasUser === true,
+    });
+  }
+
+  tableActions.push({
+    icon: 'delete',
+    label: 'Eliminar',
+    onClick: openDeleteModal,
+    variant: 'danger',
+  });
 
   const peopleData = Array.isArray(people) ? people : (people?.content ?? []);
   const isFormModalOpen = modalMode === 'create' || modalMode === 'edit';
@@ -216,6 +255,16 @@ export default function People() {
         subtitle="Gestiona todos los miembros y contactos"
         actions={<Button variant="primary" onClick={openCreateModal}>+ Nueva Persona</Button>}
       />
+
+      {/* Mensaje de éxito */}
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+          <svg className="w-5 h-5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+          {successMessage}
+        </div>
+      )}
 
       <Table<Person>
         data={peopleData}
@@ -386,6 +435,14 @@ export default function People() {
           </p>
         </div>
       </Modal>
+
+      {/* Modal de Crear Usuario */}
+      <CreateUserModal
+        isOpen={modalMode === 'createUser'}
+        person={selectedPerson}
+        onClose={closeModal}
+        onSuccess={handleUserCreated}
+      />
     </div>
   );
 }
