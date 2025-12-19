@@ -9,7 +9,7 @@ import markerShadow from "leaflet/dist/images/marker-shadow.png";
 export type Position = { lat: number; lng: number } | null;
 type Mode = 'operate' | 'view';
 
-const DEFAULT_POSITION: Position = { lat: 4.5726, lng: -74.190 };
+const DEFAULT_POSITION: Position = { lat: 4.1517, lng: -73.6386 };
 
 // Icono estándar para 'operate'
 const defaultIcon = new L.Icon({
@@ -52,7 +52,7 @@ export default function MapPicker({
     mapRef.current = map;
 
     const initial = position ?? DEFAULT_POSITION;
-    map.setView([initial?.lat, initial?.lng], initial ? 14 : 6);
+    map.setView([initial?.lat, initial?.lng], position ? 14 : 12);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",

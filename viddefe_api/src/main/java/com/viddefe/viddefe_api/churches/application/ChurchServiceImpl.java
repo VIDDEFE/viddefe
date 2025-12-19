@@ -10,6 +10,7 @@ import com.viddefe.viddefe_api.churches.domain.repository.ChurchRepository;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
+import com.viddefe.viddefe_api.people.contracts.ChurchMembershipService;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class ChurchServiceImpl implements ChurchService {
     private final ChurchRepository churchRepository;
     private final StatesCitiesService statesCitiesService;
     private final ChurchPastorService churchPastorService;
+    private final ChurchMembershipService churchMembershipService;
 
     /**
      * Crear una iglesia raíz.
@@ -91,8 +93,14 @@ public class ChurchServiceImpl implements ChurchService {
     public void deleteChurch(UUID id) {
         ChurchModel church = churchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Church not found"));
+
+        PeopleModel pastor = churchPastorService.getPastorFromChurch(church);
+        ChurchModel parentChurch = church.getParentChurch();
         churchPastorService.removePastorFromChurch(church);
         churchRepository.delete(church);
+        if(parentChurch != null){
+            churchMembershipService.transferToChurch(pastor, parentChurch);
+        }
     }
 
     @Override

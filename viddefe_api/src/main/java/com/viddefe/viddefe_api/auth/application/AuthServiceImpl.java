@@ -103,7 +103,6 @@ public class AuthServiceImpl implements AuthService {
                 person.getId(),
                 user.getId()
         );
-        System.out.println("Before Heyyy");
 
         if(person.getChurch() == null){
             System.out.println("Heyyy");

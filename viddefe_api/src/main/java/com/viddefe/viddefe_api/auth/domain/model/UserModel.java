@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,5 +31,13 @@ public class UserModel {
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "userModel", cascade = CascadeType.ALL)
     @JsonBackReference
     private List<UserPermissions> permissions;
+
+        public void addListPermission(List<UserPermissions> permission) {
+            if(this.permissions == null) {
+                this.permissions = permission;
+                return;
+            }
+            this.permissions.addAll(permission);
+        }
 
 }

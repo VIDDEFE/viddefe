@@ -59,6 +59,7 @@ export default function ChurchForm({
       return position;
   }
   useEffect(()=>{
+    console.log('Updating map position due to lat/lng change');
     setIsLoadingMap(true);
     const pos = constructPosition();
     setIsLoadingMap(false);
@@ -148,11 +149,11 @@ export default function ChurchForm({
         Mapa (click en el mapa para colocar marcador)
       </label>
 
-      {!isLoadingMap && mapPosition &&
+      {!isLoadingMap &&
       <MapPicker
           mode='operate'
           position={mapPosition}
-          height={300}
+          height={400}
           onChange={(p) => {
             if (!p) return;
             updateField('latitude', p.lat);  // ← latitude = lng
@@ -160,30 +161,6 @@ export default function ChurchForm({
           }}
         />
         }
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-        <Input
-        label="Latitud"
-        placeholder="Latitud"
-        value={value.latitude !== undefined ? String(value.latitude) : ''}
-        onChange={(e) => {
-          const v = e.target.value;
-          updateField('latitude', v === '' ? undefined : Number(v));
-        }}
-        disabled={disabled}
-      />
-
-      <Input
-        label="Longitud"
-        placeholder="Longitud"
-        value={value.longitude !== undefined ? String(value.longitude) : ''}
-        onChange={(e) => {
-          const v = e.target.value;
-          updateField('longitude', v === '' ? undefined : Number(v));
-        }}
-        disabled={disabled}
-      />
-      </div>
     </Form>
   );
 }

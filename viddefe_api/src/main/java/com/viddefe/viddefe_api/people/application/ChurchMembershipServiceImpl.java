@@ -45,20 +45,7 @@ public class ChurchMembershipServiceImpl implements ChurchMembershipService {
         
         return peopleRepository.save(person);
     }
-    
-    @Override
-    @Transactional
-    public PeopleModel assignPersonToChurch(UUID personId, UUID churchId, Long typePersonId) {
-        PeopleModel person = findPersonOrThrow(personId);
-        ChurchModel church = churchLookup.getChurchById(churchId);
-        PeopleTypeModel type = peopleTypeService.getPeopleTypeById(typePersonId);
-        
-        person.setChurch(church);
-        person.setTypePerson(type);
-        
-        return peopleRepository.save(person);
-    }
-    
+
     @Override
     @Transactional
     public PeopleModel removeChurchAssignment(UUID personId) {
@@ -66,7 +53,7 @@ public class ChurchMembershipServiceImpl implements ChurchMembershipService {
         person.setChurch(null);
         return peopleRepository.save(person);
     }
-    
+
     @Override
     @Transactional
     public PeopleModel transferToChurch(UUID personId, UUID newChurchId) {
@@ -75,7 +62,13 @@ public class ChurchMembershipServiceImpl implements ChurchMembershipService {
         person.setChurch(newChurch);
         return peopleRepository.save(person);
     }
-    
+
+    @Override
+    public PeopleModel transferToChurch(PeopleModel person, ChurchModel church) {
+        person.setChurch(church);
+        return peopleRepository.save(person);
+    }
+
     private PeopleModel findPersonOrThrow(UUID personId) {
         return peopleRepository.findById(personId)
                 .orElseThrow(() -> new EntityNotFoundException("Person not found: " + personId));

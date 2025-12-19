@@ -6,5 +6,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public interface AuthMeService {
+    /**
+     *
+     * @param userId
+     * @return UserInfo
+     */
     UserInfo getUserInfo(UUID userId);
 }

@@ -8,4 +8,6 @@ import java.util.List;
 public interface PermissionService {
     List<PermissionModel> findAll();
     void seed(PermissionSeedRequest request);
+    PermissionModel findByName(String name);
+    List<PermissionModel> findByListNames(List<String> names);
 }

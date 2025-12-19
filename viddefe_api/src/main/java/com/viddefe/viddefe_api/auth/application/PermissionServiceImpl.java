@@ -5,6 +5,7 @@ import com.viddefe.viddefe_api.auth.contracts.PermissionEnum;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
 import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
 import com.viddefe.viddefe_api.auth.domain.repository.PermissionRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -32,5 +33,17 @@ public class PermissionServiceImpl implements PermissionService {
             model.setName(permission.getName());
             permissionRepository.save(model);
         }
+    }
+
+    @Override
+    public PermissionModel findByName(String name) {
+        return permissionRepository.findByName(name).orElseThrow(
+                () -> new EntityNotFoundException("Permission not found: " + name
+        ));
+    }
+
+    @Override
+    public List<PermissionModel> findByListNames(List<String> names) {
+        return permissionRepository.findAllByNameIn(names);
     }
 }
