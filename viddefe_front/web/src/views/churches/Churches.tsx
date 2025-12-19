@@ -7,12 +7,18 @@ import { useAppContext } from '../../context/AppContext';
 import ChurchFormModal from '../../components/churches/ChurchFormModal';
 import ChurchViewModal from '../../components/churches/ChurchViewModal';
 import ChurchDeleteModal from '../../components/churches/ChurchDeleteModal';
+import ChurchesMap from '../../components/churches/ChurchesMap';
+import { FiMap, FiList } from 'react-icons/fi';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
+type ViewMode = 'table' | 'map';
 
 export default function Churches() {
   const { user } = useAppContext();
   const churchId = user?.church.id;
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
 
   // Data fetching
   const { data: churches, isLoading } = useChurchChildren(churchId);
@@ -130,6 +136,12 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
     );
   };
 
+  const createModal = () => {
+    resetForm();
+    setModalMode('create');
+    setViewMode('table');
+  }
+
   const handleDelete = () => {
     if (!selectedChurch?.id) return;
     deleteChurch.mutate(selectedChurch.id, { onSuccess: closeModal });
@@ -166,23 +178,73 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
 
   const isMutating = createChurch.isPending || updateChurch.isPending;
 
+  // Datos para el mapa
+  const churchesArray = Array.isArray(churches) ? churches : (churches?.content ?? []);
+
   return (
     <div className="container mx-auto px-2">
       <PageHeader
         title="Iglesias Hijas"
         subtitle="Gestiona todas las iglesias hijas de tu organización desde este panel."
-        actions={<Button variant="primary" onClick={() => openModal('create')}>+ Nueva Iglesia</Button>}
+        actions={
+          <div className="flex items-center gap-2">
+            {/* Toggle vista */}
+            <div className="flex items-center bg-neutral-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'table'
+                    ? 'bg-white text-primary-700 shadow-sm'
+                    : 'text-neutral-600 hover:text-neutral-800'
+                }`}
+              >
+                <FiList className="w-4 h-4" />
+                <span>Tabla</span>
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'map'
+                    ? 'bg-white text-primary-700 shadow-sm'
+                    : 'text-neutral-600 hover:text-neutral-800'
+                }`}
+              >
+                <FiMap className="w-4 h-4" />
+                <span>Mapa</span>
+              </button>
+            </div>
+            <Button variant="primary" onClick={createModal}>+ Nueva Iglesia</Button>
+          </div>
+        }
       />
 
-      <Table<ChurchSummary>
-        data={Array.isArray(churches) ? churches : (churches?.content ?? [])}
-        columns={columns}
-        actions={tableActions}
-        loading={isLoading}
-        pagination={{ mode: 'auto', pageSize: 10 }}
-      />
+      {/* Vista de Mapa */}
+      {viewMode === 'map' && (
+        <div className="mb-6 animate-fadeIn">
+          <ChurchesMap
+            churches={churchesArray}
+            height={600}
+            onChurchSelect={(church) => openModal('view', church)}
+          />
+        </div>
+      )}
 
-      <ChurchFormModal
+      {/* Vista de Tabla */}
+      {viewMode === 'table' && (
+        <div className="animate-fadeIn">
+          <Table<ChurchSummary>
+            data={churchesArray}
+            columns={columns}
+            actions={tableActions}
+            loading={isLoading}
+            pagination={{ mode: 'auto', pageSize: 10 }}
+          />
+        </div>
+      )}
+
+      {
+        viewMode == 'table' &&
+      (<><ChurchFormModal
         isOpen={modalMode === 'create' || modalMode === 'edit'}
         mode={modalMode === 'edit' ? 'edit' : 'create'}
         formData={formData}
@@ -211,6 +273,7 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
         onClose={closeModal}
         isDeleting={deleteChurch.isPending}
       />
+      </>)}
     </div>
   );
 }
