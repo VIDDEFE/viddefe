@@ -4,12 +4,14 @@ import com.viddefe.viddefe_api.auth.Infrastructure.dto.PermissionSeedRequest;
 import com.viddefe.viddefe_api.auth.contracts.PermissionEnum;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
 import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
+import com.viddefe.viddefe_api.auth.domain.model.UserModel;
 import com.viddefe.viddefe_api.auth.domain.repository.PermissionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -45,5 +47,10 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public List<PermissionModel> findByListNames(List<String> names) {
         return permissionRepository.findAllByNameIn(names);
+    }
+
+    @Override
+    public List<PermissionModel> findByUserId(UUID userId) {
+        return permissionRepository.findAllByUserId(userId);
     }
 }

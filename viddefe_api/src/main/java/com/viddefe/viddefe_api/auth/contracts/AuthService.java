@@ -8,11 +8,17 @@ import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 
+import java.util.List;
+
 public interface AuthService {
     /**
-     *
+     *This method recollect the data necessary to create a new user in the system.
+     * And returns the user ID upon successful registration...
+     * This method is used for pastor who want to register in the system. for that reason
+     * the role is set to ROLE_PASTOR by default and has every permission assigned.
      * @param dto
      * @return AuthProcessResponse with the user ID if successful
+     *
      */
     AuthProcessResponse<String> signUp(SignUpDTO dto);
     /**
@@ -38,6 +44,6 @@ public interface AuthService {
      * @param dto
      * @return JWT token as String
      */
-    String generateJwt(SignInResDTO dto);
+    String generateJwt(SignInResDTO dto, List<String> permissions);
 }
 

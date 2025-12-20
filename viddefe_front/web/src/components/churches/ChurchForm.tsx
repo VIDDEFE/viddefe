@@ -59,7 +59,6 @@ export default function ChurchForm({
       return position;
   }
   useEffect(()=>{
-    console.log('Updating map position due to lat/lng change');
     setIsLoadingMap(true);
     const pos = constructPosition();
     setIsLoadingMap(false);

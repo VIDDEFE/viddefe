@@ -84,7 +84,6 @@ export default function SignUp() {
       // Limpiar el state para evitar re-ejecutar en navegaciones futuras
       window.history.replaceState({}, document.title);
     }
-    console.log('Resume state:', location.state);
   }, [location.state]);
 
   const handleUserChange = (field: keyof typeof userData, value: string | number) => {

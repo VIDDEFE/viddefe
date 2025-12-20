@@ -122,7 +122,7 @@ export default function ChurchesMap({
         // Crear círculo alrededor de la iglesia
         const circleColor = isSelected ? '#059669' : '#3B82F6';
         const circleOpacity = isSelected ? 0.35 : 0.3;
-        const circleRadius = isSelected ? 1000 : 500; // Radio en metros
+        const circleRadius = isSelected ? 1500 : 1000; // Radio en metros
         
         const circle = L.circle([church.latitude, church.longitude], {
           radius: circleRadius,

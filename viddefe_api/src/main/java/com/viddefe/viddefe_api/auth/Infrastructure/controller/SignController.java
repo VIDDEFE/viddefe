@@ -18,6 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -51,14 +54,17 @@ public class SignController {
     @PostMapping("/sign-in")
     public ResponseEntity<ApiResponse<AuthProcessResponse<SignInResDTO>>> signIn (@Valid @RequestBody SignInDTO signinDTO, HttpServletResponse response) {
         AuthProcessResponse<SignInResDTO> responseSign = signService.signIn(signinDTO);
-        String jwt = signService.generateJwt(responseSign.getData());
+        List<String> permissions = authMeService.getUserPermissions(responseSign.getData().getUserId());
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("permissions", permissions);
+        String jwt = signService.generateJwt(responseSign.getData(), permissions);
         Cookie cookie = new Cookie("access_token",jwt);
         cookie.setHttpOnly(true);
         cookie.setSecure(env.matchesProfiles("prod"));
         cookie.setPath("/");
         cookie.setMaxAge(60 * 60);
         response.addCookie(cookie);
-        return new ResponseEntity<>(ApiResponse.ok(responseSign), HttpStatus.ACCEPTED);
+        return new ResponseEntity<>(ApiResponse.ok(responseSign).withMeta(metadata), HttpStatus.ACCEPTED);
     }
 
     @GetMapping("/me")

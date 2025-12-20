@@ -9,13 +9,20 @@ import ChurchViewModal from '../../components/churches/ChurchViewModal';
 import ChurchDeleteModal from '../../components/churches/ChurchDeleteModal';
 import ChurchesMap from '../../components/churches/ChurchesMap';
 import { FiMap, FiList } from 'react-icons/fi';
+import { ChurchPermission } from '../../services/userService';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
 type ViewMode = 'table' | 'map';
 
 export default function Churches() {
-  const { user } = useAppContext();
+  const { user, hasPermission } = useAppContext();
   const churchId = user?.church.id;
+
+  // Permisos de iglesias
+  const canCreate = hasPermission(ChurchPermission.ADD);
+  const canView = hasPermission(ChurchPermission.VIEW);
+  const canEdit = hasPermission(ChurchPermission.EDIT);
+  const canDelete = hasPermission(ChurchPermission.DELETE);
 
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -170,10 +177,11 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
     },
   ];
 
+  // Construir acciones basadas en permisos
   const tableActions = [
-    { icon: 'view' as const, label: 'Ver', onClick: (c: ChurchSummary) => openModal('view', c), variant: 'secondary' as const },
-    { icon: 'edit' as const, label: 'Editar', onClick: (c: ChurchSummary) => openModal('edit', c), variant: 'primary' as const },
-    { icon: 'delete' as const, label: 'Eliminar', onClick: (c: ChurchSummary) => openModal('delete', c), variant: 'danger' as const },
+    ...(canView ? [{ icon: 'view' as const, label: 'Ver', onClick: (c: ChurchSummary) => openModal('view', c), variant: 'secondary' as const }] : []),
+    ...(canEdit ? [{ icon: 'edit' as const, label: 'Editar', onClick: (c: ChurchSummary) => openModal('edit', c), variant: 'primary' as const }] : []),
+    ...(canDelete ? [{ icon: 'delete' as const, label: 'Eliminar', onClick: (c: ChurchSummary) => openModal('delete', c), variant: 'danger' as const }] : []),
   ];
 
   const isMutating = createChurch.isPending || updateChurch.isPending;
@@ -213,7 +221,7 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
                 <span>Mapa</span>
               </button>
             </div>
-            <Button variant="primary" onClick={createModal}>+ Nueva Iglesia</Button>
+            {canCreate && <Button variant="primary" onClick={createModal}>+ Nueva Iglesia</Button>}
           </div>
         }
       />

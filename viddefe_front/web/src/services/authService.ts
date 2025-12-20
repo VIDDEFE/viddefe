@@ -122,7 +122,19 @@ export interface UserInfoInterface {
   user: string;
   person: PersonResponse;
   church: ChurchSummary;
-  rolUser: RolUserInterface
+  rolUser: RolUserInterface;
+}
+
+// Respuesta completa del signin con meta (permisos)
+export interface SignInFullResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  data: SignInCompleteData | SignInIncompleteData;
+  meta?: {
+    permissions: string[];
+  };
+  timestamp: string;
 }
 
 export const authService = {
@@ -157,7 +169,8 @@ export const authService = {
   },
 
   logout: () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("viddefe_token");
+    sessionStorage.removeItem("viddefe_user");
+    sessionStorage.removeItem("viddefe_permissions");
   },
 };

@@ -111,7 +111,7 @@ export function PersonForm({
           <DropDown
             label="Tipo de Persona"
             options={TYPE_PERSON_OPTIONS}
-            value={value.typePersonId ? String(3) : '3'}
+            value={String(value.typePersonId)||String(3)}
             onChangeValue={(val: string) => handleChange('typePersonId', val)}
             searchKey="label"
             disabled={disabledTypePerson}
@@ -143,7 +143,7 @@ export const initialPersonFormData: PersonFormData = {
   phone: '',
   avatar: '',
   birthDate: '',
-  typePersonId: 0,
+  typePersonId: 1,
   stateId: 0,
   churchId: '',
 };

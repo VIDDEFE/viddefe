@@ -34,7 +34,7 @@ public class JwtFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        if (request.getMethod().equals(HttpMethod.OPTIONS.name())) {
+        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
             return true;
         }
 
@@ -53,28 +53,37 @@ public class JwtFilter extends OncePerRequestFilter {
             Claims claims = jwtUtil.getClaims(token);
 
             String email = claims.getSubject();
-            String role = claims.get("role", String.class);
 
-            var authToken = new UsernamePasswordAuthenticationToken(
+            List<String> permissions = claims.get("permissions", String.class).split(",").length == 0
+                    ? null
+                    : List.of(claims.get("permissions", String.class).split(","));
+
+            var authorities = permissions == null
+                    ? List.<SimpleGrantedAuthority>of()
+                    : permissions.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .toList();
+
+            var authentication = new UsernamePasswordAuthenticationToken(
                     email,
                     null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role))
+                    authorities
             );
 
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);
     }
 
     private String resolveToken(HttpServletRequest request) {
-        // 1️⃣ Authorization header
+        // Authorization header
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
 
-        // 2️⃣ Cookie
+        // Cookie fallback
         if (request.getCookies() != null) {
             for (var cookie : request.getCookies()) {
                 if (TOKEN_COOKIE.equals(cookie.getName())) {

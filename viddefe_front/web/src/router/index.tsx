@@ -12,12 +12,12 @@ import Events from '../views/events/Events';
 import type { JSX } from 'react';
 
 function ProtectedRoute({ element }: { element: JSX.Element }) {
-  const { isLoggedIn } = useAppContext();
-  return isLoggedIn ? element : <Navigate to="/signin" replace />;
+  const { user } = useAppContext();
+  return user ? element : <Navigate to="/signin" replace />;
 }
 
 export default function Router() {
-  const { isLoggedIn } = useAppContext();
+  const { user } = useAppContext();
 
   return (   
     <Routes>
@@ -33,7 +33,7 @@ export default function Router() {
         <Route path="/events" element={<ProtectedRoute element={<Events />} />} />
       </Route>
 
-      <Route path="/" element={<Navigate to={isLoggedIn ? "/dashboard" : "/signin"} replace />} />
+      <Route path="/" element={<Navigate to={user ? "/dashboard" : "/signin"} replace />} />
     </Routes>
   );
 }

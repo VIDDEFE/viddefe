@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,12 +27,29 @@ public class JwtUtil {
         return  Keys.hmacShaKeyFor(SECRET.getBytes());
     }
 
-    public String generateToken(String email,String role, String firstName, String lastName, UUID userId) {
+    /**
+     * Generate JWT token with custom claims
+     * @param email
+     * @param role
+     * @param firstName
+     * @param lastName
+     * @param userId
+     * @param permissions list of permissions {@link List<String>}
+     * @return String JWT token
+     */
+    public String generateToken(
+            String email,
+            String role,
+            String firstName,
+            String lastName,
+            UUID userId,
+            List<String> permissions) {
         Map<String, String > claims = Map.of(
                 "role", role,
                 "first_name", firstName,
                 "last_name", lastName,
-                "userId", userId.toString()
+                "userId", userId.toString(),
+                "permissions", String.join(",", permissions)
         );
 
         return Jwts.builder()

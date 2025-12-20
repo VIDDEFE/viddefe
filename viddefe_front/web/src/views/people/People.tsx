@@ -6,12 +6,19 @@ import { authService, type PersonRequest } from '../../services/authService';
 import { formatDate } from '../../utils';
 import CreateUserModal from '../../components/people/CreateUserModal';
 import { useAppContext } from '../../context/AppContext';
+import { PeoplePermission } from '../../services/userService';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | 'createUser' | null;
 
 export default function People() {
   const { data: people, isLoading, refetch } = usePeople();
-  const { user } = useAppContext();
+  const { user, hasPermission } = useAppContext();
+
+  // Permisos de personas
+  const canCreate = hasPermission(PeoplePermission.ADD);
+  const canView = hasPermission(PeoplePermission.VIEW);
+  const canEdit = hasPermission(PeoplePermission.EDIT);
+  const canDelete = hasPermission(PeoplePermission.DELETE);
   
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -25,8 +32,7 @@ export default function People() {
   const updatePerson = useUpdatePerson();
   const deletePerson = useDeletePerson();
 
-  // Verificar si el usuario tiene permiso para crear usuarios
-  // TODO: Ajustar según la estructura real de permisos del backend
+  // Verificar si el usuario tiene permiso para crear usuarios (rol admin o similar)
   const canCreateUser = user?.rolUser?.id === 1 || user?.rolUser?.name?.toLowerCase() === 'administrador';
 
   // Cargar datos de personDetails cuando se obtienen (para edición)
@@ -39,7 +45,7 @@ export default function People() {
         phone: personDetails.phone,
         avatar: (personDetails as any).avatar || '',
         birthDate: personDetails.birthDate ? new Date(personDetails.birthDate).toISOString().split('T')[0] : '',
-        typePersonId: (personDetails as any).typePersonId || 0,
+        typePersonId: (personDetails as any).typePersonId || 1,
         stateId: personDetails.state?.id || 0,
         churchId: personDetails.churchId,
       });
@@ -203,27 +209,34 @@ export default function People() {
     },
   ];
 
-  // Construir acciones de la tabla dinámicamente
+  // Construir acciones de la tabla dinámicamente basadas en permisos
   const tableActions: Array<{
     icon: 'edit' | 'delete' | 'view' | 'user';
     label: string;
     onClick: (item: Person) => void;
     variant?: 'primary' | 'danger' | 'secondary';
     hidden?: (item: Person) => boolean;
-  }> = [
-    {
+  }> = [];
+
+  // Ver detalles - requiere permiso de ver
+  if (canView) {
+    tableActions.push({
       icon: 'view',
       label: 'Ver detalles',
       onClick: openViewModal,
       variant: 'secondary',
-    },
-    {
+    });
+  }
+
+  // Editar - requiere permiso de editar
+  if (canEdit) {
+    tableActions.push({
       icon: 'edit',
       label: 'Editar',
       onClick: openEditModal,
       variant: 'primary',
-    },
-  ];
+    });
+  }
 
   // Agregar acción de crear usuario si tiene permiso
   if (canCreateUser) {
@@ -237,12 +250,15 @@ export default function People() {
     });
   }
 
-  tableActions.push({
-    icon: 'delete',
-    label: 'Eliminar',
-    onClick: openDeleteModal,
-    variant: 'danger',
-  });
+  // Eliminar - requiere permiso de eliminar
+  if (canDelete) {
+    tableActions.push({
+      icon: 'delete',
+      label: 'Eliminar',
+      onClick: openDeleteModal,
+      variant: 'danger',
+    });
+  }
 
   const peopleData = Array.isArray(people) ? people : (people?.content ?? []);
   const isFormModalOpen = modalMode === 'create' || modalMode === 'edit';
@@ -253,7 +269,7 @@ export default function People() {
       <PageHeader
         title="Personas"
         subtitle="Gestiona todos los miembros y contactos"
-        actions={<Button variant="primary" onClick={openCreateModal}>+ Nueva Persona</Button>}
+        actions={canCreate && <Button variant="primary" onClick={openCreateModal}>+ Nueva Persona</Button>}
       />
 
       {/* Mensaje de éxito */}

@@ -1,17 +1,37 @@
 import { apiService } from './api';
 
-// Definición de permisos disponibles (basados en el backend)
-export type PermissionKey = 
-  // Personas
-  | 'PEOPLE_ADD_PEOPLE'
-  | 'PEOPLE_VIEW_PEOPLE'
-  | 'PEOPLE_EDIT_PEOPLE'
-  | 'PEOPLE_DELETE_PEOPLE'
-  // Iglesias - Hijos
-  | 'CHURCH_ADD_CHILDREN'
-  | 'CHURCH_VIEW_CHILDREN'
-  | 'CHURCH_EDIT_CHILDREN'
-  | 'CHURCH_DELETE_CHILDREN';
+// =============================================================================
+// CONSTANTES DE PERMISOS (usando objetos const en lugar de enums)
+// =============================================================================
+
+/** Permisos relacionados con la gestión de personas */
+export const PeoplePermission = {
+  ADD: 'PEOPLE_ADD_PEOPLE',
+  VIEW: 'PEOPLE_VIEW_PEOPLE',
+  EDIT: 'PEOPLE_EDIT_PEOPLE',
+  DELETE: 'PEOPLE_DELETE_PEOPLE',
+} as const;
+
+export type PeoplePermissionType = typeof PeoplePermission[keyof typeof PeoplePermission];
+
+/** Permisos relacionados con la gestión de iglesias hijas */
+export const ChurchPermission = {
+  ADD: 'CHURCH_ADD_CHILDREN',
+  VIEW: 'CHURCH_VIEW_CHILDREN',
+  EDIT: 'CHURCH_EDIT_CHILDREN',
+  DELETE: 'CHURCH_DELETE_CHILDREN',
+} as const;
+
+export type ChurchPermissionType = typeof ChurchPermission[keyof typeof ChurchPermission];
+
+// Tipo union de todos los permisos
+export type PermissionKey = PeoplePermissionType | ChurchPermissionType;
+
+// Array con todos los valores de permisos
+export const ALL_PERMISSIONS = [
+  ...Object.values(PeoplePermission),
+  ...Object.values(ChurchPermission),
+] as const;
 
 export interface Permission {
   key: PermissionKey;
@@ -28,15 +48,15 @@ export interface PermissionResponse {
 // Mapeo de permisos para la UI (fallback si el endpoint falla)
 export const PERMISSION_MAP: Record<PermissionKey, { label: string; description: string; category: 'churches' | 'people' }> = {
   // Personas
-  PEOPLE_ADD_PEOPLE: { label: 'Agregar personas', description: 'Permite agregar nuevos registros de personas', category: 'people' },
-  PEOPLE_VIEW_PEOPLE: { label: 'Ver personas', description: 'Permite ver información de personas', category: 'people' },
-  PEOPLE_EDIT_PEOPLE: { label: 'Editar personas', description: 'Permite editar registros de personas', category: 'people' },
-  PEOPLE_DELETE_PEOPLE: { label: 'Eliminar personas', description: 'Permite eliminar registros de personas', category: 'people' },
+  [PeoplePermission.ADD]: { label: 'Agregar personas', description: 'Permite agregar nuevos registros de personas', category: 'people' },
+  [PeoplePermission.VIEW]: { label: 'Ver personas', description: 'Permite ver información de personas', category: 'people' },
+  [PeoplePermission.EDIT]: { label: 'Editar personas', description: 'Permite editar registros de personas', category: 'people' },
+  [PeoplePermission.DELETE]: { label: 'Eliminar personas', description: 'Permite eliminar registros de personas', category: 'people' },
   // Iglesias - Hijos
-  CHURCH_ADD_CHILDREN: { label: 'Agregar hijos', description: 'Permite agregar iglesias hijas', category: 'churches' },
-  CHURCH_VIEW_CHILDREN: { label: 'Ver hijos', description: 'Permite ver iglesias hijas', category: 'churches' },
-  CHURCH_EDIT_CHILDREN: { label: 'Editar hijos', description: 'Permite editar iglesias hijas', category: 'churches' },
-  CHURCH_DELETE_CHILDREN: { label: 'Eliminar hijos', description: 'Permite eliminar iglesias hijas', category: 'churches' },
+  [ChurchPermission.ADD]: { label: 'Agregar hijos', description: 'Permite agregar iglesias hijas', category: 'churches' },
+  [ChurchPermission.VIEW]: { label: 'Ver hijos', description: 'Permite ver iglesias hijas', category: 'churches' },
+  [ChurchPermission.EDIT]: { label: 'Editar hijos', description: 'Permite editar iglesias hijas', category: 'churches' },
+  [ChurchPermission.DELETE]: { label: 'Eliminar hijos', description: 'Permite eliminar iglesias hijas', category: 'churches' },
 };
 
 // Construir lista de permisos desde el mapa
@@ -58,6 +78,11 @@ export const parsePermissionName = (name: string): PermissionKey | null => {
     return name as PermissionKey;
   }
   return null;
+};
+
+// Función helper para verificar si un string es un permiso válido
+export const isValidPermission = (value: string): value is PermissionKey => {
+  return ALL_PERMISSIONS.includes(value as PermissionKey);
 };
 
 // Request para enviar invitación
@@ -115,7 +140,6 @@ export const userService = {
   // Enviar invitación para crear usuario
   sendInvitation: (data: InvitationRequest) =>
   {
-    console.log('Sending invitation with data:', data);
     return apiService.post<InvitationResponse>('/auth/account/invitations', data);
   },
   // Métodos legacy (por si los necesitas)

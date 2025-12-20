@@ -2,19 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button, Form, Input, Card } from '../components/shared';
 import { useAppContext } from '../context/AppContext';
-import { authService, type SignInIncompleteData, type SignInCompleteData } from '../services/authService';
+import { authService, type SignInIncompleteData, type SignInResponse } from '../services/authService';
 import { validateEmail } from '../utils';
 
 export default function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setUser } = useAppContext();
+  const { setUser, setPermissions } = useAppContext();
   const [email, setEmail] = useState('jctobon@gmail.com');
   const [password, setPassword] = useState('j1122920156T.');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const { login } = useAppContext();
+  
   useEffect(() => {
     // Mostrar mensaje de éxito si viene del signup
     const state = location.state as { message?: string } | null;
@@ -40,10 +41,10 @@ export default function SignIn() {
 
     setLoading(true);
     try {
-      const response = await authService.signIn({
+      const response : SignInResponse = await login(
         email,
         password,
-      });
+      );
 
       // Si el proceso no está completo, redirigir a signup con el paso correspondiente
       if (!response.completed && response.nextStep !== 'DONE') {
@@ -63,7 +64,12 @@ export default function SignIn() {
       }
 
       // Proceso completo - continuar con login normal
-      const completeData = response.data as SignInCompleteData;
+      // Cargar permisos desde meta si existen
+      const rawResponse = response as any;
+      if (rawResponse.meta?.permissions) {
+        setPermissions(rawResponse.meta.permissions);
+      }
+
       const userInfo = await authService.me();
       setUser(userInfo);
       navigate('/');
