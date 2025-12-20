@@ -1,34 +1,38 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Button, Form, Input, Card, Stepper, DropDown } from '../components/shared';
-import { authService, type PersonRequest } from '../services/authService';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Button, Form, Input, Card, Stepper, DropDown, PersonForm, initialPersonPastorFormData, type PersonFormData } from '../components/shared';
+import MapPicker from '../components/shared/MapPicker';
+import { authService, type PersonRequest, type ChurchRequest, type SignUpStep, type PersonResponse } from '../services/authService';
 import { validateEmail } from '../utils';
-import { useStates } from '../hooks/useStateCities';
+import { useStates, useCities } from '../hooks';
 import { FiArrowLeft } from 'react-icons/fi';
 
-type Step = 1 | 2;
+type Step = 1 | 2 | 3;
+
+// Estado de reanudación desde signin
+interface ResumeState {
+  resumeProcess: boolean;
+  nextStep: SignUpStep;
+  peopleId: string;
+  userId?: string;
+  email?: string;
+  person?: PersonResponse;
+}
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState<Step>(1);
   const [peopleId, setPeopleId] = useState<string>('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Step 1 - Person data
-  const [personData, setPersonData] = useState({
-    cc: '',
-    firstName: '',
-    lastName: '',
-    phone: '',
-    avatar: '',
-    birthDate: '',
-    typePersonId: 0,
-    stateId: 0,
-    churchId: '',
-  });
+  // Track de pasos completados (para deshabilitar botón de volver)
+  const [completedSteps, setCompletedSteps] = useState<Set<Step>>(new Set());
 
-  const [selectedStateId, setSelectedStateId] = useState<number | undefined>(undefined);
+  // Step 1 - Person data
+  const [personData, setPersonData] = useState<PersonFormData>(initialPersonPastorFormData);
+
   const { data: states } = useStates();
 
   // Step 2 - User credentials
@@ -39,12 +43,48 @@ export default function SignUp() {
     roleId: 2,
   });
 
-  const handlePersonChange = (field: keyof typeof personData, value: any) => {
-    setPersonData((prev) => ({
-      ...prev,
-      [field]: field === 'stateId' || field === 'typePersonId' ? Number(value) : value,
-    }));
-  };
+  // Step 3 - Church data
+  const [churchData, setChurchData] = useState<ChurchRequest>({
+    name: '',
+    phone: '',
+    email: '',
+    pastorId: '',
+    foundationDate: '',
+    latitude: 0,
+    longitude: 0,
+    cityId: 0,
+  });
+  const [churchStateId, setChurchStateId] = useState<number | undefined>(undefined);
+  const [churchCityId, setChurchCityId] = useState<number | undefined>(undefined);
+  const { data: churchCities } = useCities(churchStateId);
+
+  // Efecto para manejar la reanudación del proceso desde signin
+  useEffect(() => {
+    const state = location.state as ResumeState | null;
+    if (state?.resumeProcess && state.nextStep) {
+      // Determinar el paso basado en nextStep
+      if (state.nextStep === 'CREATION_USER') {
+        setStep(2);
+        setPeopleId(state.peopleId);
+        // Marcar paso 1 como completado
+        setCompletedSteps(new Set([1]));
+      } else if (state.nextStep === 'CREATION_CHURCH') {
+        setStep(3);
+        setPeopleId(state.peopleId);
+        // Pre-llenar email si está disponible
+        if (state.email) {
+          setUserData(prev => ({ ...prev, email: state.email! }));
+        }
+        // Marcar pasos 1 y 2 como completados
+        setCompletedSteps(new Set([1, 2]));
+        // Configurar pastorId para la iglesia
+        setChurchData(prev => ({ ...prev, pastorId: state.peopleId }));
+      }
+
+      // Limpiar el state para evitar re-ejecutar en navegaciones futuras
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleUserChange = (field: keyof typeof userData, value: string | number) => {
     setUserData((prev) => ({ ...prev, [field]: field === 'roleId' ? Number(value) : value }));
@@ -56,7 +96,11 @@ export default function SignUp() {
       return false;
     }
     if (!personData.stateId) {
-      setError('Por favor selecciona un estado');
+      setError('Por favor selecciona un departamento');
+      return false;
+    }
+    if (!personData.typePersonId) {
+      setError('Por favor selecciona el tipo de persona');
       return false;
     }
     return true;
@@ -93,9 +137,14 @@ export default function SignUp() {
 
     setLoading(true);
     try {
-      const response = await authService.createPerson(personData as PersonRequest);
-      setPeopleId(response.id);
-      setStep(2);
+      // Step 1: Crear pastor usando el nuevo endpoint
+      const response = await authService.signUpPastor(personData as PersonRequest);
+      
+      if (response.nextStep === 'CREATION_USER') {
+        setPeopleId(response.data.id);
+        setCompletedSteps(prev => new Set([...prev, 1]));
+        setStep(2);
+      }
     } catch (err: any) {
       setError(err?.message || 'Error al crear el perfil. Intenta de nuevo.');
     } finally {
@@ -111,16 +160,31 @@ export default function SignUp() {
 
     setLoading(true);
     try {
-      await authService.signUp({
+      // Step 2: Crear usuario usando el nuevo endpoint
+      const response = await authService.signUpUser({
         email: userData.email,
         password: userData.password,
         peopleId,
         roleId: userData.roleId,
       });
 
-      navigate('/signin', {
-        state: { message: 'Registro exitoso. Por favor inicia sesión.' },
-      });
+      // Marcar paso 2 como completado
+      setCompletedSteps(prev => new Set([...prev, 2]));
+
+      // Si el siguiente paso es crear iglesia
+      if (response.nextStep === 'CREATION_CHURCH') {
+        setChurchData(prev => ({ ...prev, pastorId: peopleId }));
+        setStep(3);
+        setLoading(false);
+        return;
+      }
+
+      // Si está completo
+      if (response.nextStep === 'DONE' || response.completed === true) {
+        navigate('/signin', {
+          state: { message: 'Registro exitoso. Por favor inicia sesión.' },
+        });
+      }
     } catch (err: any) {
       setError(err?.message || 'Error al registrarse. Intenta de nuevo.');
     } finally {
@@ -128,9 +192,52 @@ export default function SignUp() {
     }
   };
 
+  const handleCreateChurch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!churchData.name) {
+      setError('Por favor ingresa el nombre de la iglesia');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Step 3: Crear iglesia usando el nuevo endpoint
+      const response = await authService.signUpChurch({
+        name: churchData.name,
+        phone: churchData.phone || '',
+        email: churchData.email || '',
+        pastorId: peopleId,
+        foundationDate: churchData.foundationDate,
+        cityId: churchCityId || 0,
+        latitude: churchData.latitude || 0,
+        longitude: churchData.longitude || 0,
+      });
+
+      if (response.nextStep === 'DONE') {
+        navigate('/signin', {
+          state: { message: 'Registro exitoso. Iglesia creada. Por favor inicia sesión.' },
+        });
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Error al crear la iglesia. Intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleBackToStep1 = () => {
+    // Solo permitir volver si el paso 1 no está completado
+    if (completedSteps.has(1)) return;
     setStep(1);
     setError('');
+  };
+
+  // Verificar si se puede volver atrás
+  const canGoBack = (fromStep: Step): boolean => {
+    const previousStep = (fromStep - 1) as Step;
+    return !completedSteps.has(previousStep);
   };
 
   return (
@@ -141,9 +248,122 @@ export default function SignUp() {
           <p className="text-primary-600">Crear Nueva Cuenta</p>
         </div>
 
-        <Stepper steps={['Información Personal', 'Credenciales']} currentStep={step - 1} />
+        <Stepper steps={['Información Personal', 'Credenciales', 'Crear Iglesia']} currentStep={step - 1} />
 
-        {step === 1 ? (
+        {step === 3 ? (
+          // Step 3: Create Church
+          <Form onSubmit={handleCreateChurch} className="gap-4">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm mb-2">
+              <p className="font-semibold">¡Usuario creado exitosamente!</p>
+              <p>Como pastor, puedes crear tu iglesia ahora o hacerlo después.</p>
+            </div>
+
+            <Input
+              label="Nombre de la Iglesia"
+              placeholder="Iglesia Vida en Fe"
+              value={churchData.name}
+              onChange={(e) => setChurchData({ ...churchData, name: e.target.value })}
+              disabled={loading}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="Email de la Iglesia"
+                type="email"
+                placeholder="contacto@iglesia.com"
+                value={churchData.email}
+                onChange={(e) => setChurchData({ ...churchData, email: e.target.value })}
+                disabled={loading}
+              />
+              <Input
+                label="Teléfono"
+                placeholder="+569 1234 5678"
+                value={churchData.phone}
+                onChange={(e) => setChurchData({ ...churchData, phone: e.target.value })}
+                disabled={loading}
+              />
+            </div>
+
+            <Input
+              label="Fecha de Fundación"
+              type="date"
+              value={churchData.foundationDate}
+              onChange={(e) => setChurchData({ ...churchData, foundationDate: e.target.value })}
+              disabled={loading}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <DropDown
+                label="Departamento"
+                options={(states ?? []).map((s) => ({ value: String(s.id), label: s.name }))}
+                value={churchStateId ? String(churchStateId) : ''}
+                onChangeValue={(val) => {
+                  const id = val ? Number(val) : undefined;
+                  setChurchStateId(id);
+                  setChurchCityId(undefined);
+                }}
+                searchKey="label"
+              />
+
+              <DropDown
+                label="Ciudad"
+                options={(churchCities ?? []).map((c) => ({
+                  value: String(c.cityId),
+                  label: c.name,
+                }))}
+                value={churchCityId ? String(churchCityId) : ''}
+                onChangeValue={(val) => {
+                  const id = val ? Number(val) : undefined;
+                  setChurchCityId(id);
+                }}
+                searchKey="label"
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-primary-900 mb-2 text-base block">
+                Ubicación (click en el mapa para colocar marcador)
+              </label>
+              <MapPicker
+                mode='operate'
+                position={churchData.latitude && churchData.longitude ? { lat: churchData.latitude, lng: churchData.longitude } : null}
+                onChange={(p) => setChurchData(prev => ({ ...prev, latitude: p?.lat ?? 0, longitude: p?.lng ?? 0 }))}
+                height={250}
+              />
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <Input
+                  label="Latitud"
+                  placeholder="Latitud"
+                  value={churchData.latitude ? String(churchData.latitude) : ''}
+                  onChange={(e) => setChurchData(prev => ({ ...prev, latitude: parseFloat(e.target.value || '0') }))}
+                />
+                <Input
+                  label="Longitud"
+                  placeholder="Longitud"
+                  value={churchData.longitude ? String(churchData.longitude) : ''}
+                  onChange={(e) => setChurchData(prev => ({ ...prev, longitude: parseFloat(e.target.value || '0') }))}
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                variant="primary"
+                className="flex-1"
+                disabled={loading}
+                type="submit"
+              >
+                {loading ? 'Creando...' : 'Crear Iglesia'}
+              </Button>
+            </div>
+          </Form>
+        ) : step === 1 ? (
           // Step 1: Personal Information
           <Form onSubmit={(e) => {
             e.preventDefault();
@@ -155,76 +375,13 @@ export default function SignUp() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Número de Cédula"
-                placeholder="12345678"
-                value={personData.cc}
-                onChange={(e) => handlePersonChange('cc', e.target.value)}
-                disabled={loading}
-              />
-              <Input
-                label="Nombres"
-                placeholder="Juan"
-                value={personData.firstName}
-                onChange={(e) => handlePersonChange('firstName', e.target.value)}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Apellidos"
-                placeholder="Pérez García"
-                value={personData.lastName}
-                onChange={(e) => handlePersonChange('lastName', e.target.value)}
-                disabled={loading}
-              />
-              <Input
-                label="Teléfono"
-                placeholder="+569 1234 5678"
-                value={personData.phone}
-                onChange={(e) => handlePersonChange('phone', e.target.value)}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Fecha de Nacimiento"
-                type="date"
-                value={personData.birthDate}
-                onChange={(e) => handlePersonChange('birthDate', e.target.value)}
-                disabled={loading}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DropDown
-                label="Tipo de Persona"
-                options={[
-                  { value: '1', label: 'Oveja' },
-                  { value: '2', label: 'Voluntario' },
-                  { value: '3', label: 'Pastor' },
-                ]}
-                value={String(personData.typePersonId)}
-                onChangeValue={(val) => handlePersonChange('typePersonId', val)}
-                searchKey="label"
-
-              />
-
-              <DropDown
-                label="Departamento/Estado"
-                options={(states ?? []).map((s) => ({ value: String(s.id), label: s.name }))}
-                value={personData.stateId ? String(personData.stateId) : ''}
-                onChangeValue={(val) => {
-                  const id = val ? Number(val) : 0;
-                  setSelectedStateId(id);
-                  handlePersonChange('stateId', id);
-                }}
-                searchKey="label"
-              />
-            </div>
+            <PersonForm
+              value={personData}
+              onChange={setPersonData}
+              disabled={loading}
+              showTypeSelector={true}
+              disabledTypePerson={true}
+            />
 
             <Button
               variant="primary"
@@ -291,7 +448,7 @@ export default function SignUp() {
                 variant="secondary"
                 className="flex-1"
                 onClick={handleBackToStep1}
-                disabled={loading}
+                disabled={loading || !canGoBack(2)}
                 type="button"
               >
                 <FiArrowLeft className="inline mr-2" />

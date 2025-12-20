@@ -1,9 +1,12 @@
 import { apiService, type Pageable } from './api';
-import type { Church } from '../models';
+import type { Church, ChurchSummary, ChurchDetail } from '../models';
 
 export const churchService = {
-  getAll: () => apiService.get<Pageable<Church>>('/churches'),
-  getById: (id: string) => apiService.get<Church>(`/churches/${id}`),
+  getAll: () => apiService.get<Pageable<ChurchSummary>>('/churches'),
+  getById: (id: string) => apiService.get<ChurchDetail>(`/churches/${id}`),
+  getChildren: (churchId: string) => apiService.get<Pageable<ChurchSummary>>(`/churches/${churchId}/childrens`),
+  createChildren: (churchId: string, church: Omit<Church, 'id' | 'createdAt' | 'updatedAt'>) =>
+    apiService.post<Church>(`/churches/${churchId}/childrens`, church),
   create: (church: Omit<Church, 'id' | 'createdAt' | 'updatedAt'>) =>
     apiService.post<Church>('/churches', church),
   update: (id: string, church: Partial<Church>) =>

@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.config.Components;
+package com.viddefe.viddefe_api.common.Components;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -26,11 +27,29 @@ public class JwtUtil {
         return  Keys.hmacShaKeyFor(SECRET.getBytes());
     }
 
-    public String generateToken(String email,String role, String fullName, UUID userId) {
+    /**
+     * Generate JWT token with custom claims
+     * @param email
+     * @param role
+     * @param firstName
+     * @param lastName
+     * @param userId
+     * @param permissions list of permissions {@link List<String>}
+     * @return String JWT token
+     */
+    public String generateToken(
+            String email,
+            String role,
+            String firstName,
+            String lastName,
+            UUID userId,
+            List<String> permissions) {
         Map<String, String > claims = Map.of(
                 "role", role,
-                "name", fullName,
-                "userId", userId.toString()
+                "first_name", firstName,
+                "last_name", lastName,
+                "userId", userId.toString(),
+                "permissions", String.join(",", permissions)
         );
 
         return Jwts.builder()
@@ -55,6 +74,11 @@ public class JwtUtil {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public UUID getUserId(String token) {
+        String userIdStr = getClaims(token).get("userId", String.class);
+        return UUID.fromString(userIdStr);
     }
 
     public boolean isTokenValid(String token) {

@@ -22,7 +22,7 @@ public class ApiResponse<T> {
     private String message;             // human-friendly message
     private String errorCode;           // optional internal code
     private T data;                     // payload
-    private Map<String, Object> meta;   // extra metadata
+    private Map<String, Object> metadata;   // extra metadata
     private Instant timestamp;          // ISO-8601 server timestamp
 
     public static <T> ApiResponse<T> ok(T data) {
@@ -46,7 +46,7 @@ public class ApiResponse<T> {
     }
 
     public ApiResponse<T> withMeta(Map<String, Object> meta) {
-        this.meta = meta;
+        this.metadata = meta;
         return this;
     }
 }

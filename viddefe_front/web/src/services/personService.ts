@@ -1,8 +1,8 @@
-import { apiService } from './api';
+import { apiService, type Pageable } from './api';
 import type { Person } from '../models';
 
 export const personService = {
-  getAll: () => apiService.get<Person[]>('/people'),
+  getAll: () => apiService.get<Pageable<Person>>('/people'),
   getById: (id: string) => apiService.get<Person>(`/people/${id}`),
   create: (person: Omit<Person, 'id' | 'createdAt' | 'updatedAt'>) =>
     apiService.post<Person>('/people', person),

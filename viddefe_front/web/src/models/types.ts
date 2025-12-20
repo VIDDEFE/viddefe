@@ -1,3 +1,5 @@
+import type { Cities, States } from "../services/stateCitiesService";
+
 // Base interface para entidades con ID
 export interface BaseEntity {
   id: string;
@@ -5,17 +7,58 @@ export interface BaseEntity {
   updatedAt: Date;
 }
 
-// Iglesia
+// Pastor info dentro de Church
+export interface ChurchPastor {
+  id: string;
+  cc: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  avatar?: string;
+  birthDate: string;
+  typePersonId: number;
+  stateId: number;
+  churchId?: string;
+}
+
+// Iglesia (para crear/actualizar)
 export interface Church extends BaseEntity {
   name: string;
   cityId: number;
   phone: string;
   email: string;
   pastor: string;
-  foundedYear: number;
+  pastorId?: string;
+  foundationDate?: string;
   memberCount: number;
   latitude: number;
   longitude: number;
+}
+
+// Respuesta detallada de getById
+export interface ChurchDetail {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  phone?: string;
+  email?: string;
+  foundedYear?: number;
+  foundationDate?: string;
+  memberCount?: number;
+  city: Cities;
+  states: States;
+  pastor: ChurchPastor | null;
+}
+
+export interface ChurchSummary {
+  id: string;
+  name: string;
+  longitude: number;
+  pastor: Person | null;
+  latitude: number;
+  states: States;
+  city: Cities;
 }
 
 // Persona
@@ -27,7 +70,11 @@ export interface Person extends BaseEntity {
   birthDate: Date;
   role: PersonRole;
   churchId: string;
+  state: States;
   status: 'active' | 'inactive' | 'suspended';
+  // Campos para la gestión de usuarios
+  hasUser?: boolean;
+  userId?: string;
 }
 
 export type PersonRole = 'pastor' | 'deacon' | 'member' | 'visitor' | 'volunteer';

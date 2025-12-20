@@ -1,5 +1,6 @@
 // Formatear fechas
-export const formatDate = (date: Date | string): string => {
+export const formatDate = (date: Date | string | undefined): string | null => {
+  if (!date) return null;
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString('es-ES', {
     year: 'numeric',

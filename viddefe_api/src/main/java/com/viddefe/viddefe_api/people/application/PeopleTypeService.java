@@ -15,4 +15,9 @@ public class PeopleTypeService {
         return peopleTypeRepository.findById(id).orElseThrow(
                 () -> new CustomExceptions.ResourceNotFoundException("Tipo de persona no encontrado: " + id));
     }
+
+    public PeopleTypeModel getPeopleTypeByName(String name) {
+        return peopleTypeRepository.findByName(name).orElseThrow(
+                () -> new CustomExceptions.ResourceNotFoundException("Tipo de persona no encontrado: " + name));
+    }
 }

@@ -5,3 +5,4 @@ export * from './useGroups';
 export * from './useServices';
 export * from './useEvents';
 export * from './useStateCities';
+export * from './useUsers';

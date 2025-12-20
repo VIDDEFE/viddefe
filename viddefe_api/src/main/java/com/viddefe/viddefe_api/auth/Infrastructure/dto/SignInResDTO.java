@@ -5,12 +5,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class SignInResDTO {
     private String email;
     private RolUserModel rolUserModel;
-    private String fullName;
-    private java.util.UUID personId;
+    private String firstName;
+    private String lastName;
+    private UUID peopleId;
+    private UUID userId;
 }

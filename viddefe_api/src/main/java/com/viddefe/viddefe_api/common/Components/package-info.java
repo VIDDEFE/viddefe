@@ -1,3 +1,3 @@
 @org.springframework.modulith.NamedInterface("jwt")
 
-package com.viddefe.viddefe_api.config.Components;
+package com.viddefe.viddefe_api.common.Components;

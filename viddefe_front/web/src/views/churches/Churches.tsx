@@ -1,161 +1,287 @@
-import { useState } from 'react';
-import type { Church } from '../../models';
-import { Button, PageHeader, Table, Modal, Form, Input, DropDown } from '../../components/shared';
-import MapPicker from '../../components/shared/MapPicker';
-import { useChurches, useCreateChurch, useStates, useCities } from '../../hooks';
+import { useState, useEffect } from 'react';
+import type { ChurchSummary } from '../../models';
+import { Button, PageHeader, Table } from '../../components/shared';
+import { type ChurchFormData, initialChurchFormData } from '../../components/churches/ChurchForm';
+import { useChurchChildren, useStates, useCities, useCreateChildrenChurch, useUpdateChurch, useDeleteChurch, useChurch } from '../../hooks';
+import { useAppContext } from '../../context/AppContext';
+import ChurchFormModal from '../../components/churches/ChurchFormModal';
+import ChurchViewModal from '../../components/churches/ChurchViewModal';
+import ChurchDeleteModal from '../../components/churches/ChurchDeleteModal';
+import ChurchesMap from '../../components/churches/ChurchesMap';
+import { FiMap, FiList } from 'react-icons/fi';
+import { ChurchPermission } from '../../services/userService';
+
+type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
+type ViewMode = 'table' | 'map';
 
 export default function Churches() {
-  const { data: churches , isLoading } = useChurches()
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState<Partial<Church>>({});
+  const { user, hasPermission } = useAppContext();
+  const churchId = user?.church.id;
 
-  const createChurch = useCreateChurch();
+  // Permisos de iglesias
+  const canCreate = hasPermission(ChurchPermission.ADD);
+  const canView = hasPermission(ChurchPermission.VIEW);
+  const canEdit = hasPermission(ChurchPermission.EDIT);
+  const canDelete = hasPermission(ChurchPermission.DELETE);
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<ViewMode>('table');
+
+  // Data fetching
+  const { data: churches, isLoading } = useChurchChildren(churchId);
   const { data: states } = useStates();
-  const [selectedStateId, setSelectedStateId] = useState<number | undefined>(undefined);
-  const { data: cities } = useCities(selectedStateId);
-  const [selectedCityId, setSelectedCityId] = useState<number | undefined>(undefined);
 
-  const handleAddChurch = () => {
+  // Modal state
+  const [modalMode, setModalMode] = useState<ModalMode>(null);
+  const [selectedChurch, setSelectedChurch] = useState<ChurchSummary | null>(null);
+  const [formData, setFormData] = useState<ChurchFormData>(initialChurchFormData);
+
+  // Get details for selected church
+  const { data: churchDetails, isLoading: isLoadingDetails } = useChurch(selectedChurch?.id);
+  const { data: cities } = useCities(formData.stateId);
+
+  // Mutations
+  const createChurch = useCreateChildrenChurch(churchId);
+  const updateChurch = useUpdateChurch();
+  const deleteChurch = useDeleteChurch();
+
+  // Track if form was already populated to prevent overwriting user changes
+  const [formPopulated, setFormPopulated] = useState(false);
+
+  // Load church details when editing/viewing
+  // En Churches.tsx, reemplazar el useEffect problemático:
+  useEffect(() => {
+    if (!churchDetails || !selectedChurch || !(modalMode === 'edit' || modalMode === 'view')) return;
+    if (formPopulated && modalMode === 'edit') return;
+    
+    setFormData(prev => ({
+      name: churchDetails.name ?? prev.name ?? '',
+      email: churchDetails.email ?? prev.email ?? '',
+      phone: churchDetails.phone ?? prev.phone ?? '',
+      foundationDate: churchDetails.foundationDate ?? prev.foundationDate ?? '',
+      latitude: churchDetails.latitude !== undefined ? Number(churchDetails.latitude) : prev.latitude,
+      longitude: churchDetails.longitude !== undefined ? Number(churchDetails.longitude) : prev.longitude,
+      pastorId: churchDetails.pastor?.id ?? prev.pastorId ?? '',
+      stateId: churchDetails.states?.id ?? prev.stateId,
+      cityId: churchDetails.city?.cityId ?? prev.cityId,
+    }));
+
+    
+    if (modalMode === 'edit') {
+      setFormPopulated(true);
+    }
+  }, [churchDetails, modalMode]);
+
+// Modificar openModal para manejar mejor el estado:
+const openModal = (mode: ModalMode, church?: ChurchSummary) => {
+  if (church) {
+    setSelectedChurch(church);
+    setFormPopulated(mode !== 'edit'); // Solo resetear si no es edición
+  } else {
+    resetForm();
+  }
+  setModalMode(mode);
+};
+
+  // Modal handlers
+  const resetForm = () => {
+    setFormData(initialChurchFormData);
+    setSelectedChurch(null);
+    setFormPopulated(false);
+  };
+
+  const closeModal = () => {
+    setModalMode(null);
+    resetForm();
+  };
+
+  // Handle form changes from ChurchFormModal (receives partial updates)
+  const handleFormChange = (patch: Partial<ChurchFormData>) => {
+    setFormData(prev => {
+      const updated = { ...prev, ...patch };
+      return updated;
+    });
+  };
+
+  // CRUD handlers
+  const handleCreate = () => {
     if (!formData.name) return;
     createChurch.mutate(
       {
-        name: formData.name || '',
-        cityId: selectedCityId || 0,
-        phone: formData.phone || '',
-        email: formData.email || '',
-        pastor: formData.pastor || '',
-        foundedYear: formData.foundedYear || new Date().getFullYear(),
-        memberCount: formData.memberCount || 0,
+        name: formData.name,
+        cityId: formData.cityId || 0,
+        phone: formData.phone,
+        email: formData.email,
+        pastor: '',
+        pastorId: formData.pastorId || undefined,
+        foundationDate: formData.foundationDate || undefined,
+        memberCount: 0,
         longitude: formData.longitude || 0,
         latitude: formData.latitude || 0,
       },
-      {
-        onSuccess() {
-          setFormData({});
-          setIsModalOpen(false);
-        },
-      }
-    )
+      { onSuccess: closeModal }
+    );
   };
 
+  const handleUpdate = () => {
+    if (!selectedChurch?.id || !formData.name) return;
+    updateChurch.mutate(
+      {
+        id: selectedChurch.id,
+        data: {
+          name: formData.name,
+          cityId: formData.cityId,
+          phone: formData.phone,
+          email: formData.email,
+          pastorId: formData.pastorId || undefined,
+          foundationDate: formData.foundationDate,
+          latitude: formData.latitude,
+          longitude: formData.longitude,
+        },
+      },
+      { onSuccess: closeModal }
+    );
+  };
+
+  const createModal = () => {
+    resetForm();
+    setModalMode('create');
+    setViewMode('table');
+  }
+
+  const handleDelete = () => {
+    if (!selectedChurch?.id) return;
+    deleteChurch.mutate(selectedChurch.id, { onSuccess: closeModal });
+  };
+
+  // Table config
   const columns = [
     { key: 'name' as const, label: 'Nombre' },
-    { key: 'city' as const, label: 'Ciudad' },
-    { key: 'pastor' as const, label: 'Pastor' },
-    { key: 'memberCount' as const, label: 'Miembros' },
+    {
+      key: 'pastor' as const,
+      label: 'Pastor',
+      render: (_: unknown, item: ChurchSummary) =>
+        item.pastor && typeof item.pastor === 'object'
+          ? `${item.pastor.firstName} ${item.pastor.lastName}`
+          : '-',
+    },
+    {
+      key: 'states' as const,
+      label: 'Departamento',
+      render: (_: unknown, item: ChurchSummary) => item.states?.name || '-',
+    },
+    {
+      key: 'city' as const,
+      label: 'Ciudad',
+      render: (_: unknown, item: ChurchSummary) => item.city?.name || '-',
+    },
   ];
+
+  // Construir acciones basadas en permisos
+  const tableActions = [
+    ...(canView ? [{ icon: 'view' as const, label: 'Ver', onClick: (c: ChurchSummary) => openModal('view', c), variant: 'secondary' as const }] : []),
+    ...(canEdit ? [{ icon: 'edit' as const, label: 'Editar', onClick: (c: ChurchSummary) => openModal('edit', c), variant: 'primary' as const }] : []),
+    ...(canDelete ? [{ icon: 'delete' as const, label: 'Eliminar', onClick: (c: ChurchSummary) => openModal('delete', c), variant: 'danger' as const }] : []),
+  ];
+
+  const isMutating = createChurch.isPending || updateChurch.isPending;
+
+  // Datos para el mapa
+  const churchesArray = Array.isArray(churches) ? churches : (churches?.content ?? []);
 
   return (
     <div className="container mx-auto px-2">
       <PageHeader
-        title="Iglesias"
-        subtitle="Gestiona todas las iglesias"
-        actions={<Button variant="primary" onClick={() => setIsModalOpen(true)}>+ Nueva Iglesia</Button>}
-      />
-
-      <Table<Church>
-        data={Array.isArray(churches) ? churches : (churches?.content ?? [])}
-        columns={columns}
-      />
-
-      <Modal
-        isOpen={isModalOpen}
-        title="Agregar Nueva Iglesia"
-        onClose={() => setIsModalOpen(false)}
+        title="Iglesias Hijas"
+        subtitle="Gestiona todas las iglesias hijas de tu organización desde este panel."
         actions={
-          <div className="flex gap-2">
-            <Button variant="primary" onClick={handleAddChurch} disabled={isLoading}>
-              Guardar
-            </Button>
-            <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
-              Cancelar
-            </Button>
+          <div className="flex items-center gap-2">
+            {/* Toggle vista */}
+            <div className="flex items-center bg-neutral-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'table'
+                    ? 'bg-white text-primary-700 shadow-sm'
+                    : 'text-neutral-600 hover:text-neutral-800'
+                }`}
+              >
+                <FiList className="w-4 h-4" />
+                <span>Tabla</span>
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                  viewMode === 'map'
+                    ? 'bg-white text-primary-700 shadow-sm'
+                    : 'text-neutral-600 hover:text-neutral-800'
+                }`}
+              >
+                <FiMap className="w-4 h-4" />
+                <span>Mapa</span>
+              </button>
+            </div>
+            {canCreate && <Button variant="primary" onClick={createModal}>+ Nueva Iglesia</Button>}
           </div>
         }
-      >
-        <Form>
-          <Input
-            label="Nombre"
-            placeholder="Nombre de la iglesia"
-            value={formData.name || ''}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
-          
-          <Input
-            label="Pastor"
-            placeholder="Nombre del pastor"
-            value={formData.pastor || ''}
-            onChange={(e) => setFormData({ ...formData, pastor: e.target.value })}
-          />
-          <Input
-            label="Email"
-            type="email"
-            placeholder="correo@iglesia.com"
-            value={formData.email || ''}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-          <Input
-            label="Teléfono"
-            placeholder="Teléfono"
-            value={formData.phone || ''}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          />
+      />
 
-          <div>
+      {/* Vista de Mapa */}
+      {viewMode === 'map' && (
+        <div className="mb-6 animate-fadeIn">
+          <ChurchesMap
+            churches={churchesArray}
+            height={600}
+            onChurchSelect={(church) => openModal('view', church)}
+          />
+        </div>
+      )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-              <DropDown
-                label="Departamento"
-                options={(states ?? []).map((s) => ({ value: String(s.id), label: s.name }))}
-                value={selectedStateId ? String(selectedStateId) : ''}
-                onChangeValue={(val) => {
-                  const id = val ? Number(val) : undefined;
-                  setSelectedStateId(id);
-                  setSelectedCityId(undefined);
-                  setFormData(prev => ({ ...prev, city: undefined }));
-                }}
-                searchKey="label"
-              />
+      {/* Vista de Tabla */}
+      {viewMode === 'table' && (
+        <div className="animate-fadeIn">
+          <Table<ChurchSummary>
+            data={churchesArray}
+            columns={columns}
+            actions={tableActions}
+            loading={isLoading}
+            pagination={{ mode: 'auto', pageSize: 10 }}
+          />
+        </div>
+      )}
 
-              <DropDown
-                label="Ciudad"
-                options={(cities ?? []).map((c) => ({
-                  value: String(c.cityId),
-                  label: c.name,
-                }))}
-                value={selectedCityId ? String(selectedCityId) : ''}
-                onChangeValue={(val) => {
-                  const id = val ? Number(val) : undefined;
-                  setSelectedCityId(id);
-                  setFormData((prev) => ({ ...prev, city: id }));
-                }}
-                searchKey="label"
-              />
-            </div>
+      {
+        viewMode == 'table' &&
+      (<><ChurchFormModal
+        isOpen={modalMode === 'create' || modalMode === 'edit'}
+        mode={modalMode === 'edit' ? 'edit' : 'create'}
+        formData={formData}
+        onFormChange={handleFormChange}
+        onSave={modalMode === 'create' ? handleCreate : handleUpdate}
+        onClose={closeModal}
+        isLoading={modalMode === 'edit' && isLoadingDetails}
+        isSaving={isMutating}
+        states={states}
+        cities={cities}
+      />
 
-            <label className="font-semibold text-primary-900 mb-2 text-base block">Mapa (click en el mapa para colocar marcador)</label>
-            <MapPicker
-              position={formData.latitude && formData.longitude ? { lat: formData.latitude, lng: formData.longitude } : null}
-              onChange={(p) => setFormData({ ...formData, latitude: p?.lat ?? 0, longitude: p?.lng ?? 0 })}
-              height={300}
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-              <Input
-                label="Latitud"
-                placeholder="Latitud"
-                value={formData.latitude ? String(formData.latitude) : ''}
-                onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value || '0') })}
-              />
-              <Input
-                label="Longitud"               
-                placeholder="Longitud"
-                value={formData.longitude ? String(formData.longitude) : ''}
-                onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value || '0') })}
-              />
-            </div>
-          </div>
-        </Form>
-      </Modal>
+      <ChurchViewModal
+        isOpen={modalMode === 'view'}
+        church={selectedChurch!!}
+        churchDetails={churchDetails!!}
+        isLoading={isLoadingDetails}
+        onEdit={() => selectedChurch && openModal('edit', selectedChurch)}
+        onClose={closeModal}
+      />
+
+      <ChurchDeleteModal
+        isOpen={modalMode === 'delete'}
+        churchName={selectedChurch?.name || ''}
+        onConfirm={handleDelete}
+        onClose={closeModal}
+        isDeleting={deleteChurch.isPending}
+      />
+      </>)}
     </div>
   );
 }

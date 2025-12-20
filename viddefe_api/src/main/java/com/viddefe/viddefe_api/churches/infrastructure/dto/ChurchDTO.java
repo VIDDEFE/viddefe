@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.UUID;
 
 @Getter
@@ -30,4 +31,16 @@ public class ChurchDTO {
 
     @NotNull(message = "No se indico la ciudad perteneciente")
     private Long cityId;
+
+    @NotBlank(message = "El correo electronico es obligatorio")
+    @Email(message = "El correo electronico no es valido")
+    @Size(max = 100, message = "El correo no puede superar los 100 caracteres")
+    private String email;
+
+    @NotNull(message = "El telefono es obligatorio")
+    private Long phone;
+    @NotNull(message = "La fecha de fundacion es obligatoria")
+    private Date foundationDate;
+
+    private UUID pastorId;
 }

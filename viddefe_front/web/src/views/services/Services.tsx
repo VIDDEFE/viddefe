@@ -29,6 +29,7 @@ export default function Services() {
           startTime: formData.startTime || '10:00',
           endTime: formData.endTime || '12:00',
           type: (formData.type as any) || 'sunday_service',
+          attendees: formData.attendees || [],
           pastor: formData.pastor || '1',
           location: formData.location || '',
         },
@@ -72,7 +73,7 @@ export default function Services() {
         onClose={() => setIsModalOpen(false)}
         actions={
           <div className="flex gap-2">
-            <Button variant="primary" onClick={handleAddService} disabled={createService.isLoading}>
+            <Button variant="primary" onClick={handleAddService} disabled={createService.isPending}>
               Guardar
             </Button>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>

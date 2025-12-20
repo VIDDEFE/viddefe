@@ -2,19 +2,20 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button, Form, Input, Card } from '../components/shared';
 import { useAppContext } from '../context/AppContext';
-import { authService } from '../services/authService';
+import { authService, type SignInIncompleteData, type SignInResponse } from '../services/authService';
 import { validateEmail } from '../utils';
 
 export default function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setUser } = useAppContext();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { setUser, setPermissions } = useAppContext();
+  const [email, setEmail] = useState('jctobon@gmail.com');
+  const [password, setPassword] = useState('j1122920156T.');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const { login } = useAppContext();
+  
   useEffect(() => {
     // Mostrar mensaje de éxito si viene del signup
     const state = location.state as { message?: string } | null;
@@ -40,17 +41,39 @@ export default function SignIn() {
 
     setLoading(true);
     try {
-      const response = await authService.signIn({
+      const response : SignInResponse = await login(
         email,
         password,
-      });
+      );
 
-      // Guardar token y usuario en contexto y localStorage
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      
-      setUser(response.user);
-      navigate('/dashboard');
+      // Si el proceso no está completo, redirigir a signup con el paso correspondiente
+      if (!response.completed && response.nextStep !== 'DONE') {
+        const incompleteData = response.data as SignInIncompleteData;
+        
+        navigate('/signup', {
+          state: {
+            resumeProcess: true,
+            nextStep: response.nextStep,
+            peopleId: incompleteData.peopleId,
+            userId: incompleteData.userId,
+            email: incompleteData.email || email,
+            person: incompleteData.person,
+          },
+        });
+        return;
+      }
+
+      // Proceso completo - continuar con login normal
+      // Cargar permisos desde meta si existen
+      const rawResponse = response as any;
+      if (rawResponse.meta?.permissions) {
+        setPermissions(rawResponse.meta.permissions);
+      }
+
+      const userInfo = await authService.me();
+      setUser(userInfo);
+      navigate('/');
+
     } catch (err: any) {
       setError(err?.message || 'Error al iniciar sesión. Intenta de nuevo.');
     } finally {
@@ -59,7 +82,7 @@ export default function SignIn() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
+    <div className="min-h-screen  bg-linear-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-primary-800 mb-2">VIDDEFE</h1>

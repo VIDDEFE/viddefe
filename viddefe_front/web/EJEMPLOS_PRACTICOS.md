@@ -68,7 +68,7 @@ export default function Organizations() {
         <Table<Organization>
           data={organizations}
           columns={columns}
-          onRowClick={(org) => console.log('Seleccionada:', org)}
+          onRowClick={}
         />
       </Card>
 
@@ -127,12 +127,12 @@ export default function Statistics() {
     <div className="stats-container">
       <Card>
         <h3>Iglesias: {churches.length}</h3>
-        <Button onClick={() => console.log(churches)}>Ver Iglesias</Button>
+        <Button onClick={}>Ver Iglesias</Button>
       </Card>
       
       <Card>
         <h3>Personas: {people.length}</h3>
-        <Button onClick={() => console.log(people)}>Ver Personas</Button>
+        <Button onClick={}>Ver Personas</Button>
       </Card>
 
       <Card>
@@ -180,7 +180,6 @@ export default function ContactForm() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      console.log('Formulario válido:', form.values);
       form.reset();
       setErrors({});
     }

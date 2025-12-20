@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.people.domain.model;
 import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,7 +50,7 @@ public class PeopleModel {
     @Column(length = 256)
     private String avatar;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "church_id")
     private ChurchModel church;
 
@@ -60,6 +61,20 @@ public class PeopleModel {
         this.phone = dto.getPhone();
         this.birthdate = dto.getBirthDate();
         return this;
+    }
+
+    public PeopleResDto toDto(){
+        return new PeopleResDto(
+                this.id,
+                this.cc,
+                this.firstName,
+                this.lastName,
+                this.phone,
+                this.avatar,
+                java.sql.Date.valueOf(this.birthdate),
+                this.typePerson,
+                this.state.toDto()
+        );
     }
 
 }
