@@ -1,4 +1,5 @@
 export * from './api';
+export type { Pageable, PageableRequest, SortConfig, SortDirection } from './api';
 export * from './churchService';
 export * from './personService';
 export * from './serviceService';

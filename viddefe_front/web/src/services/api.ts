@@ -31,9 +31,19 @@ export type Pageable<T> = {
   size: number;
 };
 
+// Dirección de ordenamiento compatible con Spring Boot
+export type SortDirection = 'asc' | 'desc';
+
+// Configuración de ordenamiento
+export type SortConfig = {
+  field: string;
+  direction: SortDirection;
+};
+
 export type PageableRequest = {
   size: number;
   page: number;
+  sort?: SortConfig;
 };
 
 // Cambiamos a sessionStorage para persistencia

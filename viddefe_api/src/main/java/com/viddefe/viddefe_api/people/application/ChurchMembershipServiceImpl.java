@@ -38,7 +38,7 @@ public class ChurchMembershipServiceImpl implements ChurchMembershipService {
     public PeopleModel assignPersonToChurchAsPastor(UUID personId, UUID churchId) {
         PeopleModel person = findPersonOrThrow(personId);
         ChurchModel church = churchLookup.getChurchById(churchId);
-        PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.name());
+        PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.getLabel());
         
         person.setChurch(church);
         person.setTypePerson(pastorType);

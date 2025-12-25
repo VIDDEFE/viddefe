@@ -1,14 +1,43 @@
-import { apiService, type Pageable } from './api';
+import { apiService, type Pageable, type PageableRequest, type SortConfig } from './api';
 import type { Person } from '../models';
 
+// Tipo para los tipos de persona
+export interface PersonType {
+  id: number;
+  name: string;
+}
+
+// Parámetros extendidos para búsqueda de personas
+export interface PeopleSearchParams extends PageableRequest {
+  typePersonId?: number;
+}
+
+// Helper para construir query string de sort para Spring Boot
+const buildSortParam = (sort?: SortConfig): string => {
+  if (!sort) return '';
+  return `sort=${sort.field},${sort.direction}`;
+};
+
 export const personService = {
-  getAll: () => apiService.get<Pageable<Person>>('/people'),
+  getAll: (params?: PeopleSearchParams) => {
+    const queryParts: string[] = [];
+    if (params?.page !== undefined) queryParts.push(`page=${params.page}`);
+    if (params?.size !== undefined) queryParts.push(`size=${params.size}`);
+    if (params?.typePersonId !== undefined) queryParts.push(`typePersonId=${params.typePersonId}`);
+    if (params?.sort) queryParts.push(buildSortParam(params.sort));
+    const queryParams = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
+    return apiService.get<Pageable<Person>>(`/people${queryParams}`);
+  },
   getById: (id: string) => apiService.get<Person>(`/people/${id}`),
   create: (person: Omit<Person, 'id' | 'createdAt' | 'updatedAt'>) =>
     apiService.post<Person>('/people', person),
   update: (id: string, person: Partial<Person>) =>
     apiService.put<Person>(`/people/${id}`, person),
   delete: (id: string) => apiService.delete(`/people/${id}`),
-  getByChurch: (churchId: string) =>
-    apiService.get<Person[]>(`/people?churchId=${churchId}`),
+  getByChurch: (churchId: string, params?: PageableRequest) => {
+    const queryParams = params ? `&page=${params.page}&size=${params.size}` : '';
+    return apiService.get<Person[]>(`/people?churchId=${churchId}${queryParams}`);
+  },
+  // Obtener tipos de persona
+  getTypes: () => apiService.get<PersonType[]>('/people/types'),
 };

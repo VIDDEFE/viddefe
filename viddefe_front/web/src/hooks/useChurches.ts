@@ -1,11 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { churchService } from '../services/churchService'
-import type { Church, ChurchDetail } from '../models'
+import type { Church, ChurchDetail, ChurchSummary } from '../models'
+import type { Pageable, PageableRequest } from '../services/api'
 
-export function useChurches() {
-  return useQuery({
-    queryKey: ['churches'],
-    queryFn: churchService.getAll
+export function useChurches(params?: PageableRequest) {
+  return useQuery<Pageable<ChurchSummary>, Error>({
+    queryKey: ['churches', params?.page, params?.size, params?.sort?.field, params?.sort?.direction],
+    queryFn: () => churchService.getAll(params)
   })
 }
 
@@ -17,10 +18,10 @@ export function useChurch(id?: string) {
   })
 }
 
-export function useChurchChildren(churchId?: string) {
-  return useQuery({
-    queryKey: ['churches', 'children', churchId],
-    queryFn: () => churchService.getChildren(churchId!),
+export function useChurchChildren(churchId?: string, params?: PageableRequest) {
+  return useQuery<Pageable<ChurchSummary>, Error>({
+    queryKey: ['churches', 'children', churchId, params?.page, params?.size, params?.sort?.field, params?.sort?.direction],
+    queryFn: () => churchService.getChildren(churchId!, params),
     enabled: !!churchId
   })
 }

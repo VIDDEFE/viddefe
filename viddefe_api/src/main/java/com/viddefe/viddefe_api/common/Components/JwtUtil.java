@@ -34,6 +34,7 @@ public class JwtUtil {
      * @param firstName
      * @param lastName
      * @param userId
+     * @param churchId
      * @param permissions list of permissions {@link List<String>}
      * @return String JWT token
      */
@@ -43,12 +44,14 @@ public class JwtUtil {
             String firstName,
             String lastName,
             UUID userId,
+            UUID churchId,
             List<String> permissions) {
         Map<String, String > claims = Map.of(
                 "role", role,
                 "first_name", firstName,
                 "last_name", lastName,
                 "userId", userId.toString(),
+                "churchId", churchId.toString(), // Placeholder for churchId
                 "permissions", String.join(",", permissions)
         );
 
@@ -79,6 +82,11 @@ public class JwtUtil {
     public UUID getUserId(String token) {
         String userIdStr = getClaims(token).get("userId", String.class);
         return UUID.fromString(userIdStr);
+    }
+
+    public UUID getChurchId(String token) {
+        String churchIdStr = getClaims(token).get("churchId", String.class);
+        return UUID.fromString(churchIdStr);
     }
 
     public boolean isTokenValid(String token) {

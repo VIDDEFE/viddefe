@@ -1,9 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { 
   FiEdit2, FiTrash2, FiEye, FiChevronLeft, FiChevronRight, 
-  FiChevronsLeft, FiChevronsRight, FiUserPlus, FiFilter 
+  FiChevronsLeft, FiChevronsRight, FiUserPlus, FiFilter,
+  FiChevronUp, FiChevronDown
 } from 'react-icons/fi';
 import { HiOutlineViewGrid, HiOutlineViewList } from 'react-icons/hi';
+
+// Tipos de ordenamiento
+export type SortDirection = 'asc' | 'desc';
+export type SortConfig = {
+  field: string;
+  direction: SortDirection;
+};
 
 interface TableColumn<T> {
   key: keyof T;
@@ -11,6 +19,7 @@ interface TableColumn<T> {
   render?: (value: T[keyof T], item: T) => React.ReactNode;
   hideOnMobile?: boolean;
   priority?: number; // 1-5, donde 1 es más importante
+  sortable?: boolean; // Indica si la columna es ordenable
 }
 
 interface TableAction<T> {
@@ -42,6 +51,20 @@ interface AutoPagination {
 
 type PaginationProps = ManualPagination | AutoPagination;
 
+// Ordenamiento manual (backend)
+interface ManualSorting {
+  mode: 'manual';
+  sortConfig?: SortConfig;
+  onSortChange: (sort: SortConfig | undefined) => void;
+}
+
+// Ordenamiento automático (frontend)
+interface AutoSorting {
+  mode: 'auto';
+}
+
+type SortingProps = ManualSorting | AutoSorting;
+
 interface TableProps<T extends { id: string }> {
   data: T[];
   columns: TableColumn<T>[];
@@ -49,6 +72,7 @@ interface TableProps<T extends { id: string }> {
   actions?: TableAction<T>[];
   loading?: boolean;
   pagination?: PaginationProps;
+  sorting?: SortingProps;
   title?: string;
   searchable?: boolean;
   onSearch?: (query: string) => void;
@@ -79,6 +103,7 @@ export default function Table<T extends { id: string }>({
   actions,
   loading = false,
   pagination,
+  sorting,
   title,
   searchable,
   onSearch,
@@ -90,6 +115,9 @@ export default function Table<T extends { id: string }>({
   const [autoPageSize, setAutoPageSize] = useState(
     pagination?.mode === 'auto' ? (pagination.pageSize ?? DEFAULT_PAGE_SIZE) : DEFAULT_PAGE_SIZE
   );
+
+  // Estado para ordenamiento automático
+  const [autoSort, setAutoSort] = useState<SortConfig | undefined>(undefined);
 
   // Estado para vista móvil
   const [isMobileView, setIsMobileView] = useState(false);
@@ -126,14 +154,43 @@ export default function Table<T extends { id: string }>({
     );
   }, [data, searchQuery, onSearch]);
 
+  // Obtener configuración de ordenamiento actual
+  const currentSort = useMemo(() => {
+    if (!sorting) return undefined;
+    if (sorting.mode === 'manual') return sorting.sortConfig;
+    return autoSort;
+  }, [sorting, autoSort]);
+
+  // Ordenar datos (solo para modo automático)
+  const sortedData = useMemo(() => {
+    if (!sorting || sorting.mode === 'manual' || !autoSort) {
+      return filteredData;
+    }
+    
+    // Ordenamiento local para modo automático
+    const sorted = [...filteredData].sort((a, b) => {
+      const aValue = a[autoSort.field as keyof T];
+      const bValue = b[autoSort.field as keyof T];
+      
+      if (aValue === bValue) return 0;
+      if (aValue === null || aValue === undefined) return 1;
+      if (bValue === null || bValue === undefined) return -1;
+      
+      const comparison = String(aValue).localeCompare(String(bValue), undefined, { numeric: true });
+      return autoSort.direction === 'asc' ? comparison : -comparison;
+    });
+    
+    return sorted;
+  }, [filteredData, sorting, autoSort]);
+
   // Calcular datos paginados
   const paginatedData = useMemo(() => {
     if (!pagination || pagination.mode === 'manual') {
-      return filteredData;
+      return sortedData;
     }
     const start = autoPage * autoPageSize;
-    return filteredData.slice(start, start + autoPageSize);
-  }, [filteredData, pagination, autoPage, autoPageSize]);
+    return sortedData.slice(start, start + autoPageSize);
+  }, [sortedData, pagination, autoPage, autoPageSize]);
 
   // Calcular info de paginación
   const paginationInfo = useMemo(() => {
@@ -149,15 +206,15 @@ export default function Table<T extends { id: string }>({
       };
     }
 
-    const totalPages = Math.ceil(filteredData.length / autoPageSize);
+    const totalPages = Math.ceil(sortedData.length / autoPageSize);
     return {
       currentPage: autoPage,
       totalPages,
-      totalElements: filteredData.length,
+      totalElements: sortedData.length,
       pageSize: autoPageSize,
       pageSizeOptions: pagination.pageSizeOptions ?? DEFAULT_PAGE_SIZE_OPTIONS,
     };
-  }, [pagination, filteredData.length, autoPage, autoPageSize]);
+  }, [pagination, sortedData.length, autoPage, autoPageSize]);
 
   const handlePageChange = (page: number) => {
     if (!pagination) return;
@@ -186,7 +243,50 @@ export default function Table<T extends { id: string }>({
     }
   };
 
-  const displayData = pagination ? paginatedData : filteredData;
+  // Manejar cambio de ordenamiento
+  const handleSortChange = (field: string) => {
+    if (!sorting) return;
+    
+    let newSort: SortConfig | undefined;
+    
+    if (currentSort?.field === field) {
+      // Si ya está ordenado por este campo, cambiar dirección o quitar
+      if (currentSort.direction === 'asc') {
+        newSort = { field, direction: 'desc' };
+      } else {
+        newSort = undefined; // Quitar ordenamiento
+      }
+    } else {
+      // Nuevo campo de ordenamiento
+      newSort = { field, direction: 'asc' };
+    }
+    
+    if (sorting.mode === 'manual') {
+      sorting.onSortChange(newSort);
+    } else {
+      setAutoSort(newSort);
+    }
+  };
+
+  // Renderizar icono de ordenamiento
+  const renderSortIcon = (field: string) => {
+    if (currentSort?.field !== field) {
+      return (
+        <span className="ml-1 opacity-30 group-hover:opacity-60">
+          <FiChevronUp size={12} className="inline -mb-1" />
+          <FiChevronDown size={12} className="inline -mt-1" />
+        </span>
+      );
+    }
+    
+    return currentSort.direction === 'asc' ? (
+      <FiChevronUp size={14} className="ml-1 inline text-primary-600" />
+    ) : (
+      <FiChevronDown size={14} className="ml-1 inline text-primary-600" />
+    );
+  };
+
+  const displayData = pagination ? paginatedData : sortedData;
 
   // Renderizar tabla para desktop
   const renderDesktopTable = () => (
@@ -194,14 +294,23 @@ export default function Table<T extends { id: string }>({
       <table className="w-full border-collapse min-w-max">
         <thead className="from-primary-50 to-primary-100 border-b-2 border-primary-300 sticky top-0 bg-white z-10">
           <tr>
-            {columns.map(col => (
-              <th 
-                key={String(col.key)} 
-                className="px-4 py-4 text-left font-bold text-primary-900 text-sm uppercase tracking-wider"
-              >
-                {col.label}
-              </th>
-            ))}
+            {columns.map(col => {
+              const isSortable = col.sortable !== false && sorting;
+              return (
+                <th 
+                  key={String(col.key)} 
+                  className={`px-4 py-4 text-left font-bold text-primary-900 text-sm uppercase tracking-wider ${
+                    isSortable ? 'cursor-pointer hover:bg-primary-50 select-none group transition-colors' : ''
+                  }`}
+                  onClick={() => isSortable && handleSortChange(String(col.key))}
+                >
+                  <span className="flex items-center">
+                    {col.label}
+                    {isSortable && renderSortIcon(String(col.key))}
+                  </span>
+                </th>
+              );
+            })}
             {actions && actions.length > 0 && (
               <th className="px-4 py-4 text-center font-bold text-primary-900 text-sm uppercase tracking-wider w-32">
                 Acciones

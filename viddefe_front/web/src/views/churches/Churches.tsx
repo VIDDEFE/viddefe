@@ -10,9 +10,12 @@ import ChurchDeleteModal from '../../components/churches/ChurchDeleteModal';
 import ChurchesMap from '../../components/churches/ChurchesMap';
 import { FiMap, FiList } from 'react-icons/fi';
 import { ChurchPermission } from '../../services/userService';
+import type { SortConfig } from '../../services/api';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
 type ViewMode = 'table' | 'map';
+
+const DEFAULT_PAGE_SIZE = 10;
 
 export default function Churches() {
   const { user, hasPermission } = useAppContext();
@@ -27,8 +30,19 @@ export default function Churches() {
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('table');
 
-  // Data fetching
-  const { data: churches, isLoading } = useChurchChildren(churchId);
+  // Estado de paginación
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // Estado de ordenamiento
+  const [sortConfig, setSortConfig] = useState<SortConfig | undefined>(undefined);
+
+  // Data fetching con paginación y ordenamiento
+  const { data: churches, isLoading } = useChurchChildren(churchId, { 
+    page: currentPage, 
+    size: pageSize,
+    sort: sortConfig 
+  });
   const { data: states } = useStates();
 
   // Modal state
@@ -186,8 +200,32 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
 
   const isMutating = createChurch.isPending || updateChurch.isPending;
 
-  // Datos para el mapa
+  // Datos para el mapa y tabla
   const churchesArray = Array.isArray(churches) ? churches : (churches?.content ?? []);
+  
+  // Información de paginación del servidor
+  const paginationData = churches && !Array.isArray(churches) ? {
+    totalPages: churches.totalPages,
+    totalElements: churches.totalElements,
+    currentPage: churches.number,
+    pageSize: churches.size
+  } : null;
+
+  // Handlers de paginación
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(0); // Resetear a primera página
+  };
+
+  // Handler para cambio de ordenamiento
+  const handleSortChange = (sort: SortConfig | undefined) => {
+    setSortConfig(sort);
+    setCurrentPage(0); // Resetear a primera página al ordenar
+  };
 
   return (
     <div className="container mx-auto px-2">
@@ -245,7 +283,20 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
             columns={columns}
             actions={tableActions}
             loading={isLoading}
-            pagination={{ mode: 'auto', pageSize: 10 }}
+            pagination={paginationData ? {
+              mode: 'manual',
+              currentPage: paginationData.currentPage,
+              totalPages: paginationData.totalPages,
+              totalElements: paginationData.totalElements,
+              pageSize: paginationData.pageSize,
+              onPageChange: handlePageChange,
+              onPageSizeChange: handlePageSizeChange,
+            } : { mode: 'auto', pageSize: DEFAULT_PAGE_SIZE }}
+            sorting={{
+              mode: 'manual',
+              sortConfig: sortConfig,
+              onSortChange: handleSortChange,
+            }}
           />
         </div>
       )}

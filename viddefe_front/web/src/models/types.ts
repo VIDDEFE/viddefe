@@ -68,7 +68,7 @@ export interface Person extends BaseEntity {
   email: string;
   phone: string;
   birthDate: Date;
-  role: PersonRole;
+  typePerson: PersonRole;
   churchId: string;
   state: States;
   status: 'active' | 'inactive' | 'suspended';
@@ -77,7 +77,10 @@ export interface Person extends BaseEntity {
   userId?: string;
 }
 
-export type PersonRole = 'pastor' | 'deacon' | 'member' | 'visitor' | 'volunteer';
+export type PersonRole = {
+  id: number;
+  name: string;
+};
 
 // Servicio/Culto
 export interface Service extends BaseEntity {
