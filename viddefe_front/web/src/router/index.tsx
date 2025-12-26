@@ -9,6 +9,7 @@ import People from '../views/people/People';
 import Services from '../views/services/Services';
 import Groups from '../views/groups/Groups';
 import Events from '../views/events/Events';
+import Worships from '../views/worships/Worships';
 import type { JSX } from 'react';
 
 function ProtectedRoute({ element }: { element: JSX.Element }) {
@@ -31,6 +32,7 @@ export default function Router() {
         <Route path="/services" element={<ProtectedRoute element={<Services />} />} />
         <Route path="/groups" element={<ProtectedRoute element={<Groups />} />} />
         <Route path="/events" element={<ProtectedRoute element={<Events />} />} />
+        <Route path="/worships" element={<ProtectedRoute element={<Worships />} />} />
       </Route>
 
       <Route path="/" element={<Navigate to={user ? "/dashboard" : "/signin"} replace />} />

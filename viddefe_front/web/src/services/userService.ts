@@ -24,20 +24,31 @@ export const ChurchPermission = {
 
 export type ChurchPermissionType = typeof ChurchPermission[keyof typeof ChurchPermission];
 
+/** Permisos relacionados con la gestión de cultos */
+export const WorshipPermission = {
+  ADD: 'WORSHIP_ADD_MEETING',
+  VIEW: 'WORSHIP_VIEW_MEETING',
+  EDIT: 'WORSHIP_EDIT_MEETING',
+  DELETE: 'WORSHIP_DELETE_MEETING',
+} as const;
+
+export type WorshipPermissionType = typeof WorshipPermission[keyof typeof WorshipPermission];
+
 // Tipo union de todos los permisos
-export type PermissionKey = PeoplePermissionType | ChurchPermissionType;
+export type PermissionKey = PeoplePermissionType | ChurchPermissionType | WorshipPermissionType;
 
 // Array con todos los valores de permisos
 export const ALL_PERMISSIONS = [
   ...Object.values(PeoplePermission),
   ...Object.values(ChurchPermission),
+  ...Object.values(WorshipPermission),
 ] as const;
 
 export interface Permission {
   key: PermissionKey;
   label: string;
   description: string;
-  category: 'churches' | 'people';
+  category: 'churches' | 'people' | 'worships';
 }
 
 // Respuesta del backend para permisos
@@ -46,7 +57,7 @@ export interface PermissionResponse {
 }
 
 // Mapeo de permisos para la UI (fallback si el endpoint falla)
-export const PERMISSION_MAP: Record<PermissionKey, { label: string; description: string; category: 'churches' | 'people' }> = {
+export const PERMISSION_MAP: Record<PermissionKey, { label: string; description: string; category: 'churches' | 'people' | 'worships' }> = {
   // Personas
   [PeoplePermission.ADD]: { label: 'Agregar personas', description: 'Permite agregar nuevos registros de personas', category: 'people' },
   [PeoplePermission.VIEW]: { label: 'Ver personas', description: 'Permite ver información de personas', category: 'people' },
@@ -57,6 +68,11 @@ export const PERMISSION_MAP: Record<PermissionKey, { label: string; description:
   [ChurchPermission.VIEW]: { label: 'Ver hijos', description: 'Permite ver iglesias hijas', category: 'churches' },
   [ChurchPermission.EDIT]: { label: 'Editar hijos', description: 'Permite editar iglesias hijas', category: 'churches' },
   [ChurchPermission.DELETE]: { label: 'Eliminar hijos', description: 'Permite eliminar iglesias hijas', category: 'churches' },
+  // Cultos
+  [WorshipPermission.ADD]: { label: 'Agregar cultos', description: 'Permite agregar nuevos cultos', category: 'worships' },
+  [WorshipPermission.VIEW]: { label: 'Ver cultos', description: 'Permite ver información de cultos', category: 'worships' },
+  [WorshipPermission.EDIT]: { label: 'Editar cultos', description: 'Permite editar cultos', category: 'worships' },
+  [WorshipPermission.DELETE]: { label: 'Eliminar cultos', description: 'Permite eliminar cultos', category: 'worships' },
 };
 
 // Construir lista de permisos desde el mapa
@@ -70,6 +86,7 @@ export const AVAILABLE_PERMISSIONS: Permission[] = Object.entries(PERMISSION_MAP
 export const PERMISSION_CATEGORIES = {
   people: { label: 'Personas', icon: '👥' },
   churches: { label: 'Iglesias', icon: '⛪' },
+  worships: { label: 'Cultos', icon: '🙏' },
 };
 
 // Función para convertir nombre del backend a PermissionKey

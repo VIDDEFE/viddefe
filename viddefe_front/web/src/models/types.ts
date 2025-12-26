@@ -129,3 +129,35 @@ export interface Event extends BaseEntity {
 }
 
 export type EventStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
+
+// Worship Type (Tipo de Culto)
+export interface WorshipType {
+  id: number;
+  name: string;
+}
+
+// Worship Meeting (Culto)
+export interface Worship {
+  id: string;
+  name: string;
+  description?: string;
+  creationDate: string;
+  scheduledDate: string;
+  worshipType: WorshipType;
+}
+
+// DTO para crear un culto
+export interface CreateWorshipDto {
+  name: string;
+  description?: string;
+  scheduledDate: string;
+  worshipTypeId: number;
+}
+
+// DTO para actualizar un culto
+export interface UpdateWorshipDto {
+  name?: string;
+  description?: string;
+  scheduledDate?: string;
+  worshipTypeId?: number;
+}

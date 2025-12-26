@@ -514,7 +514,9 @@ export default function Table<T extends { id: string }>({
     return (
       <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-neutral-200 bg-neutral-50 rounded-b-xl gap-4">
         {/* Información general - visible en todos los dispositivos */}
-        <div className="text-sm text-neutral-600">
+        <div className="flex items-center gap-2">
+
+        <div className="text-sm text-neutral-600 mr-4">
           <span className="hidden sm:inline">
             Mostrando {displayData.length} de {paginationInfo.totalElements} registros
           </span>
@@ -524,7 +526,6 @@ export default function Table<T extends { id: string }>({
         </div>
 
         {/* Selector de tamaño de página - oculto en móvil si hay muchas opciones */}
-        <div className="flex items-center gap-2">
           <label className="hidden sm:block text-sm text-neutral-600">Por página:</label>
           <select
             value={paginationInfo.pageSize}

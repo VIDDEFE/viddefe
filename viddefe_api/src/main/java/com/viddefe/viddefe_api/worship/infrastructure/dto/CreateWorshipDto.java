@@ -7,8 +7,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
-import java.util.UUID;
+import java.time.LocalDateTime;
 
 @Getter @Setter
 public class CreateWorshipDto {
@@ -21,11 +20,8 @@ public class CreateWorshipDto {
 
     @NotNull(message = "Scheduled date is required")
     @FutureOrPresent(message = "Scheduled date cannot be in the past")
-    private LocalDate scheduledDate;
+    private LocalDateTime scheduledDate;
 
-    /**
-     * One of these must be present, not both.
-     */
-    private UUID worshipTypeId;
-    private UUID groupMeetingTypeId;
+    @NotNull(message = "Worship type ID is required")
+    private Long worshipTypeId;
 }
