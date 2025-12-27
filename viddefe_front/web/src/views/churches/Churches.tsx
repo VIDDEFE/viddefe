@@ -66,7 +66,6 @@ export default function Churches() {
   // En Churches.tsx, reemplazar el useEffect problemático:
   useEffect(() => {
     if (!churchDetails || !selectedChurch || !(modalMode === 'edit' || modalMode === 'view')) return;
-    if (formPopulated && modalMode === 'edit') return;
     
     setFormData(prev => ({
       name: churchDetails.name ?? prev.name ?? '',
@@ -160,7 +159,6 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
   const createModal = () => {
     resetForm();
     setModalMode('create');
-    setViewMode('table');
   }
 
   const handleDelete = () => {
@@ -301,9 +299,7 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
         </div>
       )}
 
-      {
-        viewMode == 'table' &&
-      (<><ChurchFormModal
+      <ChurchFormModal
         isOpen={modalMode === 'create' || modalMode === 'edit'}
         mode={modalMode === 'edit' ? 'edit' : 'create'}
         formData={formData}
@@ -332,7 +328,6 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
         onClose={closeModal}
         isDeleting={deleteChurch.isPending}
       />
-      </>)}
     </div>
   );
 }
