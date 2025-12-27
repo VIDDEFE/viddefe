@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.homeGroups.domain.model;
 
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolPeopleStrategiesDto;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -31,4 +32,13 @@ public class RolPeopleStrategiesModel {
     @ManyToOne
     @JoinColumn(name = "person_id", nullable = false)
     private PeopleModel person;
+
+    public RolPeopleStrategiesDto toDto(){
+        RolPeopleStrategiesDto dto = new RolPeopleStrategiesDto();
+        dto.setId(this.id);
+        dto.setRole(this.role.toDto());
+        dto.setPerson(this.person.toDto());
+        return dto;
+    }
+
 }

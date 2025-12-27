@@ -4,3 +4,7 @@ export { default as HomeGroupViewModal } from './HomeGroupViewModal';
 export { default as HomeGroupDeleteModal } from './HomeGroupDeleteModal';
 export { default as StrategyManager } from './StrategyManager';
 export { default as GroupsMap } from './GroupsMap';
+export { default as RoleTree } from './RoleTree';
+export { default as RoleFormModal } from './RoleFormModal';
+export { default as RoleDeleteModal } from './RoleDeleteModal';
+export { default as RolePeopleAssignmentModal } from './RolePeopleAssignmentModal';

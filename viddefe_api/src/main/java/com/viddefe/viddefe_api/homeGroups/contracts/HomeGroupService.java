@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.homeGroups.contracts;
 
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateHomeGroupsDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDTO;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDetailDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -28,7 +29,7 @@ public interface HomeGroupService {
      * @param id UUID of the home group to be retrieved
      * @return HomeGroupsDTO {@link HomeGroupsDTO} of the retrieved home group
      */
-    HomeGroupsDTO getHomeGroupById(UUID id);
+    HomeGroupsDetailDto getHomeGroupById(UUID id);
 
     /**
      * Get a paginated list of home groups for a specific church.

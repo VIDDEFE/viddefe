@@ -5,6 +5,7 @@ import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupService;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateHomeGroupsDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDTO;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDetailDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,7 +29,7 @@ public class HomeGroupsController {
     ) {
         UUID churchId = jwtUtil.getChurchId(accessToken);
         HomeGroupsDTO createdGroup = homeGroupService.createHomeGroup(dto,churchId);
-        return ResponseEntity.ok(ApiResponse.created(createdGroup));
+        return new ResponseEntity<>(ApiResponse.created(createdGroup), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -41,10 +42,10 @@ public class HomeGroupsController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<HomeGroupsDTO>> getHomeGroupById(
+    public ResponseEntity<ApiResponse<HomeGroupsDetailDto>> getHomeGroupById(
             @PathVariable UUID id
     ) {
-        HomeGroupsDTO homeGroup = homeGroupService.getHomeGroupById(id);
+        HomeGroupsDetailDto homeGroup = homeGroupService.getHomeGroupById(id);
         return ResponseEntity.ok(ApiResponse.ok(homeGroup));
     }
 

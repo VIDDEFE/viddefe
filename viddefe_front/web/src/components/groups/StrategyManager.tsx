@@ -1,25 +1,73 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button, Modal, Form, Input } from '../shared';
-import { useStrategies, useCreateStrategy, useUpdateStrategy, useDeleteStrategy } from '../../hooks';
-import type { Strategy } from '../../models';
-import { FiEdit2, FiTrash2 } from 'react-icons/fi';
+import {
+  useStrategies,
+  useCreateStrategy,
+  useUpdateStrategy,
+  useDeleteStrategy,
+  useStrategyRoles,
+  useCreateRole,
+  useUpdateRole,
+  useDeleteRole,
+} from '../../hooks';
+import RoleTree from './RoleTree';
+import RoleFormModal from './RoleFormModal';
+import RoleDeleteModal from './RoleDeleteModal';
+import type { Strategy, RoleStrategyNode, CreateRoleDto, UpdateRoleDto } from '../../models';
+import { FiEdit2, FiTrash2, FiArrowLeft, FiGrid } from 'react-icons/fi';
 
 interface StrategyManagerProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+type ViewMode = 'list' | 'create' | 'edit' | 'delete' | 'roles';
+
 export default function StrategyManager({ isOpen, onClose }: StrategyManagerProps) {
   const { data: strategies = [], isLoading } = useStrategies();
+
   const createStrategy = useCreateStrategy();
   const updateStrategy = useUpdateStrategy();
   const deleteStrategy = useDeleteStrategy();
 
-  const [mode, setMode] = useState<'list' | 'create' | 'edit' | 'delete'>('list');
+  const [mode, setMode] = useState<ViewMode>('list');
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null);
   const [strategyName, setStrategyName] = useState('');
   const [error, setError] = useState('');
 
+  // ========== ROLES STATE ==========
+  // Query de roles para la estrategia seleccionada
+  const { data: roles = [], isLoading: isLoadingRoles } = useStrategyRoles(
+    selectedStrategy?.id
+  );
+
+  // Hooks de mutación para roles
+  const createRoleMutation = useCreateRole(selectedStrategy?.id || '');
+  const updateRoleMutation = useUpdateRole(selectedStrategy?.id || '');
+  const deleteRoleMutation = useDeleteRole(selectedStrategy?.id || '');
+
+  // Estado para modales de rol
+  const [roleModal, setRoleModal] = useState<{
+    isOpen: boolean;
+    mode: 'create' | 'edit';
+    parentRole: RoleStrategyNode | null;
+    editingRole: RoleStrategyNode | null;
+  }>({
+    isOpen: false,
+    mode: 'create',
+    parentRole: null,
+    editingRole: null,
+  });
+
+  const [deleteRoleModal, setDeleteRoleModal] = useState<{
+    isOpen: boolean;
+    role: RoleStrategyNode | null;
+  }>({
+    isOpen: false,
+    role: null,
+  });
+
+  // ========== STRATEGY HANDLERS ==========
   const resetState = () => {
     setMode('list');
     setSelectedStrategy(null);
@@ -82,18 +130,112 @@ export default function StrategyManager({ isOpen, onClose }: StrategyManagerProp
     setError('');
   };
 
-  const isMutating = createStrategy.isPending || updateStrategy.isPending || deleteStrategy.isPending;
+  const openRoles = (strategy: Strategy) => {
+    setSelectedStrategy(strategy);
+    setMode('roles');
+    setError('');
+  };
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      title="Gestionar Estrategias"
-      onClose={() => {
-        resetState();
-        onClose();
-      }}
-      actions={
-        mode === 'list' ? (
+  // ========== ROLE HANDLERS ==========
+
+  // Abrir modal para crear rol raíz
+  const handleCreateRootRole = useCallback(() => {
+    setRoleModal({
+      isOpen: true,
+      mode: 'create',
+      parentRole: null,
+      editingRole: null,
+    });
+  }, []);
+
+  // Abrir modal para crear sub-rol
+  const handleCreateChildRole = useCallback((parentNode: RoleStrategyNode) => {
+    setRoleModal({
+      isOpen: true,
+      mode: 'create',
+      parentRole: parentNode,
+      editingRole: null,
+    });
+  }, []);
+
+  // Abrir modal para editar rol
+  const handleEditRole = useCallback((node: RoleStrategyNode) => {
+    setRoleModal({
+      isOpen: true,
+      mode: 'edit',
+      parentRole: null,
+      editingRole: node,
+    });
+  }, []);
+
+  // Abrir modal de confirmación para eliminar
+  const handleDeleteRoleClick = useCallback((node: RoleStrategyNode) => {
+    setDeleteRoleModal({
+      isOpen: true,
+      role: node,
+    });
+  }, []);
+
+  // Cerrar modal de rol
+  const handleCloseRoleModal = useCallback(() => {
+    setRoleModal({
+      isOpen: false,
+      mode: 'create',
+      parentRole: null,
+      editingRole: null,
+    });
+  }, []);
+
+  // Cerrar modal de eliminar
+  const handleCloseDeleteRoleModal = useCallback(() => {
+    setDeleteRoleModal({
+      isOpen: false,
+      role: null,
+    });
+  }, []);
+
+  // Guardar rol (crear o editar)
+  const handleSaveRole = useCallback(
+    (roleData: CreateRoleDto | UpdateRoleDto) => {
+      if (roleModal.mode === 'create') {
+        createRoleMutation.mutate(roleData as CreateRoleDto, {
+          onSuccess: () => handleCloseRoleModal(),
+        });
+      } else if (roleModal.editingRole) {
+        updateRoleMutation.mutate(
+          {
+            roleId: roleModal.editingRole.id,
+            data: roleData as UpdateRoleDto,
+          },
+          {
+            onSuccess: () => handleCloseRoleModal(),
+          }
+        );
+      }
+    },
+    [roleModal, createRoleMutation, updateRoleMutation, handleCloseRoleModal]
+  );
+
+  // Confirmar eliminación de rol
+  const handleConfirmDeleteRole = useCallback(() => {
+    if (deleteRoleModal.role) {
+      deleteRoleMutation.mutate(deleteRoleModal.role.id, {
+        onSuccess: () => handleCloseDeleteRoleModal(),
+      });
+    }
+  }, [deleteRoleModal.role, deleteRoleMutation, handleCloseDeleteRoleModal]);
+
+  const isMutating =
+    createStrategy.isPending ||
+    updateStrategy.isPending ||
+    deleteStrategy.isPending;
+
+  // ========== RENDER HELPERS ==========
+
+  const renderActions = () => {
+    switch (mode) {
+      case 'list':
+        return (
           <div className="flex gap-2">
             <Button variant="primary" onClick={openCreate}>
               + Nueva Estrategia
@@ -102,7 +244,9 @@ export default function StrategyManager({ isOpen, onClose }: StrategyManagerProp
               Cerrar
             </Button>
           </div>
-        ) : mode === 'create' ? (
+        );
+      case 'create':
+        return (
           <div className="flex gap-2">
             <Button variant="primary" onClick={handleCreate} disabled={isMutating}>
               {createStrategy.isPending ? 'Guardando...' : 'Guardar'}
@@ -111,7 +255,9 @@ export default function StrategyManager({ isOpen, onClose }: StrategyManagerProp
               Cancelar
             </Button>
           </div>
-        ) : mode === 'edit' ? (
+        );
+      case 'edit':
+        return (
           <div className="flex gap-2">
             <Button variant="primary" onClick={handleUpdate} disabled={isMutating}>
               {updateStrategy.isPending ? 'Guardando...' : 'Guardar'}
@@ -120,7 +266,9 @@ export default function StrategyManager({ isOpen, onClose }: StrategyManagerProp
               Cancelar
             </Button>
           </div>
-        ) : (
+        );
+      case 'delete':
+        return (
           <div className="flex gap-2">
             <Button variant="danger" onClick={handleDelete} disabled={isMutating}>
               {deleteStrategy.isPending ? 'Eliminando...' : 'Eliminar'}
@@ -129,52 +277,133 @@ export default function StrategyManager({ isOpen, onClose }: StrategyManagerProp
               Cancelar
             </Button>
           </div>
-        )
-      }
-    >
-      {mode === 'list' && (
-        <div>
-          {isLoading ? (
+        );
+      case 'roles':
+        return (
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={resetState}>
+              <span className="flex items-center gap-2">
+                <FiArrowLeft size={14} />
+                Volver
+              </span>
+            </Button>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const renderContent = () => {
+    // Vista de roles de una estrategia
+    if (mode === 'roles' && selectedStrategy) {
+      return (
+        <div className="space-y-4">
+          {/* Header con nombre de estrategia */}
+          <div className="flex items-center gap-3 pb-4 border-b border-neutral-200">
+            <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+              <FiGrid className="text-violet-600" size={20} />
+            </div>
+            <div>
+              <h4 className="font-semibold text-neutral-800">
+                {selectedStrategy.name}
+              </h4>
+              <p className="text-sm text-neutral-500">
+                Configurar estructura de roles
+              </p>
+            </div>
+          </div>
+
+          {/* Árbol de roles */}
+          {isLoadingRoles ? (
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
-              <span className="ml-2 text-neutral-600">Cargando estrategias...</span>
-            </div>
-          ) : strategies.length === 0 ? (
-            <div className="text-center py-8 text-neutral-500">
-              No hay estrategias creadas. ¡Crea la primera!
+              <span className="ml-2 text-neutral-600">Cargando roles...</span>
             </div>
           ) : (
-            <ul className="divide-y divide-neutral-200">
-              {strategies.map((strategy) => (
-                <li
-                  key={strategy.id}
-                  className="flex items-center justify-between py-3 px-2 hover:bg-neutral-50 rounded-lg transition-colors"
-                >
-                  <span className="font-medium text-neutral-800">{strategy.name}</span>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openEdit(strategy)}
-                      className="p-2 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-lg transition-colors"
-                      title="Editar"
-                    >
-                      <FiEdit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => openDelete(strategy)}
-                      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Eliminar"
-                    >
-                      <FiTrash2 size={16} />
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <div className="border border-neutral-200 rounded-lg p-4 bg-neutral-50/50 min-h-[250px]">
+              <RoleTree
+                hierarchy={roles}
+                emptyMessage="Esta estrategia no tiene roles. ¡Crea el primero!"
+                onCreateRoot={handleCreateRootRole}
+                onCreateChild={handleCreateChildRole}
+                onEdit={handleEditRole}
+                onDelete={handleDeleteRoleClick}
+              />
+            </div>
           )}
-        </div>
-      )}
 
-      {(mode === 'create' || mode === 'edit') && (
+          {/* Info sobre roles */}
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Nota:</strong> Los roles definidos aquí son la estructura que usarán
+              todos los grupos que utilicen esta estrategia. Las personas se asignan
+              desde cada grupo individual.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Vista de lista
+    if (mode === 'list') {
+      if (isLoading) {
+        return (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+            <span className="ml-2 text-neutral-600">Cargando estrategias...</span>
+          </div>
+        );
+      }
+
+      if (strategies.length === 0) {
+        return (
+          <div className="text-center py-8 text-neutral-500">
+            No hay estrategias creadas. ¡Crea la primera!
+          </div>
+        );
+      }
+
+      return (
+        <ul className="divide-y divide-neutral-200">
+          {strategies.map((strategy) => (
+            <li
+              key={strategy.id}
+              className="flex items-center justify-between py-3 px-2 hover:bg-neutral-50 rounded-lg transition-colors"
+            >
+              <span className="font-medium text-neutral-800">{strategy.name}</span>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => openRoles(strategy)}
+                  className="px-3 py-1.5 text-sm text-violet-600 hover:text-violet-800 hover:bg-violet-50 rounded-lg transition-colors font-medium"
+                  title="Configurar Roles"
+                >
+                  Roles
+                </button>
+                <button
+                  onClick={() => openEdit(strategy)}
+                  className="p-2 text-primary-600 hover:text-primary-800 hover:bg-primary-50 rounded-lg transition-colors"
+                  title="Editar nombre"
+                >
+                  <FiEdit2 size={16} />
+                </button>
+                <button
+                  onClick={() => openDelete(strategy)}
+                  className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Eliminar"
+                >
+                  <FiTrash2 size={16} />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+
+    // Vista de crear/editar
+    if (mode === 'create' || mode === 'edit') {
+      return (
         <Form>
           <Input
             label="Nombre de la Estrategia"
@@ -188,9 +417,12 @@ export default function StrategyManager({ isOpen, onClose }: StrategyManagerProp
             autoFocus
           />
         </Form>
-      )}
+      );
+    }
 
-      {mode === 'delete' && selectedStrategy && (
+    // Vista de eliminar
+    if (mode === 'delete' && selectedStrategy) {
+      return (
         <div className="text-center py-4">
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
             <svg
@@ -216,7 +448,60 @@ export default function StrategyManager({ isOpen, onClose }: StrategyManagerProp
           </p>
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
         </div>
-      )}
-    </Modal>
+      );
+    }
+
+    return null;
+  };
+
+  const getTitle = () => {
+    switch (mode) {
+      case 'roles':
+        return 'Configurar Roles';
+      default:
+        return 'Gestionar Estrategias';
+    }
+  };
+
+  return (
+    <>
+      <Modal
+        isOpen={isOpen}
+        title={getTitle()}
+        onClose={() => {
+          resetState();
+          onClose();
+        }}
+        actions={renderActions()}
+      >
+        {renderContent()}
+      </Modal>
+
+      {/* Modal para crear/editar rol */}
+      <RoleFormModal
+        isOpen={roleModal.isOpen}
+        mode={roleModal.mode}
+        initialData={
+          roleModal.editingRole
+            ? { name: roleModal.editingRole.name, parentRoleId: null }
+            : undefined
+        }
+        parentRole={roleModal.parentRole}
+        strategyId={selectedStrategy?.id || ''}
+        availableRoles={roles}
+        onSave={handleSaveRole}
+        onClose={handleCloseRoleModal}
+        isSaving={createRoleMutation.isPending || updateRoleMutation.isPending}
+      />
+
+      {/* Modal de confirmación para eliminar rol */}
+      <RoleDeleteModal
+        isOpen={deleteRoleModal.isOpen}
+        role={deleteRoleModal.role}
+        onConfirm={handleConfirmDeleteRole}
+        onClose={handleCloseDeleteRoleModal}
+        isDeleting={deleteRoleMutation.isPending}
+      />
+    </>
   );
 }

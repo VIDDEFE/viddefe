@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { HomeGroup } from '../../models';
 import { Button, PageHeader, Table } from '../../components/shared';
 import {
@@ -30,12 +31,18 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export default function Groups() {
   const { hasPermission } = useAppContext();
+  const navigate = useNavigate();
 
   // Por ahora, permitimos todas las acciones (ajustar permisos según backend)
   const canCreate = true;
   const canView = true;
   const canEdit = true;
   const canDelete = true;
+
+  // Navegar al detalle del grupo
+  const handleViewDetail = (group: HomeGroup) => {
+    navigate(`/groups/${group.id}`);
+  };
 
   // Estado de vista (tabla/mapa)
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -260,8 +267,8 @@ export default function Groups() {
       ? [
           {
             icon: 'view' as const,
-            label: 'Ver',
-            onClick: (g: HomeGroup) => openModal('view', g),
+            label: 'Ver Detalle',
+            onClick: (g: HomeGroup) => handleViewDetail(g),
             variant: 'secondary' as const,
           },
         ]

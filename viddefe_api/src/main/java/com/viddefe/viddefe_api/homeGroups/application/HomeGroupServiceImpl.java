@@ -3,12 +3,15 @@ package com.viddefe.viddefe_api.homeGroups.application;
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupService;
+import com.viddefe.viddefe_api.homeGroups.contracts.RolesStrategiesService;
 import com.viddefe.viddefe_api.homeGroups.contracts.StrategyReader;
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
 import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupsRepository;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateHomeGroupsDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDTO;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDetailDto;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -27,6 +31,7 @@ public class HomeGroupServiceImpl implements HomeGroupService {
     private final ChurchLookup churchLookup;
     private final PeopleReader peopleReader;
     private final StrategyReader strategyReader;
+    private final RolesStrategiesService rolesStrategiesService;
 
     @Override
     public HomeGroupsDTO createHomeGroup(CreateHomeGroupsDto dto, UUID churchId) {
@@ -56,10 +61,15 @@ public class HomeGroupServiceImpl implements HomeGroupService {
     }
 
     @Override
-    public HomeGroupsDTO getHomeGroupById(UUID id) {
-        return homeGroupsRepository.findById(id)
-                .map(HomeGroupsModel::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("Grupo no encontrado"));
+    public HomeGroupsDetailDto getHomeGroupById(UUID id) {
+        HomeGroupsDTO homeDto = homeGroupsRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Grupo no encontrado")).toDto();
+        List<RolesStrategiesDto> hierarchy = rolesStrategiesService.getTree(homeDto.getStrategy().getId());
+        HomeGroupsDetailDto dto = new HomeGroupsDetailDto();
+        dto.setHomeGroup(homeDto);
+        dto.setStrategy(homeDto.getStrategy());
+        dto.setHierarchy(hierarchy);
+        return dto;
     }
 
     @Override

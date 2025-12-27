@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { homeGroupService, strategyService } from '../services/homeGroupService';
-import type { HomeGroup, Strategy, CreateHomeGroupDto, UpdateHomeGroupDto } from '../models';
+import { homeGroupService, strategyService, roleService, roleAssignmentService } from '../services/homeGroupService';
+import type { 
+  HomeGroup, Strategy, CreateHomeGroupDto, UpdateHomeGroupDto, 
+  HomeGroupDetailResponse, CreateRoleDto, UpdateRoleDto, RoleStrategyNode,
+  AssignPersonToRoleDto, AssignPeopleToRoleDto
+} from '../models';
 import type { Pageable, PageableRequest } from '../services/api';
 
 // ============================================================================
@@ -18,12 +22,23 @@ export function useHomeGroups(params?: PageableRequest) {
 }
 
 /**
- * Hook para obtener un grupo por ID
+ * Hook para obtener un grupo por ID (respuesta básica)
  */
 export function useHomeGroup(id?: string) {
   return useQuery<HomeGroup, Error>({
     queryKey: ['homeGroup', id],
     queryFn: () => homeGroupService.getById(id!),
+    enabled: !!id,
+  });
+}
+
+/**
+ * Hook para obtener el detalle completo de un grupo incluyendo jerarquía de roles
+ */
+export function useHomeGroupDetail(id?: string) {
+  return useQuery<HomeGroupDetailResponse, Error>({
+    queryKey: ['homeGroupDetail', id],
+    queryFn: () => homeGroupService.getDetail(id!),
     enabled: !!id,
   });
 }
@@ -125,6 +140,113 @@ export function useDeleteStrategy() {
     mutationFn: (id: string) => strategyService.delete(id),
     onSuccess() {
       qc.invalidateQueries({ queryKey: ['strategies'] });
+    },
+  });
+}
+
+/**
+ * Hook para obtener la jerarquía de roles de una estrategia
+ */
+export function useStrategyRoles(strategyId?: string) {
+  return useQuery<RoleStrategyNode[], Error>({
+    queryKey: ['strategyRoles', strategyId],
+    queryFn: () => strategyService.getRoles(strategyId!),
+    enabled: !!strategyId,
+  });
+}
+
+// ============================================================================
+// ROLES HOOKS (Estructura de roles en una estrategia)
+// ============================================================================
+
+/**
+ * Hook para crear un nuevo rol dentro de una estrategia
+ */
+export function useCreateRole(strategyId: string) {
+  const qc = useQueryClient();
+
+  return useMutation<RoleStrategyNode, Error, CreateRoleDto>({
+    mutationFn: (data: CreateRoleDto) => roleService.create(strategyId, data),
+    onSuccess() {
+      // Invalidar roles de la estrategia y detalles de grupos que usen esta estrategia
+      qc.invalidateQueries({ queryKey: ['strategyRoles', strategyId] });
+      qc.invalidateQueries({ queryKey: ['homeGroupDetail'] });
+    },
+  });
+}
+
+/**
+ * Hook para actualizar un rol existente
+ */
+export function useUpdateRole(strategyId: string) {
+  const qc = useQueryClient();
+
+  return useMutation<RoleStrategyNode, Error, { roleId: string; data: UpdateRoleDto }>({
+    mutationFn: ({ roleId, data }) => roleService.update(strategyId, roleId, data),
+    onSuccess() {
+      qc.invalidateQueries({ queryKey: ['strategyRoles', strategyId] });
+      qc.invalidateQueries({ queryKey: ['homeGroupDetail'] });
+    },
+  });
+}
+
+/**
+ * Hook para eliminar un rol
+ */
+export function useDeleteRole(strategyId: string) {
+  const qc = useQueryClient();
+
+  return useMutation<void, Error, string>({
+    mutationFn: (roleId: string) => roleService.delete(strategyId, roleId),
+    onSuccess() {
+      qc.invalidateQueries({ queryKey: ['strategyRoles', strategyId] });
+      qc.invalidateQueries({ queryKey: ['homeGroupDetail'] });
+    },
+  });
+}
+
+// ============================================================================
+// ROLE ASSIGNMENT HOOKS (Asignación de personas a roles)
+// ============================================================================
+
+/**
+ * Hook para asignar una persona a un rol
+ */
+export function useAssignPersonToRole(groupId: string) {
+  const qc = useQueryClient();
+
+  return useMutation<void, Error, { roleId: string; data: AssignPersonToRoleDto }>({
+    mutationFn: ({ roleId, data }) => roleAssignmentService.assignPerson(groupId, roleId, data),
+    onSuccess() {
+      qc.invalidateQueries({ queryKey: ['homeGroupDetail', groupId] });
+    },
+  });
+}
+
+/**
+ * Hook para asignar múltiples personas a un rol
+ */
+export function useAssignPeopleToRole(groupId: string) {
+  const qc = useQueryClient();
+
+  return useMutation<void, Error, { roleId: string; data: AssignPeopleToRoleDto }>({
+    mutationFn: ({ roleId, data }) => roleAssignmentService.assignPeople(groupId, roleId, data),
+    onSuccess() {
+      qc.invalidateQueries({ queryKey: ['homeGroupDetail', groupId] });
+    },
+  });
+}
+
+/**
+ * Hook para remover una persona de un rol
+ */
+export function useRemovePersonFromRole(groupId: string) {
+  const qc = useQueryClient();
+
+  return useMutation<void, Error, { roleId: string; personId: string }>({
+    mutationFn: ({ roleId, personId }) => roleAssignmentService.removePerson(groupId, roleId, personId),
+    onSuccess() {
+      qc.invalidateQueries({ queryKey: ['homeGroupDetail', groupId] });
     },
   });
 }

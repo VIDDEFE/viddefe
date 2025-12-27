@@ -8,6 +8,7 @@ import Churches from '../views/churches/Churches';
 import People from '../views/people/People';
 import Services from '../views/services/Services';
 import Groups from '../views/groups/Groups';
+import HomeGroupDetail from '../views/groups/HomeGroupDetail';
 import Events from '../views/events/Events';
 import Worships from '../views/worships/Worships';
 import type { JSX } from 'react';
@@ -31,6 +32,7 @@ export default function Router() {
         <Route path="/people" element={<ProtectedRoute element={<People />} />} />
         <Route path="/services" element={<ProtectedRoute element={<Services />} />} />
         <Route path="/groups" element={<ProtectedRoute element={<Groups />} />} />
+        <Route path="/groups/:id" element={<ProtectedRoute element={<HomeGroupDetail />} />} />
         <Route path="/events" element={<ProtectedRoute element={<Events />} />} />
         <Route path="/worships" element={<ProtectedRoute element={<Worships />} />} />
       </Route>

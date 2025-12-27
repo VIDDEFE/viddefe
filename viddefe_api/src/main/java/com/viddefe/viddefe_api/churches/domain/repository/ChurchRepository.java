@@ -33,7 +33,7 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
                 pastor.lastName,
                 pastor.phone,
                 pastor.avatar,
-                cast(pastor.birthdate as java.sql.Date),
+                cast(pastor.birthDate as java.sql.Date),
                 pastor.typePerson,
                 new com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto(
                     s.id,

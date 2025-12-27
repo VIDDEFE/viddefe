@@ -149,6 +149,58 @@ export interface UpdateHomeGroupDto {
   strategyId?: string;
 }
 
+// Persona en la jerarquía de roles (respuesta del backend)
+export interface PersonInRole {
+  id: string;
+  cc?: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  avatar?: string;
+  birthDate?: string;
+  typePersonId?: number;
+  stateId?: number;
+  churchId?: string;
+}
+
+// Nodo de la jerarquía de roles/estrategias (estructura de árbol recursiva)
+export interface RoleStrategyNode {
+  id: string;
+  name: string;
+  children: RoleStrategyNode[];
+  people: PersonInRole[];
+}
+
+// Respuesta del detalle de un grupo
+export interface HomeGroupDetailResponse {
+  homeGroup: HomeGroup;
+  strategy: Strategy | null;
+  hierarchy: RoleStrategyNode[];
+}
+
+// DTO para crear un rol en la estrategia (solo estructura, sin personas)
+export interface CreateRoleDto {
+  strategyId: string;
+  name: string;
+  parentRoleId?: string;
+}
+
+// DTO para actualizar un rol (solo estructura, sin personas)
+export interface UpdateRoleDto {
+  name?: string;
+  parentRoleId?: string | null;
+}
+
+// DTO para asignar una persona a un rol (en contexto de grupo)
+export interface AssignPersonToRoleDto {
+  personId: string;
+}
+
+// DTO para asignar múltiples personas a un rol
+export interface AssignPeopleToRoleDto {
+  personIds: string[];
+}
+
 // Mantener Group legacy para compatibilidad
 /** @deprecated Usar HomeGroup en su lugar */
 export interface Group extends BaseEntity {
