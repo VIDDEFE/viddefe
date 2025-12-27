@@ -23,11 +23,11 @@ public class CitiesModel {
 
     @ManyToOne
     @JoinColumn(name = "state_id")
-    private StatesModel state;
+    private StatesModel states;
 
     public CitiesModel(String name, StatesModel state) {
         this.name = name;
-        this.state = state;
+        this.states = state;
     }
 
     public CitiesDto toDto(){

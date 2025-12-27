@@ -26,10 +26,6 @@ public class ChurchResDto {
     private CitiesDto city;
     private PeopleResDto pastor;
 
-    public ChurchResDto() {
-        // Constructor vacío para Jackson
-    }
-
     public ChurchResDto(UUID id, String name, BigDecimal longitude, BigDecimal latitude,
                         StatesDto state, CitiesDto city, PeopleResDto pastor) {
         this.id = id;

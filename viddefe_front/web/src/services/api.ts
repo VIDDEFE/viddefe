@@ -189,8 +189,11 @@ class ApiService {
 
       // --- ERROR INTERCEPTOR ---
       (error) => {
+        console.log('🔴 API Error Interceptor:', error);
+        
         if (error.response) {
           const { status, data } = error.response;
+          console.log('🔴 Error status:', status, 'data:', data);
 
           // ---------------------------
           // 401 - No autorizado
@@ -243,12 +246,19 @@ class ApiService {
             timestamp: data?.timestamp || new Date().toISOString(),
           };
 
-          // Validaciones
+          console.log('🔴 ApiError built:', apiError);
+
+          // Validaciones con campos específicos
           if (apiError.meta?.fields) {
-            Object.values(apiError.meta.fields).forEach((msg) => toast.error(String(msg)));
+            console.log('🔴 Validation fields:', apiError.meta.fields);
+            Object.values(apiError.meta.fields).forEach((msg) => {
+              console.log('🔴 Showing field error toast:', msg);
+              toast.error(String(msg));
+            });
             return Promise.reject(apiError);
           }
 
+          console.log('🔴 Showing generic error toast:', apiError.message);
           toast.error(apiError.message);
           return Promise.reject(apiError);
         }

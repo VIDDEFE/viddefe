@@ -28,7 +28,7 @@ public class StatesModel {
 
     private String name; // mapeamos "departament"
 
-    @OneToMany(fetch = FetchType.LAZY,mappedBy = "state",cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY,mappedBy = "states",cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference
     private List<CitiesModel> cities = new ArrayList<>();
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { ChurchSummary } from '../../models';
 import { Button, PageHeader, Table } from '../../components/shared';
 import { type ChurchFormData, initialChurchFormData } from '../../components/churches/ChurchForm';
@@ -34,14 +34,30 @@ export default function Churches() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  // Estado de ordenamiento
+  // Estado de ordenamiento (guarda la key de la columna de la UI)
   const [sortConfig, setSortConfig] = useState<SortConfig | undefined>(undefined);
 
-  // Data fetching con paginación y ordenamiento
+  // Mapeo de columnas de la tabla a paths JPA de la entidad ChurchModel
+  // El backend usa Spring Data Pageable con JPQL, por lo que el sort debe usar los paths reales de la entidad
+  const columnToJpaPath: Record<string, string> = {
+    name: 'name',
+    pastor: 'pastor.lastName',
+    states: 'city.states.name',
+    city: 'city.name',
+  };
+
+  // Transforma el sortConfig de la UI al formato JPA para el backend
+  const sortConfigForBackend = useMemo(() => {
+    if (!sortConfig) return undefined;
+    const jpaPath = columnToJpaPath[sortConfig.field] || sortConfig.field;
+    return { field: jpaPath, direction: sortConfig.direction };
+  }, [sortConfig]);
+
+  // Data fetching con paginación y ordenamiento (usa sortConfigForBackend para el API)
   const { data: churches, isLoading } = useChurchChildren(churchId, { 
     page: currentPage, 
     size: pageSize,
-    sort: sortConfig 
+    sort: sortConfigForBackend 
   });
   const { data: states } = useStates();
 
@@ -168,10 +184,11 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
 
   // Table config
   const columns = [
-    { key: 'name' as const, label: 'Nombre' },
+    { key: 'name' as const, label: 'Nombre', sortable: true },
     {
       key: 'pastor' as const,
       label: 'Pastor',
+      sortable: true,
       render: (_: unknown, item: ChurchSummary) =>
         item.pastor && typeof item.pastor === 'object'
           ? `${item.pastor.firstName} ${item.pastor.lastName}`
@@ -180,11 +197,13 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
     {
       key: 'states' as const,
       label: 'Departamento',
+      sortable: true,
       render: (_: unknown, item: ChurchSummary) => item.states?.name || '-',
     },
     {
       key: 'city' as const,
       label: 'Ciudad',
+      sortable: true,
       render: (_: unknown, item: ChurchSummary) => item.city?.name || '-',
     },
   ];
@@ -219,7 +238,7 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
     setCurrentPage(0); // Resetear a primera página
   };
 
-  // Handler para cambio de ordenamiento
+  // Handler para cambio de ordenamiento - guarda el campo original de la UI
   const handleSortChange = (sort: SortConfig | undefined) => {
     setSortConfig(sort);
     setCurrentPage(0); // Resetear a primera página al ordenar
