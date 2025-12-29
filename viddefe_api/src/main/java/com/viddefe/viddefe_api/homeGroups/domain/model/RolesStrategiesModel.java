@@ -3,11 +3,13 @@ package com.viddefe.viddefe_api.homeGroups.domain.model;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateRolesStrategiesDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.base.AbstractRoleTreeDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -46,12 +48,12 @@ public class RolesStrategiesModel {
     @JsonBackReference
     private Set<RolPeopleStrategiesModel> rolPeople = new HashSet<>();
 
-    public RolesStrategiesDto toDto(){
-        RolesStrategiesDto dto = new RolesStrategiesDto();
+    public AbstractRoleTreeDto toDto(){
+        AbstractRoleTreeDto dto = new RolesStrategiesDto();
         dto.setName(this.name);
-        Set<RolesStrategiesDto> childrenDto = children.stream()
+        List<AbstractRoleTreeDto> childrenDto = children.stream()
                 .map(RolesStrategiesModel::toDto)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
         dto.setChildren(childrenDto);
         return dto;
     }

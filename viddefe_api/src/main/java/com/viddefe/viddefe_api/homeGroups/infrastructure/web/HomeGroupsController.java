@@ -67,4 +67,14 @@ public class HomeGroupsController {
         return new ResponseEntity<>(ApiResponse.noContent(), HttpStatus.NO_CONTENT);
     }
 
+    @PostMapping("/{groupId}/strategy/role/{roleId}/assign")
+    public ResponseEntity<ApiResponse<Void>> assignRoleToGroupMember(
+            @PathVariable UUID groupId,
+            @PathVariable UUID roleId,
+            @RequestParam UUID memberId
+    ) {
+        //homeGroupService.assignRoleToGroupMember(groupId, roleId, memberId);
+        return new ResponseEntity<>(ApiResponse.noContent(), HttpStatus.NO_CONTENT);
+    }
+
 }

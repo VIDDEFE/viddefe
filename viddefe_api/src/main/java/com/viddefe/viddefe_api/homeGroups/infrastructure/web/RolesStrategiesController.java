@@ -10,36 +10,48 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/groups/{groupId}/strategies/roles")
+@RequestMapping("/strategies/{strategyId}/roles")
 @RequiredArgsConstructor
 public class RolesStrategiesController {
 
     private final RolesStrategiesService rolesStrategiesService;
 
+
     @PostMapping
-    public ResponseEntity<ApiResponse<RolesStrategiesDto>> create(
+    public ResponseEntity<ApiResponse<RolesStrategiesDto>> createRoles(
             @Valid @RequestBody CreateRolesStrategiesDto dto,
-            @PathVariable UUID groupId
+            @PathVariable UUID strategyId
     ) {
-        RolesStrategiesDto response = rolesStrategiesService.create(dto, groupId);
+        RolesStrategiesDto response = rolesStrategiesService.create(dto, strategyId);
         return new ResponseEntity<>(
                 ApiResponse.created(response),
                 HttpStatus.CREATED
         );
     }
 
-    @PutMapping("/{roleId}")
-    public ResponseEntity<ApiResponse<RolesStrategiesDto>> update(
-            @Valid @RequestBody CreateRolesStrategiesDto dto,
-            @PathVariable UUID groupId,
-            @PathVariable UUID roleId
-    ) {
-        RolesStrategiesDto response =
-                rolesStrategiesService.update(dto, groupId, roleId);
+    //@PutMapping("/{roleId}")
+    //public ResponseEntity<ApiResponse<RolesStrategiesDto>> update(
+    //        @Valid @RequestBody CreateRolesStrategiesDto dto,
+    //        @PathVariable UUID groupId,
+    //        @PathVariable UUID roleId
+    //) {
+    //    RolesStrategiesDto response =
+    //            rolesStrategiesService.update(dto, groupId, roleId);
+    //
+    //    return ResponseEntity.ok(
+    //            ApiResponse.ok(response)
+    //    );
+    //}
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<RolesStrategiesDto>>> getRoles(
+            @PathVariable UUID strategyId
+    ) {
+        List<RolesStrategiesDto> response = rolesStrategiesService.getTreeRoles(strategyId);
         return ResponseEntity.ok(
                 ApiResponse.ok(response)
         );

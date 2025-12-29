@@ -9,6 +9,8 @@ import com.viddefe.viddefe_api.homeGroups.domain.repository.RolesStrategyReposit
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateRolesStrategiesDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolPeopleStrategiesDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesWithPeopleDto;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.base.AbstractRoleTreeDto;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,7 +58,7 @@ public class RolesStrategiesServiceImpl implements RolesStrategiesService {
 
         rolesStrategyRepository.save(role);
 
-        return role.toDto();
+        return (RolesStrategiesDto) role.toDto();
     }
 
     @Override
@@ -95,7 +98,7 @@ public class RolesStrategiesServiceImpl implements RolesStrategiesService {
 
         role.setParentRole(newParent);
 
-        return role.toDto();
+        return (RolesStrategiesDto) role.toDto();
     }
 
     @Override
@@ -119,53 +122,39 @@ public class RolesStrategiesServiceImpl implements RolesStrategiesService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RolesStrategiesDto> getTree(UUID strategyId) {
-
-        // 1. Traer todos los roles de la estrategia (flat)
-        List<RolesStrategiesModel> roles =
-                rolesStrategyRepository.findAllByStrategyId(strategyId);
-
-        // 2. Mapa indexado por ID (lookup O(1))
-        Map<UUID, RolesStrategiesDto> index = new HashMap<>();
-
-        // 3. Raíces ordenadas (TreeMap para orden estable)
-        Map<String, RolesStrategiesDto> roots = new TreeMap<>();
-
-        // 4. Crear nodos sin relaciones
-        for (RolesStrategiesModel role : roles) {
-            RolesStrategiesDto node = new RolesStrategiesDto();
-            node.setId(role.getId());
-            node.setName(role.getName());
-            Set<PeopleResDto> people = role.getRolPeople().stream().map(
-                    RolPeopleStrategiesModel::getPerson
-            ).map(PeopleModel::toDto).collect(Collectors.toSet());
-            node.setPeople(people);
-            index.put(role.getId(), node);
-        }
-
-        // 5. Armar jerarquía
-        for (RolesStrategiesModel role : roles) {
-            RolesStrategiesDto current = index.get(role.getId());
-
-            if (role.getParentRole() == null) {
-                // root
-                roots.put(current.getName(), current);
-            } else {
-                RolesStrategiesDto parent = index.get(role.getParentRole().getId());
-                parent.getChildren().add(current);
-            }
-        }
-
-        // 6. Ordenar hijos recursivamente (opcional pero recomendado)
-        roots.values().forEach(this::sortRecursively);
-
-        return new ArrayList<>(roots.values());
+    public List<RolesStrategiesDto> getTreeRoles(UUID strategyId) {
+        return buildTree(strategyId, role -> new RolesStrategiesDto());
     }
 
-    private void sortRecursively(RolesStrategiesDto node) {
-        node.getChildren().stream().sorted(Comparator.comparing(RolesStrategiesDto::getName));
-        node.getChildren().forEach(this::sortRecursively);
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<RolesStrategiesWithPeopleDto> getTreeRolesWithPeople(UUID strategyId) {
+        return buildTree(strategyId, role -> {
+            RolesStrategiesWithPeopleDto dto = new RolesStrategiesWithPeopleDto();
+            dto.setPeople(
+                    role.getRolPeople()
+                            .stream()
+                            .map(RolPeopleStrategiesModel::getPerson)
+                            .map(PeopleModel::toDto)
+                            .collect(Collectors.toSet())
+            );
+            return dto;
+        });
     }
+
+
+    private void sortRecursively(AbstractRoleTreeDto node) {
+        if (node.getChildren().isEmpty()) {
+            return;
+        }
+
+        node.getChildren().sort(Comparator.comparing(AbstractRoleTreeDto::getName));
+
+        node.getChildren()
+                .forEach(this::sortRecursively);
+    }
+
 
     private void validateNoCycles(
             RolesStrategiesModel role,
@@ -182,4 +171,46 @@ public class RolesStrategiesServiceImpl implements RolesStrategiesService {
             current = current.getParentRole();
         }
     }
+
+    private <T extends AbstractRoleTreeDto> List<T> buildTree(
+            UUID strategyId,
+            Function<RolesStrategiesModel, T> nodeFactory
+    ) {
+
+        List<RolesStrategiesModel> roles =
+                rolesStrategyRepository.findAllByStrategyId(strategyId);
+
+        if (roles.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<UUID, T> index = new HashMap<>();
+        Map<String, T> roots = new TreeMap<>();
+
+        // 1. Crear nodos
+        for (RolesStrategiesModel role : roles) {
+            T node = nodeFactory.apply(role);
+            node.setId(role.getId());
+            node.setName(role.getName());
+            index.put(role.getId(), node);
+        }
+
+        // 2. Armar jerarquía
+        for (RolesStrategiesModel role : roles) {
+            T current = index.get(role.getId());
+
+            if (role.getParentRole() == null) {
+                roots.put(current.getName(), current);
+            } else {
+                T parent = index.get(role.getParentRole().getId());
+                parent.getChildren().add(current);
+            }
+        }
+
+        // 3. Ordenar
+        roots.values().forEach(this::sortRecursively);
+
+        return new ArrayList<>(roots.values());
+    }
+
 }

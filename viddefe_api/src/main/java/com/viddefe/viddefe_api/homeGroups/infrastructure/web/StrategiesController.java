@@ -2,7 +2,10 @@ package com.viddefe.viddefe_api.homeGroups.infrastructure.web;
 
 import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
+import com.viddefe.viddefe_api.homeGroups.contracts.RolesStrategiesService;
 import com.viddefe.viddefe_api.homeGroups.contracts.StrategyService;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateRolesStrategiesDto;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.StrategyDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +17,12 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/groups/strategies")
+@RequestMapping("/strategies")
 @RequiredArgsConstructor
 public class StrategiesController {
 
     private final StrategyService strategyService;
+    private final RolesStrategiesService rolesStrategiesService;
     private final JwtUtil jwtUtil;
 
     @PostMapping

@@ -1,12 +1,12 @@
 import { useState, memo, useCallback } from 'react';
-import type { RoleStrategyNode, PersonInRole } from '../../models';
+import type { Person, RoleStrategyNode } from '../../models';
 import { FiChevronRight, FiChevronDown, FiUsers, FiUser, FiPlus, FiEdit2, FiTrash2, FiMoreVertical, FiUserPlus, FiX } from 'react-icons/fi';
 
 // ============================================================================
 // PERSON BADGE - Muestra una persona asignada a un rol (con opción de remover)
 // ============================================================================
 interface PersonBadgeProps {
-  person: PersonInRole;
+  person: Person;
   roleId: string;
   onRemove?: (roleId: string, personId: string) => void;
 }
@@ -162,6 +162,8 @@ const ActionButtons = memo(function ActionButtons({
 interface RoleNodeProps {
   node: RoleStrategyNode;
   level: number;
+  isLastChild?: boolean;
+  parentHasSiblings?: boolean;
   onCreateChild?: (node: RoleStrategyNode) => void;
   onEdit?: (node: RoleStrategyNode) => void;
   onDelete?: (node: RoleStrategyNode) => void;
@@ -172,6 +174,8 @@ interface RoleNodeProps {
 const RoleNode = memo(function RoleNode({ 
   node, 
   level,
+  isLastChild = false,
+  parentHasSiblings = false,
   onCreateChild,
   onEdit,
   onDelete,
@@ -183,117 +187,127 @@ const RoleNode = memo(function RoleNode({
   const hasPeople = node.people && node.people.length > 0;
   const hasContent = hasChildren || hasPeople;
 
-  const toggleExpand = () => {
+  const toggleExpand = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (hasContent) {
       setIsExpanded((prev) => !prev);
     }
   };
 
-  // Colores basados en nivel de profundidad
-  const levelColors = [
-    'border-l-primary-500',
-    'border-l-violet-500',
-    'border-l-blue-500',
-    'border-l-emerald-500',
-    'border-l-amber-500',
-    'border-l-rose-500',
-  ];
-  const borderColor = levelColors[level % levelColors.length];
-
   const hasActions = onCreateChild || onEdit || onDelete || onManagePeople;
 
   return (
-    <div className="select-none">
-      {/* Header del nodo */}
-      <div
-        className={`group flex items-center gap-2 py-2 px-3 rounded-lg transition-colors ${
-          hasContent ? 'cursor-pointer hover:bg-neutral-50' : 'hover:bg-neutral-50/50'
-        }`}
-        onClick={toggleExpand}
-      >
-        {/* Icono de expansión */}
-        <span className="w-5 h-5 flex items-center justify-center text-neutral-400">
-          {hasContent ? (
-            isExpanded ? (
-              <FiChevronDown size={16} />
+    <div className="relative flex">
+      {/* Líneas verticales y horizontales del árbol */}
+      {level > 0 && (
+        <>
+          {/* Línea vertical que conecta con el padre */}
+          <div className="absolute top-0 left-4 w-px h-full bg-neutral-300" />
+          
+          {/* Línea horizontal que conecta al nodo */}
+          <div className="absolute top-5 left-4 w-4 h-px bg-neutral-300" />
+          
+          {/* Ajustar la línea vertical para el último hijo */}
+          {isLastChild && (
+            <div className="absolute top-0 left-4 w-px h-5 bg-transparent" />
+          )}
+        </>
+      )}
+
+      {/* Contenido del nodo */}
+      <div className="flex-1 pl-8">
+        {/* Header del nodo */}
+        <div
+          className={`group flex items-center gap-2 py-3 px-4 rounded-lg transition-colors ${
+            hasContent ? 'cursor-pointer hover:bg-neutral-50' : 'hover:bg-neutral-50/50'
+          }`}
+          onClick={toggleExpand}
+        >
+          {/* Icono de expansión */}
+          <span className="w-5 h-5 flex items-center justify-center text-neutral-400">
+            {hasChildren ? (
+              isExpanded ? (
+                <FiChevronDown size={16} />
+              ) : (
+                <FiChevronRight size={16} />
+              )
             ) : (
-              <FiChevronRight size={16} />
-            )
-          ) : (
-            <span className="w-2 h-2 rounded-full bg-neutral-300" />
-          )}
-        </span>
-
-        {/* Nombre del rol */}
-        <span className="font-medium text-neutral-800 flex-1">{node.name}</span>
-
-        {/* Contador de personas */}
-        {hasPeople && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-medium">
-            <FiUsers size={12} />
-            {node.people.length}
+              <span className="w-2 h-2 rounded-full bg-neutral-300" />
+            )}
           </span>
-        )}
 
-        {/* Contador de sub-roles */}
-        {hasChildren && (
-          <span className="text-xs text-neutral-400">
-            ({node.children.length} sub-rol{node.children.length !== 1 ? 'es' : ''})
-          </span>
-        )}
-
-        {/* Botones de acción - visibles al hover */}
-        {hasActions && (
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-            <ActionButtons
-              node={node}
-              onCreateChild={onCreateChild}
-              onEdit={onEdit}
-              onDelete={onDelete}
-              onManagePeople={onManagePeople}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Contenido expandible */}
-      {isExpanded && hasContent && (
-        <div className={`ml-4 pl-4 border-l-2 ${borderColor}`}>
-          {/* Personas asignadas */}
-          {hasPeople && (
-            <div className="py-2">
-              <div className="flex flex-wrap gap-2">
-                {node.people.map((person) => (
-                  <PersonBadge 
-                    key={person.id} 
-                    person={person} 
-                    roleId={node.id}
-                    onRemove={onRemovePerson}
-                  />
-                ))}
-              </div>
+          {/* Nombre del rol con fondo */}
+          <div className="flex-1 flex items-center gap-3">
+            <div className="px-3 py-1.5 bg-white border border-neutral-300 rounded-lg shadow-sm hover:shadow transition-shadow">
+              <span className="font-medium text-neutral-800">{node.name}</span>
             </div>
-          )}
 
-          {/* Hijos recursivos */}
-          {hasChildren && (
-            <div className="space-y-1">
-              {node.children.map((child) => (
-                <RoleNode 
-                  key={child.id} 
-                  node={child} 
-                  level={level + 1}
-                  onCreateChild={onCreateChild}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onManagePeople={onManagePeople}
-                  onRemovePerson={onRemovePerson}
-                />
-              ))}
+            {/* Contador de personas */}
+            {hasPeople && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full text-xs font-medium">
+                <FiUsers size={12} />
+                {node.people.length}
+              </span>
+            )}
+
+            {/* Contador de sub-roles */}
+            {hasChildren && (
+              <span className="text-xs text-neutral-400">
+                ({node.children.length} sub-rol{node.children.length !== 1 ? 'es' : ''})
+              </span>
+            )}
+          </div>
+
+          {/* Botones de acción - visibles al hover */}
+          {hasActions && (
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+              <ActionButtons
+                node={node}
+                onCreateChild={onCreateChild}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onManagePeople={onManagePeople}
+              />
             </div>
           )}
         </div>
-      )}
+
+        {/* Personas asignadas */}
+        {isExpanded && hasPeople && (
+          <div className="ml-8 mb-3">
+            <div className="flex flex-wrap gap-2">
+              {node.people.map((person) => (
+                <PersonBadge 
+                  key={person.id} 
+                  person={person} 
+                  roleId={node.id}
+                  onRemove={onRemovePerson}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Hijos recursivos */}
+        {isExpanded && hasChildren && (
+          <div className="mt-1">
+            {node.children.map((child, index) => (
+              <RoleNode 
+                key={child.id} 
+                node={child} 
+                level={level + 1}
+                isLastChild={index === node.children.length - 1}
+                parentHasSiblings={node.children.length > 1}
+                onCreateChild={onCreateChild}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onManagePeople={onManagePeople}
+                onRemovePerson={onRemovePerson}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 });
@@ -332,15 +346,17 @@ export default function RoleTree({
 
   if (!hierarchy || hierarchy.length === 0) {
     return (
-      <div className="text-center py-8 text-neutral-500">
-        <FiUsers className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-        <p className="mb-4">{emptyMessage}</p>
+      <div className="text-center py-12 text-neutral-500">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-neutral-100 flex items-center justify-center">
+          <FiUsers className="w-8 h-8 text-neutral-400" />
+        </div>
+        <p className="mb-4 text-neutral-600">{emptyMessage}</p>
         {onCreateRoot && (
           <button
             onClick={handleCreateRoot}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium shadow-sm"
           >
-            <FiPlus size={16} />
+            <FiPlus size={18} />
             Crear Primer Rol
           </button>
         )}
@@ -349,32 +365,54 @@ export default function RoleTree({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="p-4">
       {/* Botón para agregar rol raíz */}
       {onCreateRoot && (
-        <div className="flex justify-end mb-3">
+        <div className="flex justify-end mb-6">
           <button
             onClick={handleCreateRoot}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors font-medium"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 rounded-lg transition-colors text-sm font-medium shadow-sm hover:shadow"
           >
-            <FiPlus size={14} />
-            Agregar Rol
+            <FiPlus size={16} />
+            Agregar Rol Raíz
           </button>
         </div>
       )}
 
-      {hierarchy.map((node) => (
-        <RoleNode 
-          key={node.id} 
-          node={node} 
-          level={0}
-          onCreateChild={onCreateChild}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onManagePeople={onManagePeople}
-          onRemovePerson={onRemovePerson}
-        />
-      ))}
+      {/* Contenedor del árbol con fondo */}
+      <div className="bg-white border border-neutral-200 rounded-xl p-4 shadow-sm">
+        {hierarchy.map((node, index) => (
+          <RoleNode 
+            key={node.id} 
+            node={node} 
+            level={0}
+            isLastChild={index === hierarchy.length - 1}
+            onCreateChild={onCreateChild}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onManagePeople={onManagePeople}
+            onRemovePerson={onRemovePerson}
+          />
+        ))}
+      </div>
+
+      {/* Leyenda del árbol */}
+      <div className="mt-6 p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+        <div className="flex items-center gap-4 text-xs text-neutral-600">
+          <div className="flex items-center gap-2">
+            <FiChevronDown className="text-neutral-400" size={14} />
+            <span>Rol expandido</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FiChevronRight className="text-neutral-400" size={14} />
+            <span>Rol colapsado</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-neutral-300" />
+            <span>Rol sin sub-roles</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

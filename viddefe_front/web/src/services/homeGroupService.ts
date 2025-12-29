@@ -63,30 +63,30 @@ export const strategyService = {
   /**
    * Obtiene todas las estrategias
    */
-  getAll: () => apiService.get<Strategy[]>('/groups/strategies'),
+  getAll: () => apiService.get<Strategy[]>('/strategies'),
 
   /**
    * Crea una nueva estrategia
    */
   create: (strategy: { name: string }) =>
-    apiService.post<Strategy>('/groups/strategies', strategy),
+    apiService.post<Strategy>('/strategies', strategy),
 
   /**
    * Actualiza una estrategia existente
    */
   update: (id: string, strategy: { name: string }) =>
-    apiService.put<Strategy>(`/groups/strategies/${id}`, strategy),
+    apiService.put<Strategy>(`/strategies/${id}`, strategy),
 
   /**
    * Elimina una estrategia
    */
-  delete: (id: string) => apiService.delete(`/groups/strategies/${id}`),
+  delete: (id: string) => apiService.delete(`/strategies/${id}`),
 
   /**
    * Obtiene la jerarquía de roles de una estrategia
    */
   getRoles: (strategyId: string) =>
-    apiService.get<RoleStrategyNode[]>(`/groups/strategies/${strategyId}/roles`),
+    apiService.get<RoleStrategyNode[]>(`/strategies/${strategyId}/roles`),
 };
 
 /**
@@ -98,19 +98,19 @@ export const roleService = {
    * Crea un nuevo rol en una estrategia (solo estructura)
    */
   create: (strategyId: string, role: CreateRoleDto) =>
-    apiService.post<RoleStrategyNode>(`/groups/strategies/${strategyId}/roles`, role),
+    apiService.post<RoleStrategyNode>(`/strategies/${strategyId}/roles`, role),
 
   /**
    * Actualiza un rol existente (solo estructura: nombre y padre)
    */
   update: (strategyId: string, roleId: string, role: UpdateRoleDto) =>
-    apiService.put<RoleStrategyNode>(`/groups/strategies/${strategyId}/roles/${roleId}`, role),
+    apiService.put<RoleStrategyNode>(`/strategies/${strategyId}/roles/${roleId}`, role),
 
   /**
    * Elimina un rol (solo si no tiene hijos)
    */
   delete: (strategyId: string, roleId: string): Promise<void> =>
-    apiService.delete(`/groups/strategies/${strategyId}/roles/${roleId}`),
+    apiService.delete(`/strategies/${strategyId}/roles/${roleId}`),
 };
 
 /**

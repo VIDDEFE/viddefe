@@ -8,10 +8,7 @@ import com.viddefe.viddefe_api.homeGroups.contracts.StrategyReader;
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
 import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupsRepository;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateHomeGroupsDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDTO;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDetailDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.*;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.EntityNotFoundException;
@@ -64,7 +61,7 @@ public class HomeGroupServiceImpl implements HomeGroupService {
     public HomeGroupsDetailDto getHomeGroupById(UUID id) {
         HomeGroupsDTO homeDto = homeGroupsRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Grupo no encontrado")).toDto();
-        List<RolesStrategiesDto> hierarchy = rolesStrategiesService.getTree(homeDto.getStrategy().getId());
+        List<RolesStrategiesWithPeopleDto> hierarchy = rolesStrategiesService.getTreeRolesWithPeople(homeDto.getStrategy().getId());
         HomeGroupsDetailDto dto = new HomeGroupsDetailDto();
         dto.setHomeGroup(homeDto);
         dto.setStrategy(homeDto.getStrategy());

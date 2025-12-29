@@ -9,5 +9,5 @@ import java.util.List;
 public class HomeGroupsDetailDto {
     private HomeGroupsDTO homeGroup;
     private StrategyDto strategy;
-    private List<RolesStrategiesDto> hierarchy;
+    private List<RolesStrategiesWithPeopleDto> hierarchy;
 }

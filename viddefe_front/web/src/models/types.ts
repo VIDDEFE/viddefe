@@ -75,6 +75,7 @@ export interface Person extends BaseEntity {
   // Campos para la gestión de usuarios
   hasUser?: boolean;
   userId?: string;
+  avatar?: string;
 }
 
 export type PersonRole = {
@@ -150,25 +151,14 @@ export interface UpdateHomeGroupDto {
 }
 
 // Persona en la jerarquía de roles (respuesta del backend)
-export interface PersonInRole {
-  id: string;
-  cc?: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  avatar?: string;
-  birthDate?: string;
-  typePersonId?: number;
-  stateId?: number;
-  churchId?: string;
-}
+
 
 // Nodo de la jerarquía de roles/estrategias (estructura de árbol recursiva)
 export interface RoleStrategyNode {
   id: string;
   name: string;
   children: RoleStrategyNode[];
-  people: PersonInRole[];
+  people: Person[];
 }
 
 // Respuesta del detalle de un grupo

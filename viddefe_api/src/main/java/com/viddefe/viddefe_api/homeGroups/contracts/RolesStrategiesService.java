@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.homeGroups.contracts;
 
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateRolesStrategiesDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesWithPeopleDto;
 
 import java.util.List;
 import java.util.UUID;
@@ -40,10 +41,10 @@ public interface RolesStrategiesService {
      * </ul>
      *
      * @param dto     role data including name and optional parent role
-     * @param groupId identifier of the strategy where the role is created
+     * @param strategyId identifier of the strategy to which the role belongs
      * @return the created role representation
      */
-    RolesStrategiesDto create(CreateRolesStrategiesDto dto, UUID groupId);
+    RolesStrategiesDto create(CreateRolesStrategiesDto dto, UUID strategyId);
 
     /**
      * Updates an existing role inside a strategy hierarchy.
@@ -84,9 +85,15 @@ public interface RolesStrategiesService {
     void delete(UUID id);
 
     /**
-     *
+     * Retrieves the full role hierarchy for a given strategy without people assignments.
      * @param strategyId
      * @return
      */
-    List<RolesStrategiesDto> getTree(UUID strategyId);
+    List<RolesStrategiesDto> getTreeRoles(UUID strategyId);
+    /**
+     * Retrieves the full role hierarchy for a given strategy with people assignments.
+     * @param strategyId
+     * @return
+     */
+    List<RolesStrategiesWithPeopleDto> getTreeRolesWithPeople(UUID strategyId);
 }
