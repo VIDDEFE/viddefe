@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,5 +51,10 @@ public class PeopleReaderImpl implements PeopleReader {
     public boolean existsPastorByCcWithoutChurch(String cc) {
         PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.name());
         return peopleRepository.findByCcAndTypePersonAndChurchIsNull(cc, pastorType).isPresent();
+    }
+
+    @Override
+    public List<PeopleModel> getPeopleByIds(List<UUID> ids) {
+        return peopleRepository.findAllById(ids);
     }
 }

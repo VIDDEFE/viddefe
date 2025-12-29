@@ -3,6 +3,8 @@ package com.viddefe.viddefe_api.homeGroups.infrastructure.web;
 import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupService;
+import com.viddefe.viddefe_api.homeGroups.contracts.RolesPeopleStrategiesService;
+import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.AssignPeopleToRoleDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateHomeGroupsDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDTO;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDetailDto;
@@ -21,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class HomeGroupsController {
     private final HomeGroupService homeGroupService;
+    private final RolesPeopleStrategiesService rolesPeopleStrategiesService;
     private final JwtUtil jwtUtil;
     @PostMapping
     public ResponseEntity<ApiResponse<HomeGroupsDTO>> createHomeGroup(
@@ -67,13 +70,21 @@ public class HomeGroupsController {
         return new ResponseEntity<>(ApiResponse.noContent(), HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping("/{groupId}/strategy/role/{roleId}/assign")
+    @PostMapping("/strategy/role/{roleId}/assign")
     public ResponseEntity<ApiResponse<Void>> assignRoleToGroupMember(
-            @PathVariable UUID groupId,
             @PathVariable UUID roleId,
-            @RequestParam UUID memberId
+            @RequestBody @Valid AssignPeopleToRoleDto dto
     ) {
-        //homeGroupService.assignRoleToGroupMember(groupId, roleId, memberId);
+        rolesPeopleStrategiesService.assignRoleToPeopleInStrategy(roleId, dto);
+        return new ResponseEntity<>(ApiResponse.noContent(), HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping("/strategy/role/{roleId}/remove")
+    public ResponseEntity<ApiResponse<Void>> removeRoleFromGroupMember(
+            @PathVariable UUID roleId,
+            @RequestBody @Valid AssignPeopleToRoleDto dto
+    ) {
+        rolesPeopleStrategiesService.removeRoleFromPeopleInStrategy(roleId, dto);
         return new ResponseEntity<>(ApiResponse.noContent(), HttpStatus.NO_CONTENT);
     }
 

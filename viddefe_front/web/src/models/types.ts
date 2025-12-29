@@ -181,14 +181,9 @@ export interface UpdateRoleDto {
   parentRoleId?: string | null;
 }
 
-// DTO para asignar una persona a un rol (en contexto de grupo)
-export interface AssignPersonToRoleDto {
-  personId: string;
-}
-
-// DTO para asignar múltiples personas a un rol
-export interface AssignPeopleToRoleDto {
-  personIds: string[];
+// DTO para asignar/remover personas a un rol
+export interface RolePeopleDto {
+  peopleIds: string[];
 }
 
 // Mantener Group legacy para compatibilidad

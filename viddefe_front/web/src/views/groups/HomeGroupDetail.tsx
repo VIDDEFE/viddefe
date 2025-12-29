@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   useHomeGroupDetail, 
   useAssignPeopleToRole,
-  useRemovePersonFromRole
+  useRemovePeopleFromRole
 } from '../../hooks';
 import { Card, Button, PageHeader } from '../../components/shared';
 import RoleTree from '../../components/groups/RoleTree';
@@ -18,7 +18,7 @@ export default function HomeGroupDetail() {
 
   // Hooks de mutación para asignación de personas
   const assignPeopleMutation = useAssignPeopleToRole(id || '');
-  const removePersonMutation = useRemovePersonFromRole(id || '');
+  const removePeopleMutation = useRemovePeopleFromRole(id || '');
 
   // Estado para modal de asignación de personas
   const [peopleModal, setPeopleModal] = useState<{
@@ -61,7 +61,7 @@ export default function HomeGroupDetail() {
       assignPeopleMutation.mutate(
         {
           roleId: peopleModal.role.id,
-          data: { personIds },
+          peopleIds: personIds,
         },
         {
           onSuccess: () => {
@@ -74,8 +74,8 @@ export default function HomeGroupDetail() {
 
   // Remover persona de un rol (desde el badge o modal)
   const handleRemovePerson = useCallback((roleId: string, personId: string) => {
-    removePersonMutation.mutate({ roleId, personId });
-  }, [removePersonMutation]);
+    removePeopleMutation.mutate({ roleId, peopleIds: [personId] });
+  }, [removePeopleMutation]);
 
   // Estado de carga
   if (isLoading) {
@@ -332,7 +332,7 @@ export default function HomeGroupDetail() {
           }
         }}
         onClose={handleClosePeopleModal}
-        isSaving={assignPeopleMutation.isPending || removePersonMutation.isPending}
+        isSaving={assignPeopleMutation.isPending || removePeopleMutation.isPending}
       />
     </div>
   );

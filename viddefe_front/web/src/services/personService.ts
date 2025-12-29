@@ -10,6 +10,7 @@ export interface PersonType {
 // Parámetros extendidos para búsqueda de personas
 export interface PeopleSearchParams extends PageableRequest {
   typePersonId?: number;
+  search?: string; // Búsqueda por nombre, teléfono, etc.
 }
 
 // Helper para construir query string de sort para Spring Boot
@@ -24,6 +25,7 @@ export const personService = {
     if (params?.page !== undefined) queryParts.push(`page=${params.page}`);
     if (params?.size !== undefined) queryParts.push(`size=${params.size}`);
     if (params?.typePersonId !== undefined) queryParts.push(`typePersonId=${params.typePersonId}`);
+    if (params?.search) queryParts.push(`search=${encodeURIComponent(params.search)}`);
     if (params?.sort) queryParts.push(buildSortParam(params.sort));
     const queryParams = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
     return apiService.get<Pageable<Person>>(`/people${queryParams}`);

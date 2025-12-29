@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.people.contracts;
 
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,4 +44,11 @@ public interface PeopleReader {
      * @return true si existe
      */
     boolean existsPastorByCcWithoutChurch(String cc);
+
+    /**
+     * Obtiene una lista de personas por sus IDs.
+     * @param ids Lista de UUIDs de personas
+     * @return Lista de PeopleModel encontrados
+     */
+    List<PeopleModel> getPeopleByIds(List<UUID> ids);
 }

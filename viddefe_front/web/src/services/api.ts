@@ -307,6 +307,11 @@ class ApiService {
     const res = await this.client.delete<T>(endpoint, config);
     return res.data;
   }
+
+  public async deleteWithBody<T>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    const res = await this.client.delete<T>(endpoint, { ...config, data });
+    return res.data;
+  }
 }
 
 export const apiService = new ApiService();

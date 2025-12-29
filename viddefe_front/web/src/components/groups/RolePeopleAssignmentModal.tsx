@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, memo, useCallback, useRef } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { Modal, Button } from '../shared';
-import type { RoleStrategyNode, PersonInRole } from '../../models';
-import type { Person } from '../../models';
-import { usePeople } from '../../hooks';
-import { FiSearch, FiUser, FiUserPlus, FiUserMinus, FiAlertCircle, FiCheck, FiX } from 'react-icons/fi';
+import type { RoleStrategyNode, Person } from '../../models';
+import type { Pageable } from '../../services/api';
+import { personService } from '../../services/personService';
+import { FiSearch, FiUser, FiUserMinus, FiAlertCircle, FiCheck, FiX, FiLoader, FiChevronDown } from 'react-icons/fi';
 
 // ============================================================================
 // TYPES
@@ -27,10 +28,247 @@ function isLeaderRole(roleName: string): boolean {
 }
 
 // ============================================================================
+// PAGINATED PERSON DROPDOWN - DropDown con paginación infinita
+// ============================================================================
+interface PaginatedPersonDropdownProps {
+  selectedIds: string[];
+  excludeIds: Set<string>;
+  onToggle: (personId: string) => void;
+  isMultiple?: boolean;
+  placeholder?: string;
+}
+
+const PAGE_SIZE = 10;
+
+const PaginatedPersonDropdown = memo(function PaginatedPersonDropdown({
+  selectedIds,
+  excludeIds,
+  onToggle,
+  isMultiple = false,
+  placeholder = "Seleccionar personas...",
+}: PaginatedPersonDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Cerrar al hacer clic fuera
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (!wrapperRef.current?.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Fetch paginado - solo cuando está abierto
+  const {
+    data: peoplePages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery<Pageable<Person>, Error>({
+    queryKey: ['people-dropdown', debouncedSearch],
+    queryFn: async ({ pageParam = 0 }) => {
+      const params: { page: number; size: number; search?: string } = {
+        page: pageParam as number,
+        size: PAGE_SIZE,
+      };
+      if (debouncedSearch.trim()) {
+        params.search = debouncedSearch.trim();
+      }
+      return personService.getAll(params);
+    },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.totalPages === lastPage.number + 1) return undefined;
+      return lastPage.number + 1;
+    },
+    initialPageParam: 0,
+    enabled: isOpen,
+    staleTime: 30 * 1000,
+  });
+
+  // Combinar páginas
+  const allPeople = useMemo(() => {
+    if (!peoplePages) return [];
+    return peoplePages.pages.flatMap(page => page.content);
+  }, [peoplePages]);
+
+  // Filtrar localmente como fallback
+  const filteredPeople = useMemo(() => {
+    if (!debouncedSearch.trim()) return allPeople;
+    const term = debouncedSearch.toLowerCase();
+    return allPeople.filter(person => 
+      person.firstName?.toLowerCase().includes(term) ||
+      person.lastName?.toLowerCase().includes(term) ||
+      person.phone?.includes(term)
+    );
+  }, [allPeople, debouncedSearch]);
+
+  // Scroll infinito
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollHeight - scrollTop <= clientHeight * 1.5 && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // Texto del botón
+  const buttonLabel = selectedIds.length > 0
+    ? `${selectedIds.length} persona${selectedIds.length > 1 ? 's' : ''} seleccionada${selectedIds.length > 1 ? 's' : ''}`
+    : placeholder;
+
+  return (
+    <div ref={wrapperRef} className="relative w-full">
+      {/* Trigger */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(o => !o)}
+        className={`
+          px-3 py-3 w-full text-left border-2 rounded-lg text-base transition-all duration-300 bg-white
+          flex items-center justify-between
+          ${isOpen ? 'border-primary-500 ring-2 ring-primary-300' : 'border-neutral-200'}
+          hover:border-primary-400
+        `}
+      >
+        <span className={`truncate ${selectedIds.length === 0 ? 'text-neutral-400' : 'text-neutral-800'}`}>
+          {buttonLabel}
+        </span>
+        <FiChevronDown className={`ml-2 text-xl transition-transform duration-200 ${isOpen ? 'rotate-180' : ''} text-neutral-500`} />
+      </button>
+
+      {/* Dropdown panel */}
+      {isOpen && (
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg z-[9999] overflow-hidden">
+          {/* Search */}
+          <div className="relative border-b border-neutral-200">
+            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />
+            <input
+              autoFocus
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por nombre..."
+              className="px-3 py-2.5 pl-9 w-full text-sm focus:outline-none"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+              >
+                <FiX size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Options list */}
+          <div 
+            ref={listRef}
+            className="max-h-60 overflow-auto"
+            onScroll={handleScroll}
+          >
+            {isLoading && filteredPeople.length === 0 ? (
+              <div className="flex items-center justify-center py-6">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600" />
+              </div>
+            ) : filteredPeople.length === 0 ? (
+              <div className="px-3 py-4 text-neutral-500 text-sm text-center">
+                No se encontraron personas
+              </div>
+            ) : (
+              <>
+                {filteredPeople.map((person) => {
+                  const isExcluded = excludeIds.has(person.id);
+                  const isSelected = selectedIds.includes(person.id);
+                  const fullName = `${person.firstName} ${person.lastName}`.trim();
+                  const initials = `${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`.toUpperCase();
+
+                  return (
+                    <div
+                      key={person.id}
+                      onClick={() => !isExcluded && onToggle(person.id)}
+                      className={`
+                        px-3 py-2.5 flex items-center gap-3 cursor-pointer transition
+                        ${isExcluded 
+                          ? 'bg-neutral-100 cursor-not-allowed opacity-50' 
+                          : isSelected 
+                            ? 'bg-primary-50 hover:bg-primary-100' 
+                            : 'hover:bg-neutral-50'
+                        }
+                      `}
+                    >
+                      {/* Checkbox */}
+                      <div className={`
+                        w-4 h-4 rounded border-2 flex items-center justify-center shrink-0
+                        ${isExcluded 
+                          ? 'bg-neutral-300 border-neutral-300' 
+                          : isSelected 
+                            ? 'bg-primary-600 border-primary-600' 
+                            : 'border-neutral-300'
+                        }
+                      `}>
+                        {(isSelected || isExcluded) && <FiCheck size={10} className="text-white" />}
+                      </div>
+
+                      {/* Avatar */}
+                      <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium text-xs shrink-0">
+                        {initials || <FiUser size={12} />}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-neutral-800 truncate">{fullName}</p>
+                        {person.phone && (
+                          <p className="text-xs text-neutral-500">{person.phone}</p>
+                        )}
+                      </div>
+
+                      {isExcluded && (
+                        <span className="text-xs text-neutral-400 bg-neutral-200 px-1.5 py-0.5 rounded shrink-0">
+                          Asignado
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* Loading more */}
+                {isFetchingNextPage && (
+                  <div className="flex items-center justify-center py-2 gap-2">
+                    <FiLoader className="animate-spin text-primary-600" size={16} />
+                    <span className="text-xs text-neutral-500">Cargando más...</span>
+                  </div>
+                )}
+
+                {/* End indicator */}
+                {!hasNextPage && filteredPeople.length >= PAGE_SIZE && (
+                  <div className="text-center py-2 text-xs text-neutral-400">
+                    — Fin de la lista —
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+});
+
+// ============================================================================
 // PERSON ITEM - Item de persona en la lista de asignados
 // ============================================================================
 interface AssignedPersonItemProps {
-  person: PersonInRole;
+  person: Person;
   onRemove: () => void;
   isRemoving?: boolean;
 }
@@ -77,83 +315,6 @@ const AssignedPersonItem = memo(function AssignedPersonItem({
 });
 
 // ============================================================================
-// SELECTABLE PERSON - Persona seleccionable para asignar
-// ============================================================================
-interface SelectablePersonItemProps {
-  person: Person;
-  isSelected: boolean;
-  isAlreadyAssigned: boolean;
-  onToggle: () => void;
-}
-
-const SelectablePersonItem = memo(function SelectablePersonItem({
-  person,
-  isSelected,
-  isAlreadyAssigned,
-  onToggle,
-}: SelectablePersonItemProps) {
-  const initials = `${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`.toUpperCase();
-  const fullName = `${person.firstName} ${person.lastName}`.trim();
-
-  return (
-    <button
-      onClick={onToggle}
-      disabled={isAlreadyAssigned}
-      className={`
-        w-full flex items-center justify-between p-3 rounded-lg border transition-all
-        ${isAlreadyAssigned 
-          ? 'bg-neutral-100 border-neutral-200 cursor-not-allowed opacity-60' 
-          : isSelected
-            ? 'bg-primary-50 border-primary-300 ring-2 ring-primary-200'
-            : 'bg-white border-neutral-200 hover:border-primary-300 hover:bg-primary-50/50'
-        }
-      `}
-    >
-      <div className="flex items-center gap-3">
-        {/* Checkbox visual */}
-        <div className={`
-          w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
-          ${isAlreadyAssigned 
-            ? 'bg-neutral-300 border-neutral-300' 
-            : isSelected 
-              ? 'bg-primary-600 border-primary-600' 
-              : 'border-neutral-300'
-          }
-        `}>
-          {(isSelected || isAlreadyAssigned) && (
-            <FiCheck size={12} className="text-white" />
-          )}
-        </div>
-
-        {/* Avatar */}
-        {person.email ? ( // Usando un campo como proxy para avatar
-          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium text-sm">
-            {initials || <FiUser size={14} />}
-          </div>
-        ) : (
-          <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-medium text-sm">
-            {initials || <FiUser size={14} />}
-          </div>
-        )}
-
-        <div className="text-left">
-          <p className="font-medium text-neutral-800 text-sm">{fullName}</p>
-          {person.phone && (
-            <p className="text-xs text-neutral-500">{person.phone}</p>
-          )}
-        </div>
-      </div>
-
-      {isAlreadyAssigned && (
-        <span className="text-xs text-neutral-500 bg-neutral-200 px-2 py-0.5 rounded">
-          Ya asignado
-        </span>
-      )}
-    </button>
-  );
-});
-
-// ============================================================================
 // MAIN MODAL
 // ============================================================================
 
@@ -165,22 +326,14 @@ export default memo(function RolePeopleAssignmentModal({
   onClose,
   isSaving = false,
 }: RolePeopleAssignmentModalProps) {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedPersonIds, setSelectedPersonIds] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<'assigned' | 'add'>('assigned');
-
-  // Obtener lista de personas disponibles
-  const { data: peopleData, isLoading: isLoadingPeople } = usePeople({ page: 0, size: 100 });
-  const availablePeople = peopleData?.content || [];
 
   // Reset al abrir/cerrar
   useEffect(() => {
     if (isOpen) {
-      setSearchTerm('');
       setSelectedPersonIds([]);
-      setActiveTab(role?.people?.length ? 'assigned' : 'add');
     }
-  }, [isOpen, role?.people?.length]);
+  }, [isOpen]);
 
   // Verificar si es rol de líder
   const isLeader = role ? isLeaderRole(role.name) : false;
@@ -189,19 +342,8 @@ export default memo(function RolePeopleAssignmentModal({
     [role?.people]
   );
 
-  // Filtrar personas disponibles
-  const filteredPeople = useMemo(() => {
-    if (!searchTerm.trim()) return availablePeople;
-    const term = searchTerm.toLowerCase();
-    return availablePeople.filter(person => 
-      person.firstName?.toLowerCase().includes(term) ||
-      person.lastName?.toLowerCase().includes(term) ||
-      person.phone?.includes(term)
-    );
-  }, [availablePeople, searchTerm]);
-
   // Manejar selección de persona
-  const handleTogglePerson = (personId: string) => {
+  const handleTogglePerson = useCallback((personId: string) => {
     if (assignedPeopleIds.has(personId)) return;
 
     setSelectedPersonIds(prev => {
@@ -209,15 +351,12 @@ export default memo(function RolePeopleAssignmentModal({
         return prev.filter(id => id !== personId);
       }
       // Si es líder, solo permitir una persona
-      if (isLeader && role?.people?.length === 0) {
+      if (isLeader) {
         return [personId];
-      }
-      if (isLeader && prev.length >= 1) {
-        return [personId]; // Reemplazar selección
       }
       return [...prev, personId];
     });
-  };
+  }, [assignedPeopleIds, isLeader]);
 
   // Asignar personas seleccionadas
   const handleAssign = () => {
@@ -238,20 +377,16 @@ export default memo(function RolePeopleAssignmentModal({
       title={`Gestionar Personas - ${role.name}`}
       onClose={onClose}
       actions={
-        activeTab === 'add' && selectedPersonIds.length > 0 ? (
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={onClose} disabled={isSaving}>
-              Cancelar
-            </Button>
-            <Button variant="primary" onClick={handleAssign} disabled={isSaving}>
-              {isSaving ? 'Asignando...' : `Asignar ${selectedPersonIds.length} persona${selectedPersonIds.length > 1 ? 's' : ''}`}
-            </Button>
-          </div>
-        ) : (
-          <Button variant="secondary" onClick={onClose}>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={onClose} disabled={isSaving}>
             Cerrar
           </Button>
-        )
+          {selectedPersonIds.length > 0 && (
+            <Button variant="primary" onClick={handleAssign} disabled={isSaving}>
+              {isSaving ? 'Asignando...' : `Asignar ${selectedPersonIds.length}`}
+            </Button>
+          )}
+        </div>
       }
     >
       <div className="space-y-4">
@@ -266,42 +401,28 @@ export default memo(function RolePeopleAssignmentModal({
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex border-b border-neutral-200">
-          <button
-            onClick={() => setActiveTab('assigned')}
-            className={`
-              px-4 py-2 text-sm font-medium border-b-2 transition-colors
-              ${activeTab === 'assigned'
-                ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-neutral-500 hover:text-neutral-700'
-              }
-            `}
-          >
-            Asignados ({role.people?.length || 0})
-          </button>
-          <button
-            onClick={() => setActiveTab('add')}
-            disabled={!canAssignMore}
-            className={`
-              px-4 py-2 text-sm font-medium border-b-2 transition-colors
-              ${activeTab === 'add'
-                ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-neutral-500 hover:text-neutral-700'
-              }
-              ${!canAssignMore ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-          >
-            <span className="flex items-center gap-1.5">
-              <FiUserPlus size={14} />
-              Agregar
-            </span>
-          </button>
-        </div>
+        {/* Dropdown para agregar personas */}
+        {canAssignMore && (
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+              Agregar personas
+            </label>
+            <PaginatedPersonDropdown
+              selectedIds={selectedPersonIds}
+              excludeIds={assignedPeopleIds}
+              onToggle={handleTogglePerson}
+              isMultiple={!isLeader}
+              placeholder={isLeader ? "Seleccionar líder..." : "Seleccionar personas..."}
+            />
+          </div>
+        )}
 
-        {/* Tab: Personas Asignadas */}
-        {activeTab === 'assigned' && (
-          <div className="space-y-2">
+        {/* Personas actualmente asignadas */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-2">
+            Personas asignadas ({role.people?.length || 0})
+          </label>
+          <div className="space-y-2 max-h-[250px] overflow-y-auto">
             {hasAssignedPeople ? (
               role.people.map(person => (
                 <AssignedPersonItem
@@ -312,82 +433,13 @@ export default memo(function RolePeopleAssignmentModal({
                 />
               ))
             ) : (
-              <div className="text-center py-8 text-neutral-500">
-                <FiUser className="w-12 h-12 mx-auto mb-3 text-neutral-300" />
-                <p>No hay personas asignadas a este rol</p>
-                <button
-                  onClick={() => setActiveTab('add')}
-                  className="mt-3 text-primary-600 hover:text-primary-700 font-medium text-sm"
-                >
-                  + Agregar personas
-                </button>
+              <div className="text-center py-6 text-neutral-500 bg-neutral-50 rounded-lg border border-dashed border-neutral-300">
+                <FiUser className="w-10 h-10 mx-auto mb-2 text-neutral-300" />
+                <p className="text-sm">No hay personas asignadas</p>
               </div>
             )}
           </div>
-        )}
-
-        {/* Tab: Agregar Personas */}
-        {activeTab === 'add' && (
-          <div className="space-y-3">
-            {/* Buscador */}
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={18} />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar por nombre o teléfono..."
-                className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
-                >
-                  <FiX size={16} />
-                </button>
-              )}
-            </div>
-
-            {/* Selección múltiple info */}
-            {selectedPersonIds.length > 0 && (
-              <div className="flex items-center justify-between p-2 bg-primary-50 border border-primary-200 rounded-lg">
-                <span className="text-sm text-primary-700">
-                  {selectedPersonIds.length} persona{selectedPersonIds.length > 1 ? 's' : ''} seleccionada{selectedPersonIds.length > 1 ? 's' : ''}
-                </span>
-                <button
-                  onClick={() => setSelectedPersonIds([])}
-                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Limpiar selección
-                </button>
-              </div>
-            )}
-
-            {/* Lista de personas */}
-            <div className="max-h-[300px] overflow-y-auto space-y-2">
-              {isLoadingPeople ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
-                </div>
-              ) : filteredPeople.length === 0 ? (
-                <div className="text-center py-8 text-neutral-500">
-                  <p>No se encontraron personas</p>
-                </div>
-              ) : (
-                filteredPeople.map(person => (
-                  <SelectablePersonItem
-                    key={person.id}
-                    person={person}
-                    isSelected={selectedPersonIds.includes(person.id)}
-                    isAlreadyAssigned={assignedPeopleIds.has(person.id)}
-                    onToggle={() => handleTogglePerson(person.id)}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </Modal>
   );

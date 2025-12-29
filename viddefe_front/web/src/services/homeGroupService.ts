@@ -8,8 +8,7 @@ import type {
   RoleStrategyNode,
   CreateRoleDto,
   UpdateRoleDto,
-  AssignPersonToRoleDto,
-  AssignPeopleToRoleDto
+  RolePeopleDto
 } from '../models';
 
 // Helper para construir query string de sort para Spring Boot
@@ -114,25 +113,20 @@ export const roleService = {
 };
 
 /**
- * Servicio para gestionar la asignación de personas a roles dentro de un grupo
- * Las personas se asignan a roles en el contexto de un grupo específico
+ * Servicio para gestionar la asignación de personas a roles
  */
 export const roleAssignmentService = {
   /**
-   * Asigna una persona a un rol
+   * Asigna personas a un rol
+   * POST /groups/strategy/role/{roleId}/assign
    */
-  assignPerson: (groupId: string, roleId: string, data: AssignPersonToRoleDto): Promise<void> =>
-    apiService.post(`/groups/${groupId}/strategies/roles/${roleId}/people`, data),
+  assign: (roleId: string, data: RolePeopleDto): Promise<void> =>
+    apiService.post(`/groups/strategy/role/${roleId}/assign`, data),
 
   /**
-   * Asigna múltiples personas a un rol
+   * Remueve personas de un rol
+   * DELETE /groups/strategy/role/{roleId}/remove
    */
-  assignPeople: (groupId: string, roleId: string, data: AssignPeopleToRoleDto): Promise<void> =>
-    apiService.post(`/groups/${groupId}/strategies/roles/${roleId}/people/batch`, data),
-
-  /**
-   * Remueve una persona de un rol
-   */
-  removePerson: (groupId: string, roleId: string, personId: string): Promise<void> =>
-    apiService.delete(`/groups/${groupId}/strategies/roles/${roleId}/people/${personId}`),
+  remove: (roleId: string, data: RolePeopleDto): Promise<void> =>
+    apiService.deleteWithBody(`/groups/strategy/role/${roleId}/remove`, data),
 };

@@ -3,7 +3,7 @@ import { homeGroupService, strategyService, roleService, roleAssignmentService }
 import type { 
   HomeGroup, Strategy, CreateHomeGroupDto, UpdateHomeGroupDto, 
   HomeGroupDetailResponse, CreateRoleDto, UpdateRoleDto, RoleStrategyNode,
-  AssignPersonToRoleDto, AssignPeopleToRoleDto
+  RolePeopleDto
 } from '../models';
 import type { Pageable, PageableRequest } from '../services/api';
 
@@ -210,27 +210,13 @@ export function useDeleteRole(strategyId: string) {
 // ============================================================================
 
 /**
- * Hook para asignar una persona a un rol
- */
-export function useAssignPersonToRole(groupId: string) {
-  const qc = useQueryClient();
-
-  return useMutation<void, Error, { roleId: string; data: AssignPersonToRoleDto }>({
-    mutationFn: ({ roleId, data }) => roleAssignmentService.assignPerson(groupId, roleId, data),
-    onSuccess() {
-      qc.invalidateQueries({ queryKey: ['homeGroupDetail', groupId] });
-    },
-  });
-}
-
-/**
- * Hook para asignar múltiples personas a un rol
+ * Hook para asignar personas a un rol
  */
 export function useAssignPeopleToRole(groupId: string) {
   const qc = useQueryClient();
 
-  return useMutation<void, Error, { roleId: string; data: AssignPeopleToRoleDto }>({
-    mutationFn: ({ roleId, data }) => roleAssignmentService.assignPeople(groupId, roleId, data),
+  return useMutation<void, Error, { roleId: string; peopleIds: string[] }>({
+    mutationFn: ({ roleId, peopleIds }) => roleAssignmentService.assign(roleId, { peopleIds }),
     onSuccess() {
       qc.invalidateQueries({ queryKey: ['homeGroupDetail', groupId] });
     },
@@ -238,13 +224,13 @@ export function useAssignPeopleToRole(groupId: string) {
 }
 
 /**
- * Hook para remover una persona de un rol
+ * Hook para remover personas de un rol
  */
-export function useRemovePersonFromRole(groupId: string) {
+export function useRemovePeopleFromRole(groupId: string) {
   const qc = useQueryClient();
 
-  return useMutation<void, Error, { roleId: string; personId: string }>({
-    mutationFn: ({ roleId, personId }) => roleAssignmentService.removePerson(groupId, roleId, personId),
+  return useMutation<void, Error, { roleId: string; peopleIds: string[] }>({
+    mutationFn: ({ roleId, peopleIds }) => roleAssignmentService.remove(roleId, { peopleIds }),
     onSuccess() {
       qc.invalidateQueries({ queryKey: ['homeGroupDetail', groupId] });
     },
