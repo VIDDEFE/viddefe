@@ -1,17 +1,38 @@
 import { useState, useEffect } from 'react';
-import type { Person } from '../../models';
-import { Button, PageHeader, Table, Modal, Avatar, PersonForm, initialPersonFormData, type PersonFormData } from '../../components/shared';
-import { usePeople, usePerson, useUpdatePerson, useDeletePerson } from '../../hooks';
+import type { Person, PersonRole } from '../../models';
+import { Button, PageHeader, Table, Modal, Avatar, PersonForm, initialPersonFormData, type PersonFormData, DropDown } from '../../components/shared';
+import { usePeople, usePerson, useUpdatePerson, useDeletePerson, usePersonTypes } from '../../hooks';
 import { authService, type PersonRequest } from '../../services/authService';
 import { formatDate } from '../../utils';
 import CreateUserModal from '../../components/people/CreateUserModal';
 import { useAppContext } from '../../context/AppContext';
 import { PeoplePermission } from '../../services/userService';
+import type { SortConfig } from '../../services/api';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | 'createUser' | null;
 
+const DEFAULT_PAGE_SIZE = 10;
+
 export default function People() {
-  const { data: people, isLoading, refetch } = usePeople();
+  // Estado de paginación
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  
+  // Estado de filtro por tipo de persona
+  const [selectedTypeId, setSelectedTypeId] = useState<number | undefined>(undefined);
+
+  // Estado de ordenamiento
+  const [sortConfig, setSortConfig] = useState<SortConfig | undefined>(undefined);
+
+  // Hook para obtener tipos de persona
+  const { data: personTypes = [] } = usePersonTypes();
+
+  const { data: people, isLoading, refetch } = usePeople({ 
+    page: currentPage, 
+    size: pageSize,
+    typePersonId: selectedTypeId,
+    sort: sortConfig
+  });
   const { user, hasPermission } = useAppContext();
 
   // Permisos de personas
@@ -164,16 +185,6 @@ export default function People() {
     }
   };
 
-  // Helper para obtener el tipo de persona
-  const getPersonTypeName = (typeId: number) => {
-    const types: Record<number, string> = {
-      1: 'Oveja',
-      2: 'Voluntario',
-      3: 'Pastor',
-    };
-    return types[typeId] || '-';
-  };
-
   const columns = [
     {
       key: 'id' as const,
@@ -196,6 +207,8 @@ export default function People() {
       label: 'Apellidos', 
       render: (_: unknown, person: Person) => `${person.lastName}` 
     },
+    { key: 'firstName' as const, label: 'Cédula', render: (_: unknown, person: Person) => (person as any).cc || '-' },
+    { key: 'typePerson' as const, label: 'Tipo de Persona', render: (_: unknown, person: Person) => person.typePerson?.name || '-' },
     { key: 'phone' as const, label: 'Teléfono' },
     { 
       key: 'birthDate' as const, 
@@ -207,7 +220,7 @@ export default function People() {
       label: 'Departamento', 
       render: (_value: unknown, item: Person) => item.state?.name || '-' 
     },
-  ];
+  ] as any;
 
   // Construir acciones de la tabla dinámicamente basadas en permisos
   const tableActions: Array<{
@@ -264,12 +277,64 @@ export default function People() {
   const isFormModalOpen = modalMode === 'create' || modalMode === 'edit';
   const isMutating = loading || updatePerson.isPending || deletePerson.isPending;
 
+  // Información de paginación del servidor
+  const paginationData = people && !Array.isArray(people) ? {
+    totalPages: people.totalPages,
+    totalElements: people.totalElements,
+    currentPage: people.number,
+    pageSize: people.size
+  } : null;
+
+  // Handlers de paginación
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(0); // Resetear a primera página
+  };
+
+  // Handler para cambio de tipo de persona
+  const handleTypeChange = (value: string) => {
+    const typeId = value ? Number(value) : undefined;
+    setSelectedTypeId(typeId);
+    setCurrentPage(0); // Resetear a primera página al filtrar
+  };
+
+  // Handler para cambio de ordenamiento
+  const handleSortChange = (sort: SortConfig | undefined) => {
+    setSortConfig(sort);
+    setCurrentPage(0); // Resetear a primera página al ordenar
+  };
+
+  // Opciones para el dropdown de tipos con opción "Todos"
+  const typeOptions = [
+    { id: '', name: 'Todos los tipos' },
+    ...personTypes
+  ];
+
   return (
     <div className="page-container">
       <PageHeader
         title="Personas"
         subtitle="Gestiona todos los miembros y contactos"
-        actions={canCreate && <Button variant="primary" onClick={openCreateModal}>+ Nueva Persona</Button>}
+        actions={
+          <div className="flex items-center gap-3">
+            {/* Filtro por tipo de persona */}
+            <div className="w-48">
+              <DropDown
+                options={typeOptions}
+                value={selectedTypeId?.toString() ?? ''}
+                onChangeValue={handleTypeChange}
+                placeholder="Filtrar por tipo"
+                labelKey="name"
+                valueKey="id"
+              />
+            </div>
+            {canCreate && <Button variant="primary" onClick={openCreateModal}>+ Nueva Persona</Button>}
+          </div>
+        }
       />
 
       {/* Mensaje de éxito */}
@@ -287,7 +352,20 @@ export default function People() {
         columns={columns}
         actions={tableActions}
         loading={isLoading}
-        pagination={{ mode: 'auto', pageSize: 10 }}
+        pagination={paginationData ? {
+          mode: 'manual',
+          currentPage: paginationData.currentPage,
+          totalPages: paginationData.totalPages,
+          totalElements: paginationData.totalElements,
+          pageSize: paginationData.pageSize,
+          onPageChange: handlePageChange,
+          onPageSizeChange: handlePageSizeChange,
+        } : { mode: 'auto', pageSize: DEFAULT_PAGE_SIZE }}
+        sorting={{
+          mode: 'manual',
+          sortConfig: sortConfig,
+          onSortChange: handleSortChange,
+        }}
       />
 
       {/* Modal de Crear/Editar */}
@@ -367,7 +445,7 @@ export default function People() {
                     {personDetails?.firstName || selectedPerson.firstName} {personDetails?.lastName || selectedPerson.lastName}
                   </h3>
                   <p className="text-neutral-600">
-                    {getPersonTypeName((personDetails as any)?.typePersonId || 0)}
+                    {personDetails?.typePerson?.name || selectedPerson.typePerson?.name || '-'}
                   </p>
                 </div>
               </div>

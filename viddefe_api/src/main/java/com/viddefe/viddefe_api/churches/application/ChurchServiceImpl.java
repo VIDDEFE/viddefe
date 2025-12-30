@@ -15,7 +15,9 @@ import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -129,7 +131,7 @@ public class ChurchServiceImpl implements ChurchService {
                 church.getLatitude(),
                 church.getLongitude(),
                 church.getCity().toDto(),
-                church.getCity().getState().toDto(),
+                church.getCity().getStates().toDto(),
                 pastor.toDto(),
                 church.getFoundationDate(),
                 church.getPhone(),
@@ -149,6 +151,47 @@ public class ChurchServiceImpl implements ChurchService {
                 ? dto.getPastorId()
                 : creatorPastorId;
     }
+
+    private Pageable mapSort(Pageable pageable) {
+        if (pageable.getSort().isUnsorted()) {
+            return pageable;
+        }
+
+        Sort newSort = Sort.unsorted();
+
+        for (Sort.Order order : pageable.getSort()) {
+            String property = order.getProperty();
+
+            switch (property) {
+                case "pastor" ->
+                        newSort = newSort.and(
+                                Sort.by(order.getDirection(), "p.lastName")
+                        );
+
+                case "department" ->
+                        newSort = newSort.and(
+                                Sort.by(order.getDirection(), "s.name")
+                        );
+
+                case "name" ->
+                        newSort = newSort.and(
+                                Sort.by(order.getDirection(), "c.name")
+                        );
+
+                default ->
+                        throw new IllegalArgumentException(
+                                "Ordenamiento no permitido: " + property
+                        );
+            }
+        }
+
+        return PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                newSort
+        );
+    }
+
 
     /**
      * Construye, persiste y asigna el pastor a una iglesia.

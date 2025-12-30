@@ -21,7 +21,7 @@ public class PeopleTypeSeeder implements CommandLineRunner {
         }
         List<PeopleTypeModel> typesPeople = Arrays.stream(TypesPeople.values()).map(item -> {
             PeopleTypeModel model = new PeopleTypeModel();
-            model.setName(item.name());
+            model.setName(item.getLabel());
             return model;
         }).toList();
         peopleTypesRepository.saveAll(typesPeople);

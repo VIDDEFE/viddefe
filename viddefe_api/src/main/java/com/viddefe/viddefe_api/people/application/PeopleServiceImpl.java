@@ -8,6 +8,7 @@ import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,8 +40,9 @@ public class PeopleServiceImpl implements PeopleService {
     }
 
     @Override
-    public Page<PeopleResDto> getAllPeople(Pageable pageable) {
-        return peopleRepository.findAll(pageable).map(PeopleModel::toDto);
+    public Page<PeopleResDto> getAllPeople(Pageable pageable, Long personTypeId,@NonNull UUID churchId) {
+        return peopleRepository.findByChurchAndOptionalType(churchId,personTypeId , pageable)
+                .map(PeopleModel::toDto);
     }
 
     @Override

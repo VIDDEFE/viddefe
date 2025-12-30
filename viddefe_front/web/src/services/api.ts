@@ -31,9 +31,19 @@ export type Pageable<T> = {
   size: number;
 };
 
+// Dirección de ordenamiento compatible con Spring Boot
+export type SortDirection = 'asc' | 'desc';
+
+// Configuración de ordenamiento
+export type SortConfig = {
+  field: string;
+  direction: SortDirection;
+};
+
 export type PageableRequest = {
   size: number;
   page: number;
+  sort?: SortConfig;
 };
 
 // Cambiamos a sessionStorage para persistencia
@@ -179,8 +189,11 @@ class ApiService {
 
       // --- ERROR INTERCEPTOR ---
       (error) => {
+        console.log('🔴 API Error Interceptor:', error);
+        
         if (error.response) {
           const { status, data } = error.response;
+          console.log('🔴 Error status:', status, 'data:', data);
 
           // ---------------------------
           // 401 - No autorizado
@@ -233,12 +246,19 @@ class ApiService {
             timestamp: data?.timestamp || new Date().toISOString(),
           };
 
-          // Validaciones
+          console.log('🔴 ApiError built:', apiError);
+
+          // Validaciones con campos específicos
           if (apiError.meta?.fields) {
-            Object.values(apiError.meta.fields).forEach((msg) => toast.error(String(msg)));
+            console.log('🔴 Validation fields:', apiError.meta.fields);
+            Object.values(apiError.meta.fields).forEach((msg) => {
+              console.log('🔴 Showing field error toast:', msg);
+              toast.error(String(msg));
+            });
             return Promise.reject(apiError);
           }
 
+          console.log('🔴 Showing generic error toast:', apiError.message);
           toast.error(apiError.message);
           return Promise.reject(apiError);
         }
@@ -285,6 +305,11 @@ class ApiService {
 
   public async delete<T>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
     const res = await this.client.delete<T>(endpoint, config);
+    return res.data;
+  }
+
+  public async deleteWithBody<T>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    const res = await this.client.delete<T>(endpoint, { ...config, data });
     return res.data;
   }
 }

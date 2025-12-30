@@ -1,12 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { personService } from '../services/personService'
+import { personService, type PeopleSearchParams, type PersonType } from '../services/personService'
 import type { Person } from '../models'
-import type { Pageable } from '../services'
+import type { Pageable } from '../services/api'
 
-export function usePeople() {
+export function usePeople(params?: PeopleSearchParams) {
   return useQuery<Pageable<Person>, Error>({
-    queryKey: ['people'],
-    queryFn: () => personService.getAll()
+    queryKey: ['people', params?.page, params?.size, params?.typePersonId, params?.sort?.field, params?.sort?.direction],
+    queryFn: () => personService.getAll(params)
+  })
+}
+
+export function usePersonTypes() {
+  return useQuery<PersonType[], Error>({
+    queryKey: ['personTypes'],
+    queryFn: () => personService.getTypes(),
+    staleTime: 1000 * 60 * 10, // 10 minutos - los tipos no cambian frecuentemente
   })
 }
 

@@ -1,9 +1,8 @@
 package com.viddefe.viddefe_api.people.infrastructure.web;
 
+import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
-import com.viddefe.viddefe_api.people.config.PeoplePermissions;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
-import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.contracts.PeopleService;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import jakarta.validation.Valid;
@@ -13,13 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.util.UUID;
 
 @RestController
@@ -27,6 +21,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PeopleController {
     private final PeopleService peopleService;
+    private final JwtUtil jwtUtil;
     //
     @PreAuthorize(
             "hasAuthority(T(com.viddefe.viddefe_api.people.config.PeoplePermissions)" +
@@ -34,8 +29,13 @@ public class PeopleController {
     )
     @PostMapping
     public ResponseEntity<ApiResponse<PeopleResDto>> addPeople(
-            @RequestBody @Valid PeopleDTO dto
+            @RequestBody @Valid PeopleDTO dto,
+            @CookieValue(value = "access_token") String jwtToken
     ) {
+
+        UUID churchIdFromJwt = jwtUtil.getChurchId(jwtToken);
+        UUID churchIdFromDto = dto.getChurchId() == null ? churchIdFromJwt : dto.getChurchId();
+        dto.setChurchId(churchIdFromDto);
         PeopleResDto person = peopleService.createPeople(dto);
         return new ResponseEntity<>(ApiResponse.created(person), HttpStatus.CREATED);
     }
@@ -43,9 +43,11 @@ public class PeopleController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<PeopleResDto>>> getPeople(
             Pageable pageable,
-            @RequestParam(required = false) UUID rolId
+            @RequestParam(required = false) Long typePersonId,
+            @CookieValue(value = "access_token") String jwtToken
     ){
-        Page<PeopleResDto> people = peopleService.getAllPeople(pageable);
+        UUID churchId = jwtUtil.getChurchId(jwtToken);
+        Page<PeopleResDto> people = peopleService.getAllPeople(pageable, typePersonId, churchId);
         return ResponseEntity.ok(ApiResponse.ok(people));
     }
 

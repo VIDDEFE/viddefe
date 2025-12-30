@@ -170,7 +170,7 @@ export default function MapPicker({
   return (
     <div className="relative w-full rounded-lg overflow-hidden" style={{ height }}>
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/70 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-white/70">
           <span className="animate-spin border-4 border-primary-500 border-t-transparent rounded-full w-10 h-10"></span>
         </div>
       )}

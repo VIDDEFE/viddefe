@@ -1,13 +1,17 @@
 package com.viddefe.viddefe_api.homeGroups.infrastructure.dto;
 
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Getter
+@Getter @Setter
 public class HomeGroupsDTO {
+    private UUID id;
+    private String name, description;
     private BigDecimal latitude, longitude;
-    private String name, strategyName, description;
-    private UUID leaderId;
+    private PeopleResDto leader;
+    private StrategyDto strategy;
 }

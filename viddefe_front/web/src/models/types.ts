@@ -68,16 +68,20 @@ export interface Person extends BaseEntity {
   email: string;
   phone: string;
   birthDate: Date;
-  role: PersonRole;
+  typePerson: PersonRole;
   churchId: string;
   state: States;
   status: 'active' | 'inactive' | 'suspended';
   // Campos para la gestión de usuarios
   hasUser?: boolean;
   userId?: string;
+  avatar?: string;
 }
 
-export type PersonRole = 'pastor' | 'deacon' | 'member' | 'visitor' | 'volunteer';
+export type PersonRole = {
+  id: number;
+  name: string;
+};
 
 // Servicio/Culto
 export interface Service extends BaseEntity {
@@ -95,14 +99,102 @@ export interface Service extends BaseEntity {
 
 export type ServiceType = 'sunday_service' | 'wednesday_service' | 'prayer_night' | 'special_event' | 'youth_service';
 
-// Grupo
+// Estrategia de Grupo
+export interface Strategy {
+  id: string;
+  name: string;
+}
+
+// Persona resumida para líder de grupo
+export interface PersonSummary {
+  id: string;
+  cc?: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  avatar?: string;
+  birthDate?: string;
+  typePersonId?: number;
+  stateId?: number;
+  churchId?: string;
+}
+
+// Grupo (Home Group) - respuesta del backend
+export interface HomeGroup {
+  id: string;
+  name: string;
+  description?: string;
+  latitude: number;
+  longitude: number;
+  leader: PersonSummary | null;
+  strategy: Strategy | null;
+}
+
+// DTO para crear un grupo
+export interface CreateHomeGroupDto {
+  name: string;
+  description?: string;
+  latitude: number;
+  longitude: number;
+  leaderId: string;
+  strategyId: string;
+}
+
+// DTO para actualizar un grupo
+export interface UpdateHomeGroupDto {
+  name?: string;
+  description?: string;
+  latitude?: number;
+  longitude?: number;
+  leaderId?: string;
+  strategyId?: string;
+}
+
+// Persona en la jerarquía de roles (respuesta del backend)
+
+
+// Nodo de la jerarquía de roles/estrategias (estructura de árbol recursiva)
+export interface RoleStrategyNode {
+  id: string;
+  name: string;
+  children: RoleStrategyNode[];
+  people: Person[];
+}
+
+// Respuesta del detalle de un grupo
+export interface HomeGroupDetailResponse {
+  homeGroup: HomeGroup;
+  strategy: Strategy | null;
+  hierarchy: RoleStrategyNode[];
+}
+
+// DTO para crear un rol en la estrategia (solo estructura, sin personas)
+export interface CreateRoleDto {
+  strategyId: string;
+  name: string;
+  parentRoleId?: string;
+}
+
+// DTO para actualizar un rol (solo estructura, sin personas)
+export interface UpdateRoleDto {
+  name?: string;
+  parentRoleId?: string | null;
+}
+
+// DTO para asignar/remover personas a un rol
+export interface RolePeopleDto {
+  peopleIds: string[];
+}
+
+// Mantener Group legacy para compatibilidad
+/** @deprecated Usar HomeGroup en su lugar */
 export interface Group extends BaseEntity {
   name: string;
   description: string;
   churchId: string;
   type: GroupType;
-  leader: string; // ID de persona
-  members: string[]; // IDs de personas
+  leader: string;
+  members: string[];
   meetingDay: string;
   meetingTime: string;
   location: string;
@@ -126,3 +218,35 @@ export interface Event extends BaseEntity {
 }
 
 export type EventStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
+
+// Worship Type (Tipo de Culto)
+export interface WorshipType {
+  id: number;
+  name: string;
+}
+
+// Worship Meeting (Culto)
+export interface Worship {
+  id: string;
+  name: string;
+  description?: string;
+  creationDate: string;
+  scheduledDate: string;
+  worshipType: WorshipType;
+}
+
+// DTO para crear un culto
+export interface CreateWorshipDto {
+  name: string;
+  description?: string;
+  scheduledDate: string;
+  worshipTypeId: number;
+}
+
+// DTO para actualizar un culto
+export interface UpdateWorshipDto {
+  name?: string;
+  description?: string;
+  scheduledDate?: string;
+  worshipTypeId?: number;
+}

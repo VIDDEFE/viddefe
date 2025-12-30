@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { ChurchSummary } from '../../models';
 import { Button, PageHeader, Table } from '../../components/shared';
 import { type ChurchFormData, initialChurchFormData } from '../../components/churches/ChurchForm';
@@ -10,9 +10,12 @@ import ChurchDeleteModal from '../../components/churches/ChurchDeleteModal';
 import ChurchesMap from '../../components/churches/ChurchesMap';
 import { FiMap, FiList } from 'react-icons/fi';
 import { ChurchPermission } from '../../services/userService';
+import type { SortConfig } from '../../services/api';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
 type ViewMode = 'table' | 'map';
+
+const DEFAULT_PAGE_SIZE = 10;
 
 export default function Churches() {
   const { user, hasPermission } = useAppContext();
@@ -27,8 +30,35 @@ export default function Churches() {
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('table');
 
-  // Data fetching
-  const { data: churches, isLoading } = useChurchChildren(churchId);
+  // Estado de paginación
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+
+  // Estado de ordenamiento (guarda la key de la columna de la UI)
+  const [sortConfig, setSortConfig] = useState<SortConfig | undefined>(undefined);
+
+  // Mapeo de columnas de la tabla a paths JPA de la entidad ChurchModel
+  // El backend usa Spring Data Pageable con JPQL, por lo que el sort debe usar los paths reales de la entidad
+  const columnToJpaPath: Record<string, string> = {
+    name: 'name',
+    pastor: 'pastor.lastName',
+    states: 'city.states.name',
+    city: 'city.name',
+  };
+
+  // Transforma el sortConfig de la UI al formato JPA para el backend
+  const sortConfigForBackend = useMemo(() => {
+    if (!sortConfig) return undefined;
+    const jpaPath = columnToJpaPath[sortConfig.field] || sortConfig.field;
+    return { field: jpaPath, direction: sortConfig.direction };
+  }, [sortConfig]);
+
+  // Data fetching con paginación y ordenamiento (usa sortConfigForBackend para el API)
+  const { data: churches, isLoading } = useChurchChildren(churchId, { 
+    page: currentPage, 
+    size: pageSize,
+    sort: sortConfigForBackend 
+  });
   const { data: states } = useStates();
 
   // Modal state
@@ -52,7 +82,6 @@ export default function Churches() {
   // En Churches.tsx, reemplazar el useEffect problemático:
   useEffect(() => {
     if (!churchDetails || !selectedChurch || !(modalMode === 'edit' || modalMode === 'view')) return;
-    if (formPopulated && modalMode === 'edit') return;
     
     setFormData(prev => ({
       name: churchDetails.name ?? prev.name ?? '',
@@ -146,7 +175,6 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
   const createModal = () => {
     resetForm();
     setModalMode('create');
-    setViewMode('table');
   }
 
   const handleDelete = () => {
@@ -156,10 +184,11 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
 
   // Table config
   const columns = [
-    { key: 'name' as const, label: 'Nombre' },
+    { key: 'name' as const, label: 'Nombre', sortable: true },
     {
       key: 'pastor' as const,
       label: 'Pastor',
+      sortable: true,
       render: (_: unknown, item: ChurchSummary) =>
         item.pastor && typeof item.pastor === 'object'
           ? `${item.pastor.firstName} ${item.pastor.lastName}`
@@ -168,11 +197,13 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
     {
       key: 'states' as const,
       label: 'Departamento',
+      sortable: true,
       render: (_: unknown, item: ChurchSummary) => item.states?.name || '-',
     },
     {
       key: 'city' as const,
       label: 'Ciudad',
+      sortable: true,
       render: (_: unknown, item: ChurchSummary) => item.city?.name || '-',
     },
   ];
@@ -186,8 +217,32 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
 
   const isMutating = createChurch.isPending || updateChurch.isPending;
 
-  // Datos para el mapa
+  // Datos para el mapa y tabla
   const churchesArray = Array.isArray(churches) ? churches : (churches?.content ?? []);
+  
+  // Información de paginación del servidor
+  const paginationData = churches && !Array.isArray(churches) ? {
+    totalPages: churches.totalPages,
+    totalElements: churches.totalElements,
+    currentPage: churches.number,
+    pageSize: churches.size
+  } : null;
+
+  // Handlers de paginación
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(0); // Resetear a primera página
+  };
+
+  // Handler para cambio de ordenamiento - guarda el campo original de la UI
+  const handleSortChange = (sort: SortConfig | undefined) => {
+    setSortConfig(sort);
+    setCurrentPage(0); // Resetear a primera página al ordenar
+  };
 
   return (
     <div className="container mx-auto px-2">
@@ -232,7 +287,7 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
           <ChurchesMap
             churches={churchesArray}
             height={600}
-            onChurchSelect={(church) => openModal('view', church)}
+            onChurchSelect={(church) => openModal(null, church)}
           />
         </div>
       )}
@@ -245,14 +300,25 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
             columns={columns}
             actions={tableActions}
             loading={isLoading}
-            pagination={{ mode: 'auto', pageSize: 10 }}
+            pagination={paginationData ? {
+              mode: 'manual',
+              currentPage: paginationData.currentPage,
+              totalPages: paginationData.totalPages,
+              totalElements: paginationData.totalElements,
+              pageSize: paginationData.pageSize,
+              onPageChange: handlePageChange,
+              onPageSizeChange: handlePageSizeChange,
+            } : { mode: 'auto', pageSize: DEFAULT_PAGE_SIZE }}
+            sorting={{
+              mode: 'manual',
+              sortConfig: sortConfig,
+              onSortChange: handleSortChange,
+            }}
           />
         </div>
       )}
 
-      {
-        viewMode == 'table' &&
-      (<><ChurchFormModal
+      <ChurchFormModal
         isOpen={modalMode === 'create' || modalMode === 'edit'}
         mode={modalMode === 'edit' ? 'edit' : 'create'}
         formData={formData}
@@ -281,7 +347,6 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
         onClose={closeModal}
         isDeleting={deleteChurch.isPending}
       />
-      </>)}
     </div>
   );
 }

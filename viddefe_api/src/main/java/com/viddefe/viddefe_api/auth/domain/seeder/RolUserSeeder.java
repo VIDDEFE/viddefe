@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.auth.seeder;
+package com.viddefe.viddefe_api.auth.domain.seeder;
 
 import com.viddefe.viddefe_api.auth.domain.model.RolUserModel;
 import com.viddefe.viddefe_api.auth.domain.repository.RolUserRepository;

@@ -21,7 +21,7 @@ export interface PersonResponse {
   phone: string;
   avatar?: string;
   birthDate: string;
-  peopleType: {
+  typePerson: {
     id: number;
     name: string;
   };

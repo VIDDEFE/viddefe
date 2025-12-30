@@ -27,14 +27,14 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
                 ci.name
             ),
             new com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto(
-                p.id,
-                p.cc,
-                p.firstName,
-                p.lastName,
-                p.phone,
-                p.avatar,
-                cast(p.birthdate as java.sql.Date),
-                p.typePerson,
+                pastor.id,
+                pastor.cc,
+                pastor.firstName,
+                pastor.lastName,
+                pastor.phone,
+                pastor.avatar,
+                cast(pastor.birthDate as java.sql.Date),
+                pastor.typePerson,
                 new com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto(
                     s.id,
                     s.name
@@ -43,9 +43,9 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
         )
         from ChurchModel c
             join c.city ci
-            join ci.state s
+            join ci.states s
             left join ChurchPastor cp on cp.church = c
-            left join cp.pastor p
+            left join cp.pastor pastor
         where (
             (:parentChurchId is null and c.parentChurch is null)
             or

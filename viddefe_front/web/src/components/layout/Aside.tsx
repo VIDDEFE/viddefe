@@ -4,22 +4,53 @@ import {
   IconDashboard,
   IconChurch,
   IconPeople,
-  IconServices,
   IconGroups,
   IconEvents,
   IconMenu,
   IconClose,
   IconLogout,
+  IconWorship,
 } from "../../components/icons";
 
-const menuItems = [
-  { path: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
-  { path: "/churches", label: "Iglesias", icon: <IconChurch /> },
-  { path: "/people", label: "Personas", icon: <IconPeople /> },
-  { path: "/services", label: "Servicios", icon: <IconServices /> },
-  { path: "/groups", label: "Grupos", icon: <IconGroups /> },
-  { path: "/events", label: "Eventos", icon: <IconEvents /> },
+// Estructura de menú con secciones para mejor organización
+interface MenuItem {
+  path: string;
+  label: string;
+  icon: React.ReactNode;
+}
+
+interface MenuSection {
+  title: string;
+  items: MenuItem[];
+}
+
+// Menú organizado por contexto: Iglesia vs Grupos
+const menuSections: MenuSection[] = [
+  {
+    title: "",
+    items: [
+      { path: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
+    ],
+  },
+  {
+    title: "Iglesia",
+    items: [
+      { path: "/churches", label: "Iglesias Hijas", icon: <IconChurch /> },
+      { path: "/worships", label: "Cultos", icon: <IconWorship /> },
+      { path: "/events", label: "Eventos", icon: <IconEvents /> },
+    ],
+  },
+  {
+    title: "Comunidad",
+    items: [
+      { path: "/people", label: "Personas", icon: <IconPeople /> },
+      { path: "/groups", label: "Grupos", icon: <IconGroups /> },
+    ],
+  },
 ];
+
+// Flatten para móvil
+const allMenuItems = menuSections.flatMap(section => section.items);
 
 export default function Aside() {
   const location = useLocation();
@@ -87,7 +118,7 @@ export default function Aside() {
           {mobileMenuOpen && (
             <div className="absolute top-full left-0 right-0 bg-white border-t border-primary-100 shadow-lg">
               <ul className="py-2">
-                {menuItems.map((item) => {
+                {allMenuItems.map((item) => {
                   const isActive = location.pathname.startsWith(item.path);
                   return (
                     <li key={item.path}>
@@ -152,39 +183,53 @@ export default function Aside() {
 
         {/* Navegación Desktop */}
         <nav className="flex-1 py-4 overflow-y-auto">
-          <ul className="space-y-1 px-2">
-            {menuItems.map((item) => {
-              const isActive = location.pathname.startsWith(item.path);
+          {menuSections.map((section, sectionIndex) => (
+            <div key={sectionIndex} className={section.title ? "mt-4" : ""}>
+              {/* Título de sección (solo si no está colapsado) */}
+              {section.title && !isCollapsed && (
+                <h3 className="px-6 mb-2 text-xs font-semibold text-primary-500 uppercase tracking-wider">
+                  {section.title}
+                </h3>
+              )}
+              {/* Separador visual cuando está colapsado */}
+              {section.title && isCollapsed && (
+                <div className="mx-4 my-2 border-t border-primary-100" />
+              )}
+              <ul className="space-y-1 px-2">
+                {section.items.map((item) => {
+                  const isActive = location.pathname.startsWith(item.path);
 
-              return (
-                <li key={item.path} className="relative">
-                  <Link
-                    to={item.path}
-                    className={`flex items-center px-4 py-3 rounded-lg mx-2 transition-all duration-200 group
-                      ${
-                        isActive
-                          ? "bg-primary-50 text-primary-800 font-medium border-l-4 border-primary-500"
-                          : "text-primary-700 hover:bg-primary-25 hover:text-primary-800"
-                      }
-                    `}
-                    title={isCollapsed ? item.label : ""}
-                  >
-                    <span className={`flex justify-center text-primary-800 ${isCollapsed ? "mx-auto" : ""}`}>
-                      {item.icon}
-                    </span>
-                    {!isCollapsed && (
-                      <span className="ml-3 whitespace-nowrap overflow-hidden">
-                        {item.label}
-                      </span>
-                    )}
-                    {isCollapsed && isActive && (
-                      <div className="absolute left-0 w-1 h-6 bg-primary-500 rounded-r-full" />
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+                  return (
+                    <li key={item.path} className="relative">
+                      <Link
+                        to={item.path}
+                        className={`flex items-center px-4 py-3 rounded-lg mx-2 transition-all duration-200 group
+                          ${
+                            isActive
+                              ? "bg-primary-50 text-primary-800 font-medium border-l-4 border-primary-500"
+                              : "text-primary-700 hover:bg-primary-25 hover:text-primary-800"
+                          }
+                        `}
+                        title={isCollapsed ? item.label : ""}
+                      >
+                        <span className={`flex justify-center text-primary-800 ${isCollapsed ? "mx-auto" : ""}`}>
+                          {item.icon}
+                        </span>
+                        {!isCollapsed && (
+                          <span className="ml-3 whitespace-nowrap overflow-hidden">
+                            {item.label}
+                          </span>
+                        )}
+                        {isCollapsed && isActive && (
+                          <div className="absolute left-0 w-1 h-6 bg-primary-500 rounded-r-full" />
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
         {/* Footer con botón de logout - Desktop */}

@@ -8,6 +8,7 @@ import {
   FiLogOut 
 } from "react-icons/fi";
 import { MdChurch } from "react-icons/md";
+import { GiPrayer } from "react-icons/gi";
 
 function IconWrapper({ children }: { children: React.ReactNode }) {
   return <span className="inline-flex w-6 h-6 items-center justify-center">{children}</span>;
@@ -59,6 +60,14 @@ export function IconEvents() {
   return (
     <IconWrapper>
       <FiCalendar size={ICON_SIZE} />
+    </IconWrapper>
+  );
+}
+
+export function IconWorship() {
+  return (
+    <IconWrapper>
+      <GiPrayer size={ICON_SIZE} />
     </IconWrapper>
   );
 }

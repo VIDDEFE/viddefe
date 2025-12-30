@@ -206,12 +206,12 @@ export default function ChurchesMap({
   };
 
   return (
-    <div className="relative w-full rounded-xl overflow-hidden shadow-lg border border-neutral-200" style={{ height }}>
+    <div className="relative w-full rounded-xl overflow-hidden shadow-lg border border-neutral-200 z-0" style={{ height }}>
       {/* Mapa */}
-      <div ref={containerRef} className="w-full h-full" />
+      <div ref={containerRef} className="w-full h-full z-0" />
 
       {/* Contador de iglesias */}
-      <div className="absolute top-4 left-4 z-100 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200">
+      <div className="absolute top-4 left-4  bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200">
         <div className="flex items-center gap-2">
           <FiMapPin className="w-4 h-4 text-primary-600" />
           <span className="text-sm font-medium text-neutral-700">
@@ -221,7 +221,7 @@ export default function ChurchesMap({
       </div>
 
       {/* Leyenda */}
-      <div className="absolute bottom-4 left-4 z-1000 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200">
+      <div className="absolute bottom-4 left-4  bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200">
         <div className="flex items-center gap-4 text-xs text-neutral-600">
           <div className="flex items-center gap-1">
             <span className="w-3 h-3 rounded-full bg-blue-500" />
@@ -240,7 +240,7 @@ export default function ChurchesMap({
 
       {/* Card de información flotante */}
       <div 
-        className={`absolute top-4 right-4 z-1000 w-80 transition-all duration-300 ease-out ${
+        className={`absolute top-4 right-4 w-80 transition-all duration-300 ease-out ${
           isCardVisible && selectedChurch 
             ? 'opacity-100 translate-x-0' 
             : 'opacity-0 translate-x-4 pointer-events-none'

@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.auth.Infrastructure.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.viddefe.viddefe_api.auth.domain.model.RolUserModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,4 +18,7 @@ public class SignInResDTO {
     private String lastName;
     private UUID peopleId;
     private UUID userId;
+
+    @JsonIgnore
+    private UUID churchId;
 }

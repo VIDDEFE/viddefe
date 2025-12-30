@@ -37,7 +37,7 @@ public class PeopleModel {
     @Column(length = 256, nullable = false)
     private String phone;
 
-    private LocalDate birthdate;
+    private LocalDate birthDate;
 
     @ManyToOne
     @JoinColumn(name = "type_person_id")
@@ -59,7 +59,7 @@ public class PeopleModel {
         this.lastName = dto.getLastName();
         this.cc = dto.getCc();
         this.phone = dto.getPhone();
-        this.birthdate = dto.getBirthDate();
+        this.birthDate = dto.getBirthDate();
         return this;
     }
 
@@ -71,7 +71,7 @@ public class PeopleModel {
                 this.lastName,
                 this.phone,
                 this.avatar,
-                java.sql.Date.valueOf(this.birthdate),
+                java.sql.Date.valueOf(this.birthDate),
                 this.typePerson,
                 this.state.toDto()
         );

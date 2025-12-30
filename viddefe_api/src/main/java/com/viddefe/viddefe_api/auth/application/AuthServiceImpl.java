@@ -111,7 +111,8 @@ public class AuthServiceImpl implements AuthService {
                 person.getFirstName(),
                 person.getLastName(),
                 person.getId(),
-                user.getId()
+                user.getId(),
+                person.getChurch().getId()
         );
 
         if(person.getChurch() == null){
@@ -132,6 +133,7 @@ public class AuthServiceImpl implements AuthService {
                 dto.getFirstName(),
                 dto.getLastName(),
                 dto.getUserId(),
+                dto.getChurchId(),
                 permissions
         );
     }

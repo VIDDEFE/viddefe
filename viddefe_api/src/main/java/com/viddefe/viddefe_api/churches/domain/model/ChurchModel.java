@@ -39,8 +39,6 @@ public class ChurchModel {
     @JoinColumn(name = "cities_id")
     private CitiesModel city;
 
-    // -------- JERARQUÍA --------
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_church_id")
     @JsonBackReference
@@ -54,8 +52,6 @@ public class ChurchModel {
     @JsonManagedReference
     private Collection<ChurchModel> children = new ArrayList<>();
 
-    // -------- HELPERS --------
-
     public void addChildChurch(ChurchModel childChurch) {
         children.add(childChurch);
         childChurch.setParentChurch(this);
@@ -65,8 +61,6 @@ public class ChurchModel {
         children.remove(childChurch);
         childChurch.setParentChurch(null);
     }
-
-    // -------- MAPPERS --------
 
     public  ChurchModel fromDto(ChurchDTO dto) {
         this.setName(dto.getName());
@@ -84,7 +78,7 @@ public class ChurchModel {
                 name,
                 longitude,
                 latitude,
-                city.getState().toDto(),
+                city.getStates().toDto(),
                 city.toDto(),
                 null
         );
