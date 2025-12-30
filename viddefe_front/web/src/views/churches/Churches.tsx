@@ -287,7 +287,7 @@ const openModal = (mode: ModalMode, church?: ChurchSummary) => {
           <ChurchesMap
             churches={churchesArray}
             height={600}
-            onChurchSelect={(church) => openModal('view', church)}
+            onChurchSelect={(church) => openModal(null, church)}
           />
         </div>
       )}

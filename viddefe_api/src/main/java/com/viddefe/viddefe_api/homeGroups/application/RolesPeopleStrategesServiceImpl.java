@@ -35,16 +35,8 @@ public class RolesPeopleStrategesServiceImpl implements RolesPeopleStrategiesSer
     }
 
     @Override
-    public void removeRoleFromPeopleInStrategy(UUID roleId, AssignPeopleToRoleDto peopleId) {
-        List<PeopleModel> listOfPeople = peopleReader.getPeopleByIds(peopleId.getPeopleIds());
-
-        RolesStrategiesModel rolesStrategiesModel = rolesStrategiesReader.getRoleStrategyById(roleId);
-        List<RolPeopleStrategiesModel> rolesPeopleStrategiesModels = listOfPeople.stream().map(people -> {
-            RolPeopleStrategiesModel rolPeopleStrategiesModel = new RolPeopleStrategiesModel();
-            rolPeopleStrategiesModel.setRole(rolesStrategiesModel);
-            rolPeopleStrategiesModel.setPerson(people);
-            return rolPeopleStrategiesModel;
-        }).toList();
-        rolesPeopleStrategiesRepository.deleteAll(rolesPeopleStrategiesModels);
+    public void removeRoleFromPeopleInStrategy(UUID roleId, AssignPeopleToRoleDto dto) {
+        List<RolPeopleStrategiesModel> rolPeople = rolesPeopleStrategiesRepository.findAllByPersonIdInAndRoleId(dto.getPeopleIds(), roleId);
+        rolesPeopleStrategiesRepository.deleteAll(rolPeople);
     }
 }

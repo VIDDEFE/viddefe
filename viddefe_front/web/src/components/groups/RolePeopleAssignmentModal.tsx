@@ -149,7 +149,7 @@ const PaginatedPersonDropdown = memo(function PaginatedPersonDropdown({
 
       {/* Dropdown panel */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg z-[9999] overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg overflow-hidden">
           {/* Search */}
           <div className="relative border-b border-neutral-200">
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />

@@ -88,7 +88,7 @@ export default memo(function RoleDeleteModal({
         {hasContent && (
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <FiAlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <FiAlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
               <div className="text-sm">
                 <p className="font-semibold text-amber-800 mb-2">
                   Advertencia: Este rol tiene contenido asociado

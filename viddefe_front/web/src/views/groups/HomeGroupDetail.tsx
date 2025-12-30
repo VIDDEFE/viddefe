@@ -8,7 +8,7 @@ import {
 import { Card, Button, PageHeader } from '../../components/shared';
 import RoleTree from '../../components/groups/RoleTree';
 import RolePeopleAssignmentModal from '../../components/groups/RolePeopleAssignmentModal';
-import { FiArrowLeft, FiMapPin, FiUser, FiGrid, FiEdit2 } from 'react-icons/fi';
+import { FiArrowLeft, FiMapPin, FiUser, FiGrid } from 'react-icons/fi';
 import type { RoleStrategyNode } from '../../models';
 
 export default function HomeGroupDetail() {
@@ -33,11 +33,6 @@ export default function HomeGroupDetail() {
     navigate('/groups');
   };
 
-  const handleEdit = () => {
-    navigate(`/groups?edit=${id}`);
-  };
-
-  // ========== HANDLERS PARA ASIGNACIÓN DE PERSONAS ==========
 
   // Abrir modal para gestionar personas de un rol
   const handleManagePeople = useCallback((node: RoleStrategyNode) => {
@@ -81,7 +76,7 @@ export default function HomeGroupDetail() {
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center justify-center min-h-75">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto" />
             <p className="mt-4 text-neutral-600">Cargando detalles del grupo...</p>
@@ -95,7 +90,7 @@ export default function HomeGroupDetail() {
   if (error || !data) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center justify-center min-h-75">
           <div className="text-center">
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-red-600 text-2xl">!</span>
@@ -131,12 +126,6 @@ export default function HomeGroupDetail() {
               <span className="flex items-center gap-2">
                 <FiArrowLeft size={16} />
                 Volver
-              </span>
-            </Button>
-            <Button variant="primary" onClick={handleEdit}>
-              <span className="flex items-center gap-2">
-                <FiEdit2 size={16} />
-                Editar
               </span>
             </Button>
           </div>
@@ -277,7 +266,7 @@ export default function HomeGroupDetail() {
               </div>
             )}
 
-            <div className="border border-neutral-200 rounded-lg p-4 bg-neutral-50/50 min-h-[300px]">
+            <div className="border border-neutral-200 rounded-lg p-4 bg-neutral-50/50 min-h-75">
               <RoleTree
                 hierarchy={hierarchy}
                 emptyMessage={
