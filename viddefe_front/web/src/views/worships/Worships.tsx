@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Worship } from '../../models';
 import { Button, PageHeader, Table } from '../../components/shared';
 import {
   WorshipFormModal,
-  WorshipViewModal,
   WorshipDeleteModal,
   initialWorshipFormData,
   type WorshipFormData,
@@ -20,7 +20,7 @@ import { useAppContext } from '../../context/AppContext';
 import { WorshipPermission } from '../../services/userService';
 import type { SortConfig } from '../../services/api';
 
-type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
+type ModalMode = 'create' | 'edit' | 'delete' | null;
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -52,6 +52,7 @@ function formatDateTime(isoDate: string): string {
 
 export default function Worships() {
   const { hasPermission } = useAppContext();
+  const navigate = useNavigate();
 
   // Permisos de cultos
   const canCreate = hasPermission(WorshipPermission.ADD);
@@ -93,22 +94,20 @@ export default function Worships() {
   // Track if form was already populated to prevent overwriting user changes
   const [formPopulated, setFormPopulated] = useState(false);
 
-  // Load worship details when editing/viewing
+  // Load worship details when editing
   useEffect(() => {
-    if (!worshipDetails || !selectedWorship || !(modalMode === 'edit' || modalMode === 'view'))
+    if (!worshipDetails || !selectedWorship || modalMode !== 'edit')
       return;
-    if (formPopulated && modalMode === 'edit') return;
+    if (formPopulated) return;
 
     setFormData({
       name: worshipDetails.name ?? '',
-      description: worshipDetails.description ?? '',
+      description: worshipDetails.description ?? '',  
       scheduledDate: isoToDatetimeLocal(worshipDetails.scheduledDate),
       worshipTypeId: worshipDetails.worshipType?.id ?? '',
     });
 
-    if (modalMode === 'edit') {
-      setFormPopulated(true);
-    }
+    setFormPopulated(true);
   }, [worshipDetails, modalMode, formPopulated, selectedWorship]);
 
   // Modal handlers
@@ -244,8 +243,8 @@ export default function Worships() {
       ? [
           {
             icon: 'view' as const,
-            label: 'Ver',
-            onClick: (w: Worship) => openModal('view', w),
+            label: 'Ver Detalle',
+            onClick: (w: Worship) => navigate(`/worships/${w.id}`),
             variant: 'secondary' as const,
           },
         ]
@@ -359,15 +358,6 @@ export default function Worships() {
         isSaving={isMutating}
         worshipTypes={worshipTypes}
         errors={formErrors}
-      />
-
-      {/* Modal de Ver */}
-      <WorshipViewModal
-        isOpen={modalMode === 'view'}
-        worship={worshipDetails ?? selectedWorship}
-        isLoading={isLoadingDetails}
-        onEdit={canEdit ? () => selectedWorship && openModal('edit', selectedWorship) : undefined}
-        onClose={closeModal}
       />
 
       {/* Modal de Eliminar */}

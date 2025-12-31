@@ -6,7 +6,7 @@ import { authService, type PersonRequest } from '../../services/authService';
 import { formatDate } from '../../utils';
 import CreateUserModal from '../../components/people/CreateUserModal';
 import { useAppContext } from '../../context/AppContext';
-import { PeoplePermission } from '../../services/userService';
+import { PeoplePermission, UserPermission } from '../../services/userService';
 import type { SortConfig } from '../../services/api';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | 'createUser' | null;
@@ -33,13 +33,16 @@ export default function People() {
     typePersonId: selectedTypeId,
     sort: sortConfig
   });
-  const { user, hasPermission } = useAppContext();
+  const { hasPermission } = useAppContext();
 
   // Permisos de personas
   const canCreate = hasPermission(PeoplePermission.ADD);
   const canView = hasPermission(PeoplePermission.VIEW);
   const canEdit = hasPermission(PeoplePermission.EDIT);
   const canDelete = hasPermission(PeoplePermission.DELETE);
+  
+  // Permiso para crear usuarios (invitaciones)
+  const canCreateUser = hasPermission(UserPermission.INVITATION);
   
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
@@ -52,9 +55,6 @@ export default function People() {
   const { data: personDetails, isLoading: isLoadingDetails } = usePerson(selectedPerson?.id);
   const updatePerson = useUpdatePerson();
   const deletePerson = useDeletePerson();
-
-  // Verificar si el usuario tiene permiso para crear usuarios (rol admin o similar)
-  const canCreateUser = user?.rolUser?.id === 1 || user?.rolUser?.name?.toLowerCase() === 'administrador';
 
   // Cargar datos de personDetails cuando se obtienen (para edición)
   useEffect(() => {

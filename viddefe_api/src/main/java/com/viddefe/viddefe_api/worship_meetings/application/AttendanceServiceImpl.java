@@ -8,9 +8,14 @@ import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceProjectionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -30,19 +35,34 @@ public class AttendanceServiceImpl implements AttendanceService {
                         type,
                         null
                 ));
-        AttendanceStatus status = attendanceModel.getId() == null ?
-                determineInverseStatus(attendanceModel.getStatus()) :
+        AttendanceStatus status = attendanceModel.getId() != null ?
+                AttendanceStatus.ABSENT :
                 AttendanceStatus.PRESENT;
 
         attendanceModel.setStatus(status);
+        if(attendanceModel.getId() != null){
+            attendanceRepository.deleteById(attendanceModel.getId());
+            return attendanceModel.toDto();
+        }
 
         return attendanceRepository.save(attendanceModel).toDto();
     }
 
-    private AttendanceStatus determineInverseStatus(AttendanceStatus type) {
-        return switch (type) {
-            case PRESENT -> AttendanceStatus.ABSENT;
-            case ABSENT -> AttendanceStatus.PRESENT;
-        };
+    @Override
+    public Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable) {
+        return attendanceRepository
+                .findAttendanceByEventWithDefaults(eventId, AttendanceEventType.TEMPLE_WORHSIP ,pageable)
+                .map(AttendanceProjectionDto::toDto);
     }
+
+    @Override
+    public long countTotalByEventId(UUID eventId, AttendanceEventType eventType) {
+        return attendanceRepository.countTotalByEventId(eventId);
+    }
+
+    @Override
+    public long countByEventIdWithDefaults(UUID eventId, AttendanceEventType eventType, AttendanceStatus status) {
+        return attendanceRepository.countByEventIdWithDefaults(eventId, eventType, status);
+    }
+
 }

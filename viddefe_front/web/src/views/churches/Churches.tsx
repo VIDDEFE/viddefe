@@ -79,38 +79,41 @@ export default function Churches() {
   const [formPopulated, setFormPopulated] = useState(false);
 
   // Load church details when editing/viewing
-  // En Churches.tsx, reemplazar el useEffect problemático:
   useEffect(() => {
+    // Solo cargar si hay datos, hay iglesia seleccionada, estamos en modo edit/view Y no se ha llenado ya
     if (!churchDetails || !selectedChurch || !(modalMode === 'edit' || modalMode === 'view')) return;
+    // Verificar que los datos correspondan a la iglesia seleccionada
+    if (churchDetails.id !== selectedChurch.id) return;
+    // Si ya se pobló el form en modo edit, no sobreescribir
+    if (formPopulated && modalMode === 'edit') return;
     
-    setFormData(prev => ({
-      name: churchDetails.name ?? prev.name ?? '',
-      email: churchDetails.email ?? prev.email ?? '',
-      phone: churchDetails.phone ?? prev.phone ?? '',
-      foundationDate: churchDetails.foundationDate ?? prev.foundationDate ?? '',
-      latitude: churchDetails.latitude !== undefined ? Number(churchDetails.latitude) : prev.latitude,
-      longitude: churchDetails.longitude !== undefined ? Number(churchDetails.longitude) : prev.longitude,
-      pastorId: churchDetails.pastor?.id ?? prev.pastorId ?? '',
-      stateId: churchDetails.states?.id ?? prev.stateId,
-      cityId: churchDetails.city?.cityId ?? prev.cityId,
-    }));
+    setFormData({
+      name: churchDetails.name ?? '',
+      email: churchDetails.email ?? '',
+      phone: churchDetails.phone ?? '',
+      foundationDate: churchDetails.foundationDate ?? '',
+      latitude: churchDetails.latitude !== undefined ? Number(churchDetails.latitude) : undefined,
+      longitude: churchDetails.longitude !== undefined ? Number(churchDetails.longitude) : undefined,
+      pastorId: churchDetails.pastor?.id ?? '',
+      stateId: churchDetails.states?.id ?? undefined,
+      cityId: churchDetails.city?.cityId ?? undefined,
+    });
 
-    
     if (modalMode === 'edit') {
       setFormPopulated(true);
     }
-  }, [churchDetails, modalMode]);
+  }, [churchDetails, modalMode, formPopulated, selectedChurch]);
 
-// Modificar openModal para manejar mejor el estado:
-const openModal = (mode: ModalMode, church?: ChurchSummary) => {
-  if (church) {
-    setSelectedChurch(church);
-    setFormPopulated(mode !== 'edit'); // Solo resetear si no es edición
-  } else {
-    resetForm();
-  }
-  setModalMode(mode);
-};
+  // Modal handlers
+  const openModal = (mode: ModalMode, church?: ChurchSummary) => {
+    if (church) {
+      setSelectedChurch(church);
+      setFormPopulated(false); // Siempre resetear para permitir cargar nuevos datos
+    } else {
+      resetForm();
+    }
+    setModalMode(mode);
+  };
 
   // Modal handlers
   const resetForm = () => {

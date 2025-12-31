@@ -11,6 +11,7 @@ import Groups from '../views/groups/Groups';
 import HomeGroupDetail from '../views/groups/HomeGroupDetail';
 import Events from '../views/events/Events';
 import Worships from '../views/worships/Worships';
+import WorshipDetail from '../views/worships/WorshipDetail';
 import type { JSX } from 'react';
 
 function ProtectedRoute({ element }: { element: JSX.Element }) {
@@ -35,6 +36,7 @@ export default function Router() {
         <Route path="/groups/:id" element={<ProtectedRoute element={<HomeGroupDetail />} />} />
         <Route path="/events" element={<ProtectedRoute element={<Events />} />} />
         <Route path="/worships" element={<ProtectedRoute element={<Worships />} />} />
+        <Route path="/worships/:id" element={<ProtectedRoute element={<WorshipDetail />} />} />
       </Route>
 
       <Route path="/" element={<Navigate to={user ? "/dashboard" : "/signin"} replace />} />
