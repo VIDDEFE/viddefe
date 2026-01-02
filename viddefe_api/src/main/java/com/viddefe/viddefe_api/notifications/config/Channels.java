@@ -7,5 +7,10 @@ package com.viddefe.viddefe_api.notifications.config;
  */
 public enum Channels {
     EMAIL,
-    APP
+    WHATSAPP,
+    APP;
+
+    public static String getName(Channels channel) {
+        return channel.name();
+    }
 }
