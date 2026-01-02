@@ -49,7 +49,7 @@ public class PeopleReaderImpl implements PeopleReader {
     
     @Override
     public boolean existsPastorByCcWithoutChurch(String cc) {
-        PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.name());
+        PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.getLabel());
         return peopleRepository.findByCcAndTypePersonAndChurchIsNull(cc, pastorType).isPresent();
     }
 

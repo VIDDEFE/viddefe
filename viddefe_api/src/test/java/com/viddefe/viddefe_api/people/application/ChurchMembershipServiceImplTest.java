@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.people.application;
 
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
+import com.viddefe.viddefe_api.people.config.TypesPeople;
 import com.viddefe.viddefe_api.people.contracts.ChurchMembershipService;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
@@ -70,7 +71,7 @@ class ChurchMembershipServiceImplTest {
         
         pastorType = new PeopleTypeModel();
         pastorType.setId(1L);
-        pastorType.setName("PASTOR");
+        pastorType.setName(TypesPeople.PASTOR.getLabel());
     }
     
     @Nested
@@ -83,7 +84,7 @@ class ChurchMembershipServiceImplTest {
             // Given
             when(peopleRepository.findById(personId)).thenReturn(Optional.of(person));
             when(churchLookup.getChurchById(churchId)).thenReturn(church);
-            when(peopleTypeService.getPeopleTypeByName("PASTOR")).thenReturn(pastorType);
+            when(peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.getLabel())).thenReturn(pastorType);
             when(peopleRepository.save(any(PeopleModel.class))).thenAnswer(i -> i.getArgument(0));
             
             // When
