@@ -86,3 +86,31 @@ export const translateEventStatus = (status: string): string => {
   };
   return translations[status] || status;
 };
+
+/**
+ * Convierte un valor de datetime-local a LocalDateTime string para enviar al backend.
+ * IMPORTANTE: NO usar new Date().toISOString() porque convierte a UTC y agrega 'Z'.
+ * El backend espera LocalDateTime sin zona horaria: "YYYY-MM-DDTHH:mm:ss"
+ * 
+ * @param value - Valor del input datetime-local (formato: "YYYY-MM-DDTHH:mm")
+ * @returns String en formato LocalDateTime ("YYYY-MM-DDTHH:mm:ss")
+ */
+export const toLocalDateTime = (value: string): string => {
+  // datetime-local devuelve "YYYY-MM-DDTHH:mm" (16 caracteres)
+  // Solo agregamos los segundos si faltan
+  return value.length === 16 ? `${value}:00` : value;
+};
+
+/**
+ * Convierte una fecha ISO o LocalDateTime del backend a formato datetime-local para el input.
+ * Extrae solo la parte "YYYY-MM-DDTHH:mm" sin conversiones de zona horaria.
+ * 
+ * @param isoDate - Fecha del backend (puede tener o no zona horaria)
+ * @returns String en formato datetime-local ("YYYY-MM-DDTHH:mm")
+ */
+export const toDatetimeLocal = (isoDate: string): string => {
+  if (!isoDate) return '';
+  // Extraer solo los primeros 16 caracteres: "YYYY-MM-DDTHH:mm"
+  // Esto funciona tanto para "2025-01-03T16:00:00" como para "2025-01-03T16:00:00Z"
+  return isoDate.slice(0, 16);
+};

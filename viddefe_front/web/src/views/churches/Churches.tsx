@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { ChurchSummary } from '../../models';
+import type { ChurchSummary, PersonSummary} from '../../models';
 import { Button, PageHeader, Table } from '../../components/shared';
 import { type ChurchFormData, initialChurchFormData } from '../../components/churches/ChurchForm';
 import { useChurchChildren, useStates, useCities, useCreateChildrenChurch, useUpdateChurch, useDeleteChurch, useChurch } from '../../hooks';
@@ -95,6 +95,7 @@ export default function Churches() {
       latitude: churchDetails.latitude !== undefined ? Number(churchDetails.latitude) : undefined,
       longitude: churchDetails.longitude !== undefined ? Number(churchDetails.longitude) : undefined,
       pastorId: churchDetails.pastor?.id ?? '',
+      pastor: churchDetails?.pastor ?? {} as PersonSummary,
       stateId: churchDetails.states?.id ?? undefined,
       cityId: churchDetails.city?.cityId ?? undefined,
     });
