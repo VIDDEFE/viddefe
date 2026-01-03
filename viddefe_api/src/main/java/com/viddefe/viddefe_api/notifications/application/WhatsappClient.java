@@ -13,19 +13,18 @@ import java.util.Map;
 public class WhatsappClient {
     private final RestClient restClient;
 
-    @Value("whatsapp.api.url")
-    private String GRAPH_BASE_URL ;
+    @Value("${whatsapp.api.url}")
+    private String graphBaseUrl;
 
-    @Value("whatsapp.api.phone.number.id")
-    private String PHONE_NUMBER_ID;
+    @Value("${whatsapp.api.phone.number.id}")
+    private String phoneNumberId;
 
     public void sendTextMessage(
             String to,
             String message
     ) {
 
-        String url = GRAPH_BASE_URL + "/" + PHONE_NUMBER_ID + "/messages";
-
+        String url = graphBaseUrl + "/" + phoneNumberId + "/messages";
         Map<String, Object> payload = Map.of(
                 "messaging_product", "whatsapp",
                 "to", to,

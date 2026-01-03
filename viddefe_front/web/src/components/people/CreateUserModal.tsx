@@ -4,7 +4,9 @@ import { Modal, Button, Input, DropDown, Avatar } from '../shared';
 import { 
   DEFAULT_ROLES, 
   PERMISSION_CATEGORIES,
-  type PermissionKey 
+  INVITATION_CHANNELS,
+  type PermissionKey,
+  type InvitationChannel 
 } from '../../services/userService';
 import { useSendInvitation, usePermissions } from '../../hooks/useUsers';
 import { FiUser, FiMail, FiShield, FiCheck, FiLoader, FiSend, FiAlertCircle } from 'react-icons/fi';
@@ -23,6 +25,8 @@ export default function CreateUserModal({
   onSuccess,
 }: CreateUserModalProps) {
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [channel, setChannel] = useState<InvitationChannel>('email');
   const [roleId, setRoleId] = useState<string>('2');
   const [selectedPermissions, setSelectedPermissions] = useState<Set<PermissionKey>>(new Set());
   const [error, setError] = useState('');
@@ -36,13 +40,15 @@ export default function CreateUserModal({
   useEffect(() => {
     if (isOpen) {
       setEmail('');
+      setPhone(person?.phone || '');
+      setChannel('email');
       setRoleId('2');
       setSelectedPermissions(new Set());
       setError('');
       setSuccess(false);
       setExpandedCategories(new Set(['people', 'churches']));
     }
-  }, [isOpen]);
+  }, [isOpen, person?.phone]);
 
   // Agrupar permisos por categoría
   const permissionsByCategory = useMemo(() => {
@@ -106,13 +112,25 @@ export default function CreateUserModal({
   };
 
   const validateForm = (): boolean => {
-    if (!email.trim()) {
-      setError('El correo electrónico es requerido');
-      return false;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('Ingresa un correo electrónico válido');
-      return false;
+    if (channel === 'email') {
+      if (!email.trim()) {
+        setError('El correo electrónico es requerido');
+        return false;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError('Ingresa un correo electrónico válido');
+        return false;
+      }
+    } else if (channel === 'whatsapp') {
+      if (!phone.trim()) {
+        setError('El número de teléfono es requerido para WhatsApp');
+        return false;
+      }
+      // Validar formato de teléfono básico
+      if (!/^[+]?[\d\s-]{8,}$/.test(phone.trim())) {
+        setError('Ingresa un número de teléfono válido');
+        return false;
+      }
     }
     if (!roleId) {
       setError('Selecciona un rol para el usuario');
@@ -131,10 +149,12 @@ export default function CreateUserModal({
 
     try {
       await sendInvitation.mutateAsync({
-        email: email.trim(),
+        email: channel === 'email' ? email.trim() : undefined,
+        phone: channel === 'whatsapp' ? phone.trim() : undefined,
         personId: person.id,
         role: roleId,
         permissions: Array.from(selectedPermissions),
+        channel,
       });
       setSuccess(true);
       // Esperar un momento para mostrar la animación de éxito
@@ -144,6 +164,8 @@ export default function CreateUserModal({
     } catch (err: any) {
       if (err?.message?.includes('email') || err?.message?.includes('correo')) {
         setError('Este correo electrónico ya está en uso');
+      } else if (err?.message?.includes('phone') || err?.message?.includes('teléfono')) {
+        setError('Este número de teléfono ya está en uso');
       } else if (err?.message?.includes('permiso') || err?.message?.includes('permission')) {
         setError('No tienes permisos para crear usuarios');
       } else {
@@ -186,13 +208,16 @@ export default function CreateUserModal({
             className="text-neutral-600"
             style={{ animation: 'slideUp 0.4s ease-out 0.1s both' }}
           >
-            Se ha enviado una invitación a <span className="font-semibold">{email}</span>
+            Se ha enviado una invitación a <span className="font-semibold">{channel === 'email' ? email : phone}</span>
           </p>
           <p 
             className="text-sm text-neutral-500 mt-2"
             style={{ animation: 'slideUp 0.4s ease-out 0.2s both' }}
           >
-            El usuario recibirá un correo con las instrucciones para completar su registro.
+            {channel === 'email' 
+              ? 'El usuario recibirá un correo con las instrucciones para completar su registro.'
+              : 'El usuario recibirá un mensaje de WhatsApp con las instrucciones para completar su registro.'
+            }
           </p>
         </div>
       </Modal>
@@ -272,24 +297,74 @@ export default function CreateUserModal({
           </div>
         </div>
 
-        {/* Email y Rol */}
+        {/* Canal de envío */}
         <div className="space-y-4">
-          <div className="group">
-            <label className="flex items-center gap-2 text-sm font-medium text-neutral-700 mb-2 transition-colors group-focus-within:text-primary-600">
-              <FiMail className="w-4 h-4 transition-transform group-focus-within:scale-110" />
-              Correo Electrónico <span className="text-red-500">*</span>
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-neutral-700 mb-3">
+              📨 Canal de envío <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <Input
-                type="email"
-                placeholder="usuario@ejemplo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                className="transition-all duration-200 focus:ring-2 focus:ring-primary-500/20"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              {INVITATION_CHANNELS.map((ch) => (
+                <button
+                  key={ch.value}
+                  type="button"
+                  onClick={() => setChannel(ch.value)}
+                  disabled={isLoading}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                    channel === ch.value
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-md'
+                      : 'border-neutral-200 bg-white text-neutral-600 hover:border-primary-200 hover:bg-primary-50/50'
+                  }`}
+                >
+                  <span className="text-xl">{ch.icon}</span>
+                  <span className="font-medium">{ch.label}</span>
+                </button>
+              ))}
             </div>
           </div>
+
+          {/* Email (solo si canal es email) */}
+          {channel === 'email' && (
+            <div className="group">
+              <label className="flex items-center gap-2 text-sm font-medium text-neutral-700 mb-2 transition-colors group-focus-within:text-primary-600">
+                <FiMail className="w-4 h-4 transition-transform group-focus-within:scale-110" />
+                Correo Electrónico <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  type="email"
+                  placeholder="usuario@ejemplo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  className="transition-all duration-200 focus:ring-2 focus:ring-primary-500/20"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Teléfono (solo si canal es whatsapp) */}
+          {channel === 'whatsapp' && (
+            <div className="group">
+              <label className="flex items-center gap-2 text-sm font-medium text-neutral-700 mb-2 transition-colors group-focus-within:text-primary-600">
+                <span className="text-lg">📱</span>
+                Número de WhatsApp <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <Input
+                  type="tel"
+                  placeholder="+57 300 123 4567"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  disabled={isLoading}
+                  className="transition-all duration-200 focus:ring-2 focus:ring-primary-500/20"
+                />
+              </div>
+              <p className="text-xs text-neutral-500 mt-1">
+                Incluye el código de país (ej: +57 para Colombia)
+              </p>
+            </div>
+          )}
 
           <div className="group">
             <label className="flex items-center gap-2 text-sm font-medium text-neutral-700 mb-2 transition-colors group-focus-within:text-primary-600">
@@ -493,7 +568,10 @@ export default function CreateUserModal({
           <ul className="space-y-2 text-blue-700">
             <li className="flex items-start gap-2">
               <span className="text-blue-400 mt-0.5">•</span>
-              Se enviará un correo de invitación al usuario
+              {channel === 'email' 
+                ? 'Se enviará un correo de invitación al usuario'
+                : 'Se enviará un mensaje de WhatsApp con la invitación'
+              }
             </li>
             <li className="flex items-start gap-2">
               <span className="text-blue-400 mt-0.5">•</span>

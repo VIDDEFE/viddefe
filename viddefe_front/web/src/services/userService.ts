@@ -149,12 +149,22 @@ export const isValidPermission = (value: string): value is PermissionKey => {
   return ALL_PERMISSIONS.includes(value as PermissionKey);
 };
 
+// Canales disponibles para enviar invitación
+export type InvitationChannel = 'email' | 'whatsapp';
+
+export const INVITATION_CHANNELS: { value: InvitationChannel; label: string; icon: string }[] = [
+  { value: 'email', label: 'Correo electrónico', icon: '📧' },
+  { value: 'whatsapp', label: 'WhatsApp', icon: '💬' },
+];
+
 // Request para enviar invitación
 export interface InvitationRequest {
-  email: string;
+  email?: string;
+  phone?: string;
   personId: string;
   role: string;
   permissions: string[];
+  channel: InvitationChannel;
 }
 
 // Response de invitación

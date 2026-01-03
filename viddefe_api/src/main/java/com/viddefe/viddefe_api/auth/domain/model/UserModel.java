@@ -21,6 +21,8 @@ public class UserModel {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "people_id", nullable = false)
     private PeopleModel people;
+
+    private String phone;
     private String email;
     private String password;
 

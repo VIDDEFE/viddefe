@@ -97,10 +97,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public AuthProcessResponse<SignInResDTO> signIn(SignInDTO dto) {
-        UserModel user = userRepository.findByEmail(dto.getEmail())
+        UserModel user = userRepository.findByEmailOrPhone(dto.getEmail(), dto.getPhone())
                 .orElseThrow(() -> new EntityNotFoundException("User not found by email: " + dto.getEmail()));
         if(!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
-            throw new CustomExceptions.InvalidCredentialsException("Wrong password");
+            throw new IllegalArgumentException("Contraseña incorrecta");
         }
 
 
@@ -116,7 +116,6 @@ public class AuthServiceImpl implements AuthService {
         );
 
         if(person.getChurch() == null){
-            System.out.println("Heyyy");
             return AuthProcessResponse.pending(AuthFlowPastorEnum.CREATION_CHURCH,dtoRes);
         }
 

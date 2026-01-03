@@ -76,6 +76,21 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalArgument(
+            IllegalArgumentException ex,
+            HttpServletRequest req
+    ) {
+        return buildResponse(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                "INVALID_ARGUMENT",
+                req,
+                null
+        );
+    }
+
+
     // =====================================================
     //  PERSISTENCE / DATABASE
     // =====================================================

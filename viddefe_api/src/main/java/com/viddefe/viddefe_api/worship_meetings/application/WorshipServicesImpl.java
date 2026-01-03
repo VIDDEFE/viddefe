@@ -94,7 +94,6 @@ public class WorshipServicesImpl implements WorshipService {
     @Override
     public WorshipDto updateWorship(UUID id, CreateWorshipDto dto, @NotNull UUID churchId) {
 
-        System.out.println("dto.shceduledDate = " + dto.getScheduledDate());
         verifyWorshipMeetingConflict.verifyHourOfWorshipMeeting(dto, churchId, id);
 
         WorshipMeetingModel worship = worshipRepository.findById(id)
