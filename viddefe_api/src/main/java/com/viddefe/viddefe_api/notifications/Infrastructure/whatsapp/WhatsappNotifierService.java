@@ -5,6 +5,7 @@ import com.viddefe.viddefe_api.notifications.application.WhatsappClient;
 import com.viddefe.viddefe_api.notifications.config.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -25,6 +26,7 @@ public class WhatsappNotifierService implements Notificator {
         return Channels.WHATSAPP;
     }
 
+    @Async
     @Override
     public void send(NotificationDto notificationDto) {
         String message = TEMPLATE_INVITATION_CREDENTIALS

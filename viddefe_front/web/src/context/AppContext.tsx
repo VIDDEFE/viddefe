@@ -23,7 +23,7 @@ interface AppContextType {
   isHydrated: boolean;
   user: UserInfoInterface | null;
   permissions: PermissionKey[];
-  login: (email: string, password: string) => Promise<SignInResponse>;
+  login: (identifier: string, password: string, method: 'email' | 'phone') => Promise<SignInResponse>;
   logout: () => void;
   setUser: (user: UserInfoInterface | null) => void;
   setPermissions: (permissions: PermissionKey[]) => void;
@@ -172,8 +172,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   // =======================
   // AUTH ACTIONS
   // =======================
-  const login = async (email: string, password: string): Promise<SignInResponse> => {
-    const response : SignInResponse = await authService.signIn({ email, password });
+  const login = async (identifier: string, password: string, method: 'email' | 'phone' = 'email'): Promise<SignInResponse> => {
+    const payload = method === 'email' 
+      ? { email: identifier, password }
+      : { phone: identifier, password };
+    
+    const response: SignInResponse = await authService.signIn(payload);
 
     if (!response) throw new Error('Sign in failed');
 

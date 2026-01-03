@@ -95,8 +95,11 @@ export interface ChurchRequest {
   longitude?: number;
 }
 
+export type SignInMethod = 'email' | 'phone';
+
 export interface SignInRequest {
-  email: string;
+  email?: string;
+  phone?: string;
   password: string;
 }
 

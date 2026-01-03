@@ -97,8 +97,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public AuthProcessResponse<SignInResDTO> signIn(SignInDTO dto) {
-        UserModel user = userRepository.findByEmailOrPhone(dto.getEmail(), dto.getPhone())
-                .orElseThrow(() -> new EntityNotFoundException("User not found by email: " + dto.getEmail()));
+        if((dto.getEmail() == null || dto.getEmail().isBlank()) && (dto.getPhone() == null || dto.getPhone().isBlank())) {
+            throw new IllegalArgumentException("Email or phone must be provided");
+        }
+        UserModel user = resolveUserByEmailOrPhone(dto);
         if(!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Contraseña incorrecta");
         }
@@ -122,6 +124,18 @@ public class AuthServiceImpl implements AuthService {
         return AuthProcessResponse.completed(
                 dtoRes
         );
+    }
+
+    private UserModel resolveUserByEmailOrPhone(SignInDTO dto) {
+        if(dto.getEmail() != null && !dto.getEmail().isBlank()) {
+            return userRepository.findByEmail(dto.getEmail())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found by email: " + dto.getEmail()));
+        } else if(dto.getPhone() != null && !dto.getPhone().isBlank()) {
+            return userRepository.findByPhone(dto.getPhone())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found by phone: " + dto.getPhone()));
+        } else {
+            throw new IllegalArgumentException("Email or phone must be provided");
+        }
     }
 
     @Override
