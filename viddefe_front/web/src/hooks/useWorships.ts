@@ -170,14 +170,15 @@ export function useRegisterAttendance(worshipId?: string) {
       if (context?.previousWorship) {
         qc.setQueryData(['worship', worshipId], context.previousWorship);
       }
-    },
-
-    // Siempre refetch después para asegurar sincronización
-    onSettled: () => {
+      // Solo invalidamos en caso de error para resincronizar
       if (worshipId) {
         qc.invalidateQueries({ queryKey: ['worship', worshipId] });
         qc.invalidateQueries({ queryKey: ['worshipAttendance', worshipId] });
       }
+    },
+
+    // Solo invalidamos la lista general de worships para actualizar contadores
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['worships'] });
     },
   });

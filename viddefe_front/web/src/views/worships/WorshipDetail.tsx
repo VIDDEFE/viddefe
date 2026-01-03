@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useWorshipMeeting, useWorshipAttendance, useRegisterAttendance } from '../../hooks';
 import { Card, Button, PageHeader, Avatar, Switch, Table } from '../../components/shared';
@@ -65,26 +65,25 @@ export default function WorshipDetail() {
   const { data: worship, isLoading, error } = useWorshipMeeting(id);
   const { 
     data: attendanceData, 
-    isLoading: isLoadingAttendance,
-    isFetching: isFetchingAttendance
+    isLoading: isLoadingAttendance
   } = useWorshipAttendance(id, { page, size: pageSize });
   const registerAttendance = useRegisterAttendance(id);
 
   // Estados de UI
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [loadingPersonId, setLoadingPersonId] = useState<string | null>(null);
 
-  // Transformar datos para la tabla
-  const tableData: AttendanceTableItem[] = (attendanceData?.content ?? []).map((record: WorshipAttendance) => ({
-    id: record.people.id,
-    fullName: `${record.people.firstName} ${record.people.lastName}`,
-    phone: record.people.phone || '-',
-    avatar: record.people.avatar,
-    typePerson: record.people.typePerson?.name || '-',
-    status: record.status,
-    isPresent: record.status === 'PRESENT',
-    peopleId: record.people.id,
-  }));
+  // Transformar datos para la tabla con memoización para evitar re-renders
+  const tableData: AttendanceTableItem[] = useMemo(() => 
+    (attendanceData?.content ?? []).map((record: WorshipAttendance) => ({
+      id: record.people.id,
+      fullName: `${record.people.firstName} ${record.people.lastName}`,
+      phone: record.people.phone || '-',
+      avatar: record.people.avatar,
+      typePerson: record.people.typePerson?.name || '-',
+      status: record.status,
+      isPresent: record.status === 'PRESENT',
+      peopleId: record.people.id,
+    })), [attendanceData?.content]);
 
   // Solo mostrar loading si no hay datos previos (primera carga)
   const showTableLoading = isLoadingAttendance && tableData.length === 0;
@@ -93,21 +92,14 @@ export default function WorshipDetail() {
     navigate('/worships');
   };
 
-  // Manejar cambio de asistencia
-  const handleToggleAttendance = async (personId: string) => {
+  // Manejar cambio de asistencia (actualización optimista, sin loading visual)
+  const handleToggleAttendance = (personId: string) => {
     if (!id) return;
     
-    setLoadingPersonId(personId);
-    try {
-      await registerAttendance.mutateAsync({
-        peopleId: personId,
-        eventId: id,
-      });
-    } catch (error) {
-      console.error('Error al registrar asistencia:', error);
-    } finally {
-      setLoadingPersonId(null);
-    }
+    registerAttendance.mutate({
+      peopleId: personId,
+      eventId: id,
+    });
   };
 
   // Paginación
@@ -206,7 +198,6 @@ export default function WorshipDetail() {
       priority: 2,
       render: (_value: AttendanceTableItem[keyof AttendanceTableItem], item: AttendanceTableItem) => {
         const isPresent = item.status === 'PRESENT';
-        const isThisLoading = registerAttendance.isPending && loadingPersonId === item.peopleId;
         
         return (
           <div className="flex items-center justify-center gap-2">
@@ -221,8 +212,6 @@ export default function WorshipDetail() {
             <Switch
               checked={isPresent}
               onChange={() => handleToggleAttendance(item.peopleId)}
-              loading={isThisLoading}
-              disabled={registerAttendance.isPending}
               size="sm"
             />
           </div>
@@ -356,7 +345,7 @@ export default function WorshipDetail() {
 
         {/* Columna derecha: Lista de asistencia (2 columnas) */}
         <div className="lg:col-span-2">
-          <Card className={`h-full flex flex-col ${isFetchingAttendance && tableData.length > 0 ? 'opacity-70 transition-opacity' : ''}`}>
+          <Card className="h-full flex flex-col">
             <Table<AttendanceTableItem>
               data={tableData}
               columns={columns}
