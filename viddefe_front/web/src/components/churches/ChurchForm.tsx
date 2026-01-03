@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Cities, States } from '../../services/stateCitiesService';
 import { Form, Input, DropDown, PastorSelector } from '../shared';
 import MapPicker, { type Position } from '../shared/MapPicker';
+import type { Person, PersonSummary } from '../../models';
 
 export interface ChurchFormData {
   name: string;
@@ -11,6 +12,7 @@ export interface ChurchFormData {
   latitude: number | undefined;
   longitude: number | undefined;
   pastorId: string;
+  pastor: PersonSummary;
   stateId: number | undefined;
   cityId: number | undefined;
 }
@@ -23,6 +25,7 @@ export const initialChurchFormData: ChurchFormData = {
   latitude: undefined,
   longitude: undefined,
   pastorId: '',
+  pastor: {} as PersonSummary,
   stateId: undefined,
   cityId: undefined,
 };
@@ -50,6 +53,7 @@ export default function ChurchForm({
   ) => {
     onChange({ [field]: val });
   };
+  console.log('ChurchForm render with value:', value);
   const [isLoadingMap, setIsLoadingMap] =  useState<boolean>(false);
   const [mapPosition, setMapPosition] = useState<Position | null>(null);
   const constructPosition = () => {

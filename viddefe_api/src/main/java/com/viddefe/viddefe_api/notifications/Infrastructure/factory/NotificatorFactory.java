@@ -2,24 +2,31 @@ package com.viddefe.viddefe_api.notifications.Infrastructure.factory;
 
 import com.viddefe.viddefe_api.notifications.config.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Component
-@RequiredArgsConstructor
 public class NotificatorFactory {
 
-    @Qualifier("EMAIL")
-    private final Notificator emailNotificator;
+    private final Map<Channels, Notificator> notificators;
 
-    public Notificator get(Channels channels) {
-        switch (channels) {
-            case EMAIL:
-                return emailNotificator;
-            default:
-                throw new IllegalArgumentException("Channel not supported: " + channels);
-        }
+    public NotificatorFactory(List<Notificator> notificators) {
+        this.notificators = notificators.stream()
+                .collect(Collectors.toMap(
+                        Notificator::channel,
+                        Function.identity()
+                ));
     }
 
+    public Notificator get(Channels channel) {
+        return Optional.ofNullable(notificators.get(channel))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Channel not supported: " + channel
+                ));
+    }
 }

@@ -225,7 +225,32 @@ export interface WorshipType {
   name: string;
 }
 
-// Worship Meeting (Culto)
+// Persona en la asistencia de culto
+export interface WorshipAttendeePerson {
+  id: string;
+  cc: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  avatar?: string;
+  birthDate: string;
+  typePerson: {
+    id: number;
+    name: string;
+  };
+  state: {
+    id: number;
+    name: string;
+  };
+}
+
+// Registro de asistencia individual
+export interface WorshipAttendance {
+  people: WorshipAttendeePerson;
+  status: 'PRESENT' | 'ABSENT' | string;
+}
+
+// Worship Meeting (Culto) - respuesta básica de lista
 export interface Worship {
   id: string;
   name: string;
@@ -233,6 +258,15 @@ export interface Worship {
   creationDate: string;
   scheduledDate: string;
   worshipType: WorshipType;
+}
+
+// Worship Detail - respuesta detallada (sin lista de asistencia, solo conteos)
+// La asistencia se obtiene de forma paginada en /worship/meeting/{id}/attendance
+export interface WorshipDetail extends Worship {
+  totalAttendance: number;
+  presentCount: number;
+  absentCount: number;
+  date?: string; // Campo adicional que puede venir en la respuesta
 }
 
 // DTO para crear un culto

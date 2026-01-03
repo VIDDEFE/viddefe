@@ -1,7 +1,7 @@
 import { useAppContext } from '../../context/AppContext';
-import { FiLogOut, FiChevronDown } from 'react-icons/fi';
+import { FiLogOut, FiChevronDown, FiUser, FiSettings } from 'react-icons/fi';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Avatar } from '../shared';
 
 export default function NavBar() {
@@ -52,6 +52,15 @@ export default function NavBar() {
                 <p className="text-sm font-medium text-primary-900">{fullName}</p>
                 <p className="text-xs text-primary-600">{user.user}</p>
               </div>
+
+              <Link
+                to="/account"
+                onClick={() => setIsProfileOpen(false)}
+                className="w-full text-left px-4 py-3 text-sm text-primary-700 hover:bg-primary-50 flex items-center gap-2 transition-colors"
+              >
+                <FiUser size={16} />
+                Mi Cuenta
+              </Link>
 
               <button
                 onClick={handleLogout}

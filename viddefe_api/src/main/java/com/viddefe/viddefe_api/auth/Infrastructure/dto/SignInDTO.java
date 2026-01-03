@@ -8,9 +8,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SignInDTO {
-    @NotBlank(message = "Email is empty")
     @Email(message = "Is not valid format email")
     private String email;
+    private String phone;
     @NotBlank(message = "Password is empty")
     private String password;
 }

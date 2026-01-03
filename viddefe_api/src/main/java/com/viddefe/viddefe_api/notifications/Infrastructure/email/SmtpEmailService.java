@@ -1,6 +1,7 @@
-package com.viddefe.viddefe_api.notifications.Infrastructure.web;
+package com.viddefe.viddefe_api.notifications.Infrastructure.email;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
+import com.viddefe.viddefe_api.notifications.config.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -15,14 +16,18 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.context.Context;
 
-import javax.naming.*;
 import java.nio.file.Path;
 
-@Service("EMAIL")
+@Service
 @RequiredArgsConstructor
 public class SmtpEmailService implements Notificator {
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
+
+    @Override
+    public Channels channel() {
+        return Channels.EMAIL;
+    }
 
     @Override
     @Async

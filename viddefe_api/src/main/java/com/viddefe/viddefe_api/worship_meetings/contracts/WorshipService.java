@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.worship_meetings.contracts;
 
 import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDetailedDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +28,7 @@ public interface WorshipService {
      * @param id The ID of the worship service.
      * @return The Worship Service, {{@link WorshipDto}}.
      */
-    WorshipDto getWorshipById(UUID id);
+    WorshipDetailedDto getWorshipById(UUID id);
     /**
      * Retrieves all worship services with pagination.
      *

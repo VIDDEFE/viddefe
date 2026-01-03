@@ -15,7 +15,6 @@ import java.util.Map;
 @Getter @Setter
 public class NotificationDto{
     @NotBlank
-    @Email
     private String to;
 
     @NotBlank

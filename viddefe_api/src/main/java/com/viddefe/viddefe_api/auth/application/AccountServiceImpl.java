@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,16 +42,18 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public void invite(InvitationDto dtp) {
         // Implementation goes here
-        if(userRepository.existsByEmail(dtp.getEmail())) {
+        if((dtp.getEmail() != null && !dtp.getEmail().isBlank()) && userRepository.existsByEmail(dtp.getEmail())) {
             throw new DataIntegrityViolationException("User with email already exists");
+        }else if((dtp.getPhone() != null && !dtp.getPhone().isBlank()) && userRepository.existsByPhone(dtp.getPhone())) {
+            throw new DataIntegrityViolationException("User with phone number already exists");
         }
-        System.out.println("Permissions to assign: " + dtp.getPermissions());
         List<PermissionModel> permissionModels =permissionService.findByListNames(dtp.getPermissions());
 
         RolUserModel role = rolesUserService.foundRolUserById(dtp.getRole());
         PeopleModel person = peopleReader.getPeopleById(dtp.getPersonId());
         UserModel userModel = new UserModel();
         userModel.setEmail(dtp.getEmail());
+        userModel.setPhone(dtp.getPhone());
         userModel.setPeople(person);
         userModel.setRolUser(role);
         List<UserPermissions> userPermissions = getUserPermissionsCollection(userModel, permissionModels);
@@ -60,7 +61,37 @@ public class AccountServiceImpl implements AccountService {
         String temporaryPassword = generateRandomPassword();
         userModel.setPassword(passwordEncoder.encode(temporaryPassword));
         userRepository.save(userModel);
-        Notificator notificator = notificatorFactory.get(Channels.EMAIL);
+        Channels channel = Channels.from(dtp.getChannel());
+        Notificator notificator = notificatorFactory.get(channel);
+        if(notificator.channel() == Channels.EMAIL) {
+            sendEmail(dtp, person, userModel, temporaryPassword, notificator);
+        } else if(notificator.channel() == Channels.WHATSAPP) {
+            sendWhatsapp(dtp, person, userModel, temporaryPassword, notificator);
+        }
+
+    }
+
+    private void sendWhatsapp(InvitationDto dtp, PeopleModel person, UserModel userModel, String temporaryPassword, Notificator notificator) {
+        if(dtp.getChannel().equalsIgnoreCase(Channels.WHATSAPP.name()) && (dtp.getPhone() == null || dtp.getPhone().isBlank())) {
+            throw new IllegalArgumentException("Phone number is required for WhatsApp invitations");
+        }
+        NotificationDto notificationDto = new NotificationDto();
+        notificationDto.setTo(dtp.getPhone());
+        notificationDto.setVariables(
+                Map.of(
+                        "name", person.getFirstName() + " " + person.getLastName(),
+                        "username", userModel.getPhone(),
+                        "password", temporaryPassword
+                )
+        );
+        notificationDto.setCreatedAt(Instant.now());
+        notificator.send(notificationDto);
+    }
+
+    private void sendEmail(InvitationDto dtp, PeopleModel person, UserModel userModel, String temporaryPassword, Notificator notificator) {
+        if(dtp.getChannel().equalsIgnoreCase(Channels.EMAIL.name()) && (dtp.getEmail() == null || dtp.getEmail().isBlank())) {
+            throw new IllegalArgumentException("Email is required for Email invitations");
+        }
         NotificationDto notificationDto = new NotificationDto();
         notificationDto.setTo(dtp.getEmail());
         notificationDto.setVariables(

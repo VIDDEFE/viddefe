@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.auth.Infrastructure.dto;
 
+import com.viddefe.viddefe_api.notifications.config.Channels;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -11,9 +12,10 @@ import java.util.UUID;
 
 @Getter @Setter
 public class InvitationDto {
-    @NotBlank(message = "Email is required")
     @Email
     private String email;
+
+    private String phone;
 
     @NotNull(message = "Person is required")
     private UUID personId;
@@ -22,4 +24,7 @@ public class InvitationDto {
     private Long role;
     @NotNull(message = "Permissions are required")
     private List<String> permissions;
+
+    @NotBlank(message = "Channel is required")
+    private String channel;
 }

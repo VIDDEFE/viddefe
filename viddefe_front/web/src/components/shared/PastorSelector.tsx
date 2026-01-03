@@ -20,7 +20,7 @@ export default function PastorSelector({
   placeholder = 'Seleccionar pastor...',
 }: PastorSelectorProps) {
   const { data: people } = usePeople();
-  
+  console.log('PastorSelector render with value:', value, 'people:', people);
   const peopleList = Array.isArray(people) ? people : (people?.content ?? []);
   
   const options = peopleList.map((person) => ({

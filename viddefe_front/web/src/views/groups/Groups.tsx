@@ -22,6 +22,7 @@ import {
 } from '../../hooks';
 import { useAppContext } from '../../context/AppContext';
 import type { SortConfig } from '../../services/api';
+import { GroupPermission } from '../../services/userService';
 import { FiSettings, FiList, FiMap } from 'react-icons/fi';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | 'strategies' | null;
@@ -33,11 +34,11 @@ export default function Groups() {
   const { hasPermission } = useAppContext();
   const navigate = useNavigate();
 
-  // Por ahora, permitimos todas las acciones (ajustar permisos según backend)
-  const canCreate = true;
-  const canView = true;
-  const canEdit = true;
-  const canDelete = true;
+  // Permisos de grupos
+  const canCreate = hasPermission(GroupPermission.CREATE);
+  const canView = hasPermission(GroupPermission.VIEW);
+  const canEdit = hasPermission(GroupPermission.EDIT);
+  const canDelete = hasPermission(GroupPermission.DELETE);
 
   // Navegar al detalle del grupo
   const handleViewDetail = (group: HomeGroup) => {
@@ -85,6 +86,9 @@ export default function Groups() {
   useEffect(() => {
     if (!groupDetails || !selectedGroup || !(modalMode === 'edit' || modalMode === 'view'))
       return;
+    // Verificar que los datos correspondan al grupo seleccionado
+    if (groupDetails.id !== selectedGroup.id) return;
+    // Si ya se pobló el form en modo edit, no sobreescribir
     if (formPopulated && modalMode === 'edit') return;
 
     setFormData({
@@ -112,7 +116,7 @@ export default function Groups() {
   const openModal = (mode: ModalMode, group?: HomeGroup) => {
     if (group) {
       setSelectedGroup(group);
-      setFormPopulated(mode !== 'edit');
+      setFormPopulated(false); // Siempre resetear para permitir cargar nuevos datos
     } else {
       resetForm();
     }

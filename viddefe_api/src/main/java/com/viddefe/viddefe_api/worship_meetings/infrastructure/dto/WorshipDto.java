@@ -10,11 +10,10 @@ import java.util.UUID;
 
 @Getter @Setter
 public class WorshipDto {
-    private UUID id;
-    private String name;
-    private String description;
-    private Date creationDate;
-    private LocalDateTime scheduledDate;
-
-    private WorshipMeetingTypes worshipType;
+    protected UUID id;
+    protected String name;
+    protected String description;
+    protected Date creationDate;
+    protected LocalDateTime scheduledDate;
+    protected WorshipMeetingTypes worshipType;
 }
