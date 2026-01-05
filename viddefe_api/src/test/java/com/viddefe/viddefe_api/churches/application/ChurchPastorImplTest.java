@@ -165,7 +165,7 @@ class ChurchPastorImplTest {
         @DisplayName("Should return pastor from church")
         void shouldReturnPastorFromChurch() {
             // Given
-            when(churchPastorRepository.findByChurch(church)).thenReturn(Optional.of(churchPastor));
+            when(churchPastorRepository.findByChurchWithPastorRelations(church)).thenReturn(Optional.of(churchPastor));
 
             // When
             PeopleModel result = churchPastorService.getPastorFromChurch(church);
@@ -179,7 +179,7 @@ class ChurchPastorImplTest {
         @DisplayName("Should throw exception when church has no pastor")
         void shouldThrowWhenChurchHasNoPastor() {
             // Given
-            when(churchPastorRepository.findByChurch(church)).thenReturn(Optional.empty());
+            when(churchPastorRepository.findByChurchWithPastorRelations(church)).thenReturn(Optional.empty());
 
             // When/Then
             assertThatThrownBy(() -> churchPastorService.getPastorFromChurch(church))

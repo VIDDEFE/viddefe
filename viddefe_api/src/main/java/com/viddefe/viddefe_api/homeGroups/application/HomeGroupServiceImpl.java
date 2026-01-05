@@ -59,7 +59,8 @@ public class HomeGroupServiceImpl implements HomeGroupService {
 
     @Override
     public HomeGroupsDetailDto getHomeGroupById(UUID id) {
-        HomeGroupsDTO homeDto = homeGroupsRepository.findById(id)
+        // Usa findWithRelationsById para evitar N+1 al acceder a leader, strategy
+        HomeGroupsDTO homeDto = homeGroupsRepository.findWithRelationsById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Grupo no encontrado")).toDto();
         List<RolesStrategiesWithPeopleDto> hierarchy = rolesStrategiesService.getTreeRolesWithPeople(homeDto.getStrategy().getId());
         HomeGroupsDetailDto dto = new HomeGroupsDetailDto();

@@ -8,9 +8,21 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
+
+    /**
+     * Busca iglesia por ID con city y states pre-cargados.
+     * Evita N+1 en ChurchServiceImpl.getChurchById() al llamar toDto()
+     */
+    @Query("SELECT c FROM ChurchModel c " +
+           "JOIN FETCH c.city ci " +
+           "JOIN FETCH ci.states " +
+           "WHERE c.id = :id")
+    Optional<ChurchModel> findByIdWithCityAndState(@Param("id") UUID id);
+
     @Query(
             value = """
         select new com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto(

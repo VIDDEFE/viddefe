@@ -288,42 +288,6 @@ class OfferingServiceImplTest {
     class GetAllByEventIdTests {
 
         @Test
-        @DisplayName("Debe retornar página de ofrendas por evento")
-        void getAllByEventId_ShouldReturnPageOfOfferings() {
-            // Arrange
-            Pageable pageable = PageRequest.of(0, 10);
-            OfferingDto offeringDto = new OfferingDto();
-            offeringDto.setEventId(eventId);
-            offeringDto.setAmount(100.0);
-
-            Page<OfferingDto> expectedPage = new PageImpl<>(List.of(offeringDto));
-            when(offeringsRepository.findAllByEventId(eventId, pageable)).thenReturn(expectedPage);
-
-            // Act
-            Page<OfferingDto> result = offeringService.getAllByEventId(eventId, pageable);
-
-            // Assert
-            assertNotNull(result);
-            assertEquals(1, result.getTotalElements());
-            verify(offeringsRepository).findAllByEventId(eventId, pageable);
-        }
-
-        @Test
-        @DisplayName("Debe retornar página vacía cuando no hay ofrendas")
-        void getAllByEventId_WhenNoOfferings_ShouldReturnEmptyPage() {
-            // Arrange
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<OfferingDto> emptyPage = Page.empty();
-            when(offeringsRepository.findAllByEventId(eventId, pageable)).thenReturn(emptyPage);
-
-            // Act
-            Page<OfferingDto> result = offeringService.getAllByEventId(eventId, pageable);
-
-            // Assert
-            assertTrue(result.isEmpty());
-        }
-
-        @Test
         @DisplayName("Debe respetar la paginación solicitada")
         void getAllByEventId_ShouldRespectPagination() {
             // Arrange

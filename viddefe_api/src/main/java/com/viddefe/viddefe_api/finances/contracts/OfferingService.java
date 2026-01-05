@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.finances.contracts;
 
 import com.viddefe.viddefe_api.finances.infrastructure.dto.CreateOfferingDto;
 import com.viddefe.viddefe_api.finances.infrastructure.dto.OfferingDto;
+import com.viddefe.viddefe_api.finances.infrastructure.dto.OfferingDtoPageWithAnalityc;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -34,7 +35,7 @@ public interface OfferingService {
      * @param pageable Pagination information.
      * @return {@link Page<OfferingDto>} List of data transfer objects representing the offerings .
      */
-    Page<OfferingDto> getAllByEventId(UUID eventId, Pageable pageable);
+    OfferingDtoPageWithAnalityc getAllByEventId(UUID eventId, Pageable pageable);
 
     /**
      * Deletes an offering by its unique identifier.

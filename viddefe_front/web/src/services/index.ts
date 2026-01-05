@@ -8,3 +8,4 @@ export * from './homeGroupService';
 export * from './eventService';
 export * from './userService';
 export * from './worshipService';
+export * from './offeringService';

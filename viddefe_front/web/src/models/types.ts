@@ -284,3 +284,54 @@ export interface UpdateWorshipDto {
   scheduledDate?: string;
   worshipTypeId?: number;
 }
+
+// Offering Type (Tipo de Ofrenda)
+export interface OfferingType {
+  id: number;
+  name: string;
+}
+
+// Persona en la ofrenda (reutilizamos la estructura existente)
+export interface OfferingPerson {
+  id: string;
+  cc: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  avatar?: string;
+  birthDate: string;
+  typePerson: {
+    id: number;
+    name: string;
+  };
+  state: {
+    id: number;
+    name: string;
+  };
+}
+
+// Ofrenda - respuesta del backend
+export interface Offering {
+  id: string;
+  eventId: string;
+  amount: number;
+  people: OfferingPerson | null;
+  type: OfferingType;
+}
+
+// DTO para crear una ofrenda
+export interface CreateOfferingDto {
+  eventId: string;
+  amount: number;
+  peopleId?: string; // Opcional si es ofrenda anónima
+  offeringTypeId: number;
+}
+
+// DTO para actualizar una ofrenda
+export interface UpdateOfferingDto {
+  id: string;
+  eventId: string;
+  amount: number;
+  peopleId?: string;
+  offeringTypeId: number;
+}

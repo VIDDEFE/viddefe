@@ -310,7 +310,7 @@ class HomeGroupServiceImplTest {
         void getHomeGroupById_WhenExists_ShouldReturnHomeGroupsDetailDto() {
             // Arrange
             HomeGroupsModel model = createHomeGroupsModel();
-            when(homeGroupsRepository.findById(homeGroupId)).thenReturn(Optional.of(model));
+            when(homeGroupsRepository.findWithRelationsById(homeGroupId)).thenReturn(Optional.of(model));
             when(rolesStrategiesService.getTreeRolesWithPeople(strategyId))
                     .thenReturn(List.of());
 
@@ -327,7 +327,7 @@ class HomeGroupServiceImplTest {
         @DisplayName("Debe lanzar excepción cuando el grupo no existe")
         void getHomeGroupById_WhenNotExists_ShouldThrowEntityNotFoundException() {
             // Arrange
-            when(homeGroupsRepository.findById(homeGroupId)).thenReturn(Optional.empty());
+            when(homeGroupsRepository.findWithRelationsById(homeGroupId)).thenReturn(Optional.empty());
 
             // Act & Assert
             EntityNotFoundException exception = assertThrows(
@@ -344,7 +344,7 @@ class HomeGroupServiceImplTest {
             HomeGroupsModel model = createHomeGroupsModel();
             List<RolesStrategiesWithPeopleDto> hierarchy = List.of(new RolesStrategiesWithPeopleDto());
 
-            when(homeGroupsRepository.findById(homeGroupId)).thenReturn(Optional.of(model));
+            when(homeGroupsRepository.findWithRelationsById(homeGroupId)).thenReturn(Optional.of(model));
             when(rolesStrategiesService.getTreeRolesWithPeople(strategyId)).thenReturn(hierarchy);
 
             // Act

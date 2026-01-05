@@ -313,7 +313,7 @@ class AuthServiceImplTest {
             dto.setEmail("test@test.com");
             dto.setPassword("password123");
 
-            when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
+            when(userRepository.findByEmailWithRelations(dto.getEmail())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches(dto.getPassword(), user.getPassword())).thenReturn(true);
 
             // When
@@ -343,7 +343,7 @@ class AuthServiceImplTest {
             emptyChurch.setId(null);
             person.setChurch(emptyChurch);
 
-            when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
+            when(userRepository.findByEmailWithRelations(dto.getEmail())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches(dto.getPassword(), user.getPassword())).thenReturn(true);
 
             // When
@@ -362,7 +362,7 @@ class AuthServiceImplTest {
             dto.setEmail("nonexistent@test.com");
             dto.setPassword("password123");
 
-            when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.empty());
+            when(userRepository.findByEmailWithRelations(dto.getEmail())).thenReturn(Optional.empty());
 
             // When/Then
             assertThatThrownBy(() -> authService.signIn(dto))
@@ -378,13 +378,13 @@ class AuthServiceImplTest {
             dto.setEmail("test@test.com");
             dto.setPassword("wrongPassword");
 
-            when(userRepository.findByEmail(dto.getEmail())).thenReturn(Optional.of(user));
+            when(userRepository.findByEmailWithRelations(dto.getEmail())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches(dto.getPassword(), user.getPassword())).thenReturn(false);
 
             // When/Then
             assertThatThrownBy(() -> authService.signIn(dto))
-                .isInstanceOf(CustomExceptions.InvalidCredentialsException.class)
-                .hasMessageContaining("Wrong password");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Contraseña incorrecta");
         }
     }
 

@@ -122,7 +122,8 @@ public class ChurchServiceImpl implements ChurchService {
      */
     @Override
     public ChurchDetailedResDto getChurchById(UUID id) {
-        ChurchModel church = churchRepository.findById(id)
+        // Usa findByIdWithCityAndState para evitar N+1 al acceder a city y states
+        ChurchModel church = churchRepository.findByIdWithCityAndState(id)
                 .orElseThrow(() -> new EntityNotFoundException("Iglesia no encontrada: " + id));
         PeopleModel pastor = churchPastorService.getPastorFromChurch(church);
         return new ChurchDetailedResDto(

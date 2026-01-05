@@ -7,6 +7,7 @@ import com.viddefe.viddefe_api.finances.domain.model.Offerings;
 import com.viddefe.viddefe_api.finances.domain.repositories.OfferingsRepository;
 import com.viddefe.viddefe_api.finances.infrastructure.dto.CreateOfferingDto;
 import com.viddefe.viddefe_api.finances.infrastructure.dto.OfferingDto;
+import com.viddefe.viddefe_api.finances.infrastructure.dto.OfferingDtoPageWithAnalityc;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -49,8 +49,11 @@ public class OfferingServiceImpl implements OfferingService {
     }
 
     @Override
-    public Page<OfferingDto> getAllByEventId(UUID eventId, Pageable pageable) {
-        return offeringsRepository.findAllByEventId(eventId, pageable);
+    public OfferingDtoPageWithAnalityc getAllByEventId(UUID eventId, Pageable pageable) {
+        Page<OfferingDto> offeringDtos = offeringsRepository.findAllByEventId(eventId, pageable).map(Offerings::toDto);
+        OfferingDtoPageWithAnalityc offeringdtoWithAnalityc = new OfferingDtoPageWithAnalityc();
+        offeringdtoWithAnalityc.setOfferings(offeringDtos);
+        return offeringdtoWithAnalityc;
     }
 
     @Override
