@@ -162,9 +162,18 @@ class ApiService {
           res.message = decodeHtmlEntities(res.message);
 
           if (res.success) {
-            // Evitar spamear toasts en respuestas 200 triviales
-            if (res.message && !["OK", "Created"].includes(res.message)) {
-              toast.success(res.message);
+            // Solo mostrar toast para operaciones de mutación (no GET)
+            const method = response.config.method?.toUpperCase();
+            const isMutationRequest = method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+            
+            if (res.message && isMutationRequest) {
+              // Mapear mensajes genéricos a mensajes más descriptivos
+              const friendlyMessages: Record<string, string> = {
+                'OK': 'Cambios guardados exitosamente',
+                'Created': 'Registro creado exitosamente',
+              };
+              const displayMessage = friendlyMessages[res.message] || res.message;
+              toast.success(displayMessage);
             }
 
             // Si hay metadata con permissions, actualizarlos en el AppContext

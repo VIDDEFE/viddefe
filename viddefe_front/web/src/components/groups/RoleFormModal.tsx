@@ -1,5 +1,5 @@
 import { useState, useEffect, memo } from 'react';
-import { Modal, Button } from '../shared';
+import { Modal, Button, DropDown } from '../shared';
 import type { RoleStrategyNode, CreateRoleDto, UpdateRoleDto } from '../../models';
 import { FiAlertCircle } from 'react-icons/fi';
 
@@ -200,36 +200,24 @@ export default memo(function RoleFormModal({
         {/* Rol Padre (solo en modo crear sin parentRole preseleccionado, o en modo editar) */}
         {(mode === 'edit' || (mode === 'create' && !parentRole)) && flattenedRoles.length > 0 && (
           <div>
-            <label
-              htmlFor="parentRole"
-              className="block text-sm font-semibold text-neutral-700 mb-1"
-            >
-              Rol Padre
-            </label>
-            <select
-              id="parentRole"
+            <DropDown
+              label="Rol Padre"
               value={formData.parentRoleId || ''}
-              onChange={(e) =>
+              onChangeValue={(value) =>
                 setFormData({
                   ...formData,
-                  parentRoleId: e.target.value || null,
+                  parentRoleId: value || null,
                 })
               }
-              className="
-                w-full px-4 py-2.5 rounded-lg border border-neutral-300 bg-white
-                focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                hover:border-neutral-400 transition-colors
-              "
-            >
-              <option value="">Sin rol padre (nivel raíz)</option>
-              {flattenedRoles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {'  '.repeat(role.level)}
-                  {role.level > 0 ? '└ ' : ''}
-                  {role.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: 'Sin rol padre (nivel raíz)' },
+                ...flattenedRoles.map((role) => ({
+                  value: role.id,
+                  label: `${'  '.repeat(role.level)}${role.level > 0 ? '└ ' : ''}${role.name}`
+                }))
+              ]}
+              placeholder="Sin rol padre (nivel raíz)"
+            />
             <p className="mt-1.5 text-xs text-neutral-500">
               Selecciona un rol padre si este rol debe ser un sub-rol de otro
             </p>

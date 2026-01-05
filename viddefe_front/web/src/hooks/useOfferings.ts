@@ -1,15 +1,19 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { offeringService } from '../services/offeringService';
-import type { Offering, OfferingType, CreateOfferingDto, UpdateOfferingDto } from '../models';
+import type { Offering, OfferingType, CreateOfferingDto, UpdateOfferingDto, OfferingList } from '../models';
 import type { Pageable, PageableRequest } from '../services/api';
 
 /**
  * Hook para obtener las ofrendas de un evento con paginación
  */
 export function useEventOfferings(eventId?: string, params?: PageableRequest) {
-  return useQuery<Pageable<Offering>, Error>({
+  return useQuery<OfferingList, Error>({
     queryKey: ['offerings', eventId, params?.page, params?.size, params?.sort?.field, params?.sort?.direction],
-    queryFn: () => offeringService.getByEventId(eventId!, params),
+    queryFn: async () => {
+      const response = await offeringService.getByEventId(eventId!, params);
+      // La respuesta viene envuelta en data
+      return (response as any).data ?? response;
+    },
     enabled: !!eventId,
     placeholderData: keepPreviousData,
   });

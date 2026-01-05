@@ -18,9 +18,9 @@ export default function PastorSelector({
   error,
   className = '',
   placeholder = 'Seleccionar pastor...',
-}: PastorSelectorProps) {
-  const { data: people } = usePeople();
-  console.log('PastorSelector render with value:', value, 'people:', people);
+}: Readonly<PastorSelectorProps>) {
+  // Cargar más personas para asegurar que el pastor actual esté en la lista
+  const { data: people } = usePeople({ page: 0, size: 500 });
   const peopleList = Array.isArray(people) ? people : (people?.content ?? []);
   
   const options = peopleList.map((person) => ({

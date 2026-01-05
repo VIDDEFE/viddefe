@@ -1,3 +1,4 @@
+import type { Pageable } from "../services";
 import type { Cities, States } from "../services/stateCitiesService";
 
 // Base interface para entidades con ID
@@ -312,11 +313,23 @@ export interface OfferingPerson {
 
 // Ofrenda - respuesta del backend
 export interface Offering {
-  id: string;
+  id?: string; // El id puede venir del backend o no
   eventId: string;
   amount: number;
   people: OfferingPerson | null;
   type: OfferingType;
+}
+
+export interface OfferingAnalytics {
+  code: string;
+  name: string;
+  amount: number;
+  count: number;
+}
+
+export interface OfferingList {
+  offerings: Pageable<Offering>;
+  analitycs: OfferingAnalytics[] | null;
 }
 
 // DTO para crear una ofrenda
