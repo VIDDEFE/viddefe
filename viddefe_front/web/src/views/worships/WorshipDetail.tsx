@@ -8,8 +8,7 @@ import {
   useOfferingTypes,
   useCreateOffering,
   useUpdateOffering,
-  useDeleteOffering,
-  usePeople
+  useDeleteOffering
 } from '../../hooks';
 import { Card, Button, PageHeader, Avatar, Switch, Table } from '../../components/shared';
 import { FiArrowLeft, FiCheck, FiX } from 'react-icons/fi';
@@ -112,7 +111,6 @@ export default function WorshipDetail() {
     { page: offeringPagination.page, size: offeringPagination.pageSize }
   );
   const { data: offeringTypes = [] } = useOfferingTypes();
-  const { data: peopleData } = usePeople({ page: 0, size: 100 });
   const createOffering = useCreateOffering(id);
   const updateOffering = useUpdateOffering(id);
   const deleteOffering = useDeleteOffering(id);
@@ -371,7 +369,6 @@ export default function WorshipDetail() {
         isEditing={!!offeringModal.editingOffering}
         isSaving={createOffering.isPending || updateOffering.isPending}
         offeringTypes={offeringTypes}
-        people={peopleData?.content ?? []}
       />
       
       <DeleteOfferingModal

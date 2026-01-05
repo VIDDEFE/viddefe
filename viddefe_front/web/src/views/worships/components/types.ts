@@ -1,4 +1,4 @@
-import type { WorshipDetail, OfferingType, Person, OfferingAnalytics } from '../../../models';
+import type { WorshipDetail, OfferingType, OfferingAnalytics } from '../../../models';
 
 // Tipo extendido para la tabla de asistencia
 export interface AttendanceTableItem {
@@ -65,7 +65,6 @@ export interface OfferingModalProps {
   readonly isEditing: boolean;
   readonly isSaving: boolean;
   readonly offeringTypes: OfferingType[];
-  readonly people: Person[];
 }
 
 export interface DeleteOfferingModalProps {

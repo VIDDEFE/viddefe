@@ -3,25 +3,37 @@ import { useInfinitePeople, usePerson } from '../../hooks';
 import DropDown from './DropDown';
 import Avatar from './Avatar';
 
-interface PastorSelectorProps {
+interface PersonSelectorProps {
   label?: string;
   value?: string;
   onChangeValue?: (value: string) => void;
   error?: string;
   className?: string;
   placeholder?: string;
+  disabled?: boolean;
+  showSelectedPreview?: boolean;
+  allowEmpty?: boolean;
+  emptyLabel?: string;
 }
 
-export default function PastorSelector({
-  label = 'Pastor',
+/**
+ * Selector de personas con paginación infinita.
+ * Carga datos bajo demanda al hacer scroll en el dropdown.
+ */
+export default function PersonSelector({
+  label = 'Persona',
   value,
   onChangeValue,
   error,
   className = '',
-  placeholder = 'Seleccionar pastor...',
-}: Readonly<PastorSelectorProps>) {
-  // Cargar el pastor seleccionado directamente por ID
-  const { data: selectedPerson, isLoading: isLoadingPerson } = usePerson(value);
+  placeholder = 'Seleccionar persona...',
+  disabled = false,
+  showSelectedPreview = false,
+  allowEmpty = false,
+  emptyLabel = 'Sin asignar',
+}: Readonly<PersonSelectorProps>) {
+  // Cargar la persona seleccionada directamente por ID
+  const { data: selectedPerson, isLoading: isLoadingPerson } = usePerson(value || undefined);
   
   // Cargar lista con paginación infinita para el dropdown
   const { 
@@ -37,12 +49,19 @@ export default function PastorSelector({
     return peoplePages.pages.flatMap(page => page.content ?? []);
   }, [peoplePages]);
   
-  const options = useMemo(() => 
-    peopleList.map((person) => ({
+  const options = useMemo(() => {
+    const baseOptions = peopleList.map((person) => ({
       value: person.id,
       label: `${person.firstName} ${person.lastName}`,
       avatar: person.avatar,
-    })), [peopleList]);
+    }));
+    
+    if (allowEmpty) {
+      return [{ value: '', label: emptyLabel }, ...baseOptions];
+    }
+    
+    return baseOptions;
+  }, [peopleList, allowEmpty, emptyLabel]);
 
   const handleLoadMore = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -52,7 +71,7 @@ export default function PastorSelector({
 
   return (
     <div className={className}>
-      {selectedPerson && !isLoadingPerson && (
+      {showSelectedPreview && selectedPerson && !isLoadingPerson && (
         <div className="flex items-center gap-2 mb-2 p-2 bg-primary-50 rounded-lg">
           <Avatar
             src={selectedPerson.avatar}
@@ -64,7 +83,7 @@ export default function PastorSelector({
           </span>
         </div>
       )}
-      {isLoadingPerson && value && (
+      {showSelectedPreview && isLoadingPerson && value && (
         <div className="flex items-center gap-2 mb-2 p-2 bg-primary-50 rounded-lg animate-pulse">
           <div className="w-8 h-8 bg-primary-200 rounded-full" />
           <div className="h-4 w-32 bg-primary-200 rounded" />
@@ -78,6 +97,7 @@ export default function PastorSelector({
         placeholder={placeholder}
         error={error}
         searchKey="label"
+        disabled={disabled}
         hasMore={hasNextPage}
         isLoadingMore={isFetchingNextPage}
         onLoadMore={handleLoadMore}

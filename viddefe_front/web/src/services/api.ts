@@ -29,6 +29,8 @@ export type Pageable<T> = {
   totalPages: number;
   number: number;
   size: number;
+  last?: boolean;
+  first?: boolean;
 };
 
 // Dirección de ordenamiento compatible con Spring Boot

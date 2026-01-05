@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Cities, States } from '../../services/stateCitiesService';
 import { Form, Input, DropDown, PastorSelector } from '../shared';
 import MapPicker, { type Position } from '../shared/MapPicker';
-import type { Person, PersonSummary } from '../../models';
+import type { PersonSummary } from '../../models';
 
 export interface ChurchFormData {
   name: string;
@@ -31,12 +31,12 @@ export const initialChurchFormData: ChurchFormData = {
 };
 
 interface ChurchFormProps {
-  value: ChurchFormData;
-  onChange: (patch: Partial<ChurchFormData>) => void;
-  states?: States[];
-  cities?: Cities[];
-  disabled?: boolean;
-  errors?: Partial<Record<keyof ChurchFormData, string>>;
+  readonly value: ChurchFormData;
+  readonly onChange: (patch: Partial<ChurchFormData>) => void;
+  readonly states?: States[];
+  readonly cities?: Cities[];
+  readonly disabled?: boolean;
+  readonly errors?: Partial<Record<keyof ChurchFormData, string>>;
 }
 
 export default function ChurchForm({
@@ -53,7 +53,6 @@ export default function ChurchForm({
   ) => {
     onChange({ [field]: val });
   };
-  console.log('ChurchForm render with value:', value);
   const [isLoadingMap, setIsLoadingMap] =  useState<boolean>(false);
   const [mapPosition, setMapPosition] = useState<Position | null>(null);
   const constructPosition = () => {
@@ -68,6 +67,7 @@ export default function ChurchForm({
     setIsLoadingMap(false);
     setMapPosition(pos);
   },[value.latitude, value.longitude])
+  console.log("PastorId:", value.pastorId);
   return (
     <Form>
       <Input
@@ -125,7 +125,7 @@ export default function ChurchForm({
             value: String(s.id),
             label: s.name,
           }))}
-          value={value.stateId != null ? String(value.stateId) : ''}
+          value={value.stateId === null || value.stateId === undefined ? '' : String(value.stateId)}
           onChangeValue={(val) => {
             const id = val ? Number(val) : undefined;
             updateField('stateId', id);
@@ -139,7 +139,7 @@ export default function ChurchForm({
             value: String(c.cityId),
             label: c.name,
           }))}
-          value={value.cityId != null ? String(value.cityId) : ''}
+          value={value.cityId === null || value.cityId === undefined ? '' : String(value.cityId)}
           onChangeValue={(val) => {
             const id = val ? Number(val) : undefined;
             updateField('cityId', id);

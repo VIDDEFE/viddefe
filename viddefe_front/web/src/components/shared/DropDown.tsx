@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HiChevronDown } from "react-icons/hi";
 import { FormGroup } from "./Form";
 
@@ -16,6 +16,10 @@ interface DropDownProps {
   searchKey?: string;
   className?: string;
   disabled?: boolean;
+  // Props para paginación infinita
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 export default function DropDown({
@@ -30,13 +34,19 @@ export default function DropDown({
   searchKey,
   className = "",
   disabled = false,
-}: DropDownProps) {
+  // Paginación infinita
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
+}: Readonly<DropDownProps>) {
   const searchField = searchKey ?? labelKey;
 
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const loadMoreTriggerRef = useRef<HTMLDivElement>(null);
 
   // Filter options by search
   const filtered = useMemo(() => {
@@ -59,9 +69,49 @@ export default function DropDown({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Intersection Observer para cargar más cuando se acerca al final
+  useEffect(() => {
+    if (!onLoadMore || !hasMore || isLoadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && hasMore && !isLoadingMore) {
+          onLoadMore();
+        }
+      },
+      {
+        root: listRef.current,
+        rootMargin: "100px",
+        threshold: 0.1,
+      }
+    );
+
+    const trigger = loadMoreTriggerRef.current;
+    if (trigger) {
+      observer.observe(trigger);
+    }
+
+    return () => {
+      if (trigger) {
+        observer.unobserve(trigger);
+      }
+    };
+  }, [hasMore, isLoadingMore, onLoadMore, open]);
+
   const currentLabel =
     options.find((o) => String(o[valueKey]) === String(value))?.[labelKey] ??
     placeholder;
+
+  const handleScroll = useCallback(() => {
+    if (!onLoadMore || !hasMore || isLoadingMore || !listRef.current) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+    // Cargar más cuando está a 100px del final
+    if (scrollHeight - scrollTop - clientHeight < 100) {
+      onLoadMore();
+    }
+  }, [hasMore, isLoadingMore, onLoadMore]);
 
   return (
     <FormGroup label={label} error={error}>
@@ -108,8 +158,12 @@ export default function DropDown({
             />
 
             {/* Options list */}
-            <div className="max-h-60 overflow-auto custom-scrollbar">
-              {filtered.length === 0 && (
+            <div 
+              ref={listRef}
+              className="max-h-60 overflow-auto custom-scrollbar"
+              onScroll={handleScroll}
+            >
+              {filtered.length === 0 && !isLoadingMore && (
                 <div className="px-3 py-3 text-neutral-500 text-sm">
                   No results
                 </div>
@@ -135,6 +189,19 @@ export default function DropDown({
                   </div>
                 );
               })}
+
+              {/* Loading indicator para paginación */}
+              {isLoadingMore && (
+                <div className="px-3 py-3 flex items-center justify-center gap-2 text-neutral-500 text-sm">
+                  <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                  Cargando más...
+                </div>
+              )}
+
+              {/* Trigger invisible para intersection observer */}
+              {hasMore && !isLoadingMore && (
+                <div ref={loadMoreTriggerRef} className="h-1" />
+              )}
             </div>
           </div>
         )}

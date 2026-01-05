@@ -1,7 +1,7 @@
-import { Form, Input, TextArea } from '../shared';
+import { Form, Input, TextArea, PersonSelector } from '../shared';
 import DropDown from '../shared/DropDown';
 import MapPicker, { type Position } from '../shared/MapPicker';
-import type { Strategy, Person } from '../../models';
+import type { Strategy } from '../../models';
 
 export interface HomeGroupFormData {
   name: string;
@@ -25,32 +25,21 @@ interface HomeGroupFormProps {
   value: HomeGroupFormData;
   onChange: (patch: Partial<HomeGroupFormData>) => void;
   strategies?: Strategy[];
-  people?: Person[];
   errors?: Partial<Record<keyof HomeGroupFormData, string>>;
   isLoadingStrategies?: boolean;
-  isLoadingPeople?: boolean;
 }
 
 export default function HomeGroupForm({
   value,
   onChange,
   strategies = [],
-  people = [],
   errors = {},
   isLoadingStrategies = false,
-  isLoadingPeople = false,
-}: HomeGroupFormProps) {
+}: Readonly<HomeGroupFormProps>) {
   // Transformar strategies para el DropDown
   const strategyOptions = strategies.map((s) => ({
     id: s.id,
     name: s.name,
-  }));
-
-  // Transformar people para el DropDown
-  const peopleOptions = people.map((p) => ({
-    id: p.id,
-    name: `${p.firstName} ${p.lastName}`,
-    fullName: `${p.firstName} ${p.lastName}`,
   }));
 
   // Posición para el MapPicker
@@ -102,17 +91,12 @@ export default function HomeGroupForm({
         disabled={isLoadingStrategies}
       />
 
-      <DropDown
+      <PersonSelector
         label="Líder"
-        options={peopleOptions}
         value={value.leaderId}
         onChangeValue={(val) => onChange({ leaderId: val })}
-        placeholder={isLoadingPeople ? 'Cargando personas...' : 'Seleccionar líder...'}
-        labelKey="name"
-        valueKey="id"
-        searchKey="fullName"
+        placeholder="Seleccionar líder..."
         error={errors.leaderId}
-        disabled={isLoadingPeople}
       />
 
       {/* MapPicker para ubicación */}

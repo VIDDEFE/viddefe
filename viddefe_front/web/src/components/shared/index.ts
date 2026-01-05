@@ -9,5 +9,6 @@ export { default as Stepper } from './Stepper';
 export { default as Avatar } from './Avatar';
 export { default as Switch } from './Switch';
 export { default as PastorSelector } from './PastorSelector';
+export { default as PersonSelector } from './PersonSelector';
 export { PersonForm, initialPersonFormData,initialPersonPastorFormData, type PersonFormData } from './PersonForm';
 export { default as ChurchForm, initialChurchFormData, type ChurchFormData } from '../churches/ChurchForm';
