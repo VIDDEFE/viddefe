@@ -123,7 +123,7 @@ class AuthMeUseCaseTest {
         @DisplayName("Should return complete user info with church and pastor")
         void shouldReturnCompleteUserInfo() {
             // Given
-            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(userRepository.findByIdWithPeopleAndChurch(userId)).thenReturn(Optional.of(user));
             when(churchPastorService.getPastorFromChurch(church)).thenReturn(pastor);
 
             // When
@@ -142,7 +142,7 @@ class AuthMeUseCaseTest {
         @DisplayName("Should throw exception when user not found")
         void shouldThrowWhenUserNotFound() {
             // Given
-            when(userRepository.findById(userId)).thenReturn(Optional.empty());
+            when(userRepository.findByIdWithPeopleAndChurch(userId)).thenReturn(Optional.empty());
 
             // When/Then
             assertThatThrownBy(() -> authMeUseCase.getUserInfo(userId))
@@ -154,7 +154,7 @@ class AuthMeUseCaseTest {
         @DisplayName("Should include pastor info in church response")
         void shouldIncludePastorInfoInChurchResponse() {
             // Given
-            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(userRepository.findByIdWithPeopleAndChurch(userId)).thenReturn(Optional.of(user));
             when(churchPastorService.getPastorFromChurch(church)).thenReturn(pastor);
 
             // When
@@ -169,7 +169,7 @@ class AuthMeUseCaseTest {
         @DisplayName("Should handle church without pastor")
         void shouldHandleChurchWithoutPastor() {
             // Given
-            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(userRepository.findByIdWithPeopleAndChurch(userId)).thenReturn(Optional.of(user));
             when(churchPastorService.getPastorFromChurch(church)).thenReturn(null);
 
             // When
@@ -189,7 +189,7 @@ class AuthMeUseCaseTest {
             adminRole.setName("ADMIN");
             user.setRolUser(adminRole);
 
-            when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+            when(userRepository.findByIdWithPeopleAndChurch(userId)).thenReturn(Optional.of(user));
             when(churchPastorService.getPastorFromChurch(church)).thenReturn(pastor);
 
             // When

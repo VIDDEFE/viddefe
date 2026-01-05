@@ -38,7 +38,8 @@ public class AuthMeUseCase implements AuthMeService {
     @Override
     @Transactional(readOnly = true)
     public UserInfo getUserInfo(@NonNull UUID userId) {
-        UserModel user = userRepository.findById(userId).orElseThrow(
+        // Usa findByIdWithPeopleAndChurch para evitar N+1 queries
+        UserModel user = userRepository.findByIdWithPeopleAndChurch(userId).orElseThrow(
                 () -> new EntityNotFoundException("User not found")
         );
         ChurchModel church = user.getPeople().getChurch();

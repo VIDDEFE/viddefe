@@ -71,7 +71,8 @@ public class ChurchPastorImpl implements ChurchPastorService {
     @Override
     @Transactional(readOnly = true)
     public PeopleModel getPastorFromChurch(@NonNull ChurchModel church) {
-        ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
+        // Usa findByChurchWithPastorRelations para evitar N+1 al acceder a pastor.state y pastor.typePerson
+        ChurchPastor churchPastor = churchPastorRepository.findByChurchWithPastorRelations(church)
                 .orElseThrow(() -> new EntityNotFoundException("Church has no assigned pastor"));
         return churchPastor.getPastor();
     }

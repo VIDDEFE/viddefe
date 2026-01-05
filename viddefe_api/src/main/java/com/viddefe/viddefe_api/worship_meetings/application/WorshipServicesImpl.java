@@ -55,7 +55,8 @@ public class WorshipServicesImpl implements WorshipService {
 
     @Override
     public WorshipDetailedDto getWorshipById(UUID id) {
-        WorshipMeetingModel worship = worshipRepository.findById(id)
+        // Usa findWithRelationsById para evitar N+1 al acceder a worshipType
+        WorshipMeetingModel worship = worshipRepository.findWithRelationsById(id)
                 .orElseThrow(() ->
                         new EntityNotFoundException(
                                 "Worship service not found with id: " + id

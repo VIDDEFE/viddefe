@@ -128,10 +128,12 @@ public class AuthServiceImpl implements AuthService {
 
     private UserModel resolveUserByEmailOrPhone(SignInDTO dto) {
         if(dto.getEmail() != null && !dto.getEmail().isBlank()) {
-            return userRepository.findByEmail(dto.getEmail())
+            // Usa findByEmailWithRelations para evitar N+1 al acceder a people y church
+            return userRepository.findByEmailWithRelations(dto.getEmail())
                     .orElseThrow(() -> new EntityNotFoundException("User not found by email: " + dto.getEmail()));
         } else if(dto.getPhone() != null && !dto.getPhone().isBlank()) {
-            return userRepository.findByPhone(dto.getPhone())
+            // Usa findByPhoneWithRelations para evitar N+1 al acceder a people y church
+            return userRepository.findByPhoneWithRelations(dto.getPhone())
                     .orElseThrow(() -> new EntityNotFoundException("User not found by phone: " + dto.getPhone()));
         } else {
             throw new IllegalArgumentException("Email or phone must be provided");

@@ -147,7 +147,7 @@ class OferringTypeSeederTest {
             existingTypes.add(type2);
 
             OfferingType type3 = new OfferingType();
-            type3.setName(OfferingTypeEnum.CHARITY.getDescription());
+            type3.setName(OfferingTypeEnum.DONATION.getDescription());
             existingTypes.add(type3);
 
             when(offeringTypeRepository.findAll()).thenReturn(existingTypes);
