@@ -8,12 +8,17 @@ databaseChangeLog:
             columns:
               - column:
                   name: id
-                  type: varchar(40)
+                  type: uuid
                   constraints:
+                    nullable: false
                     primaryKey: true
+              - column:
+                  name: email
+                  type: varchar(256)
+                  constraints:
                     nullable: false
               - column:
-                  name: passwordc
+                  name: password
                   type: varchar(256)
                   constraints:
                     nullable: false
@@ -22,9 +27,22 @@ databaseChangeLog:
                   type: bigint
                   constraints:
                     nullable: false
+              - column:
+                  name: people_id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+
         - addForeignKeyConstraint:
             baseTableName: users
             baseColumnNames: rol_user_id
             referencedTableName: roles_user
             referencedColumnNames: id
             constraintName: fk_rol_user_id
+        - addForeignKeyConstraint:
+            baseTableName: users
+            baseColumnNames: people_id
+            referencedTableName: people
+            referencedColumnNames: id
+            constraintName: fk_people_id

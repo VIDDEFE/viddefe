@@ -1,0 +1,10 @@
+@ApplicationModule(
+        id = "people",
+        displayName = "People",
+        allowedDependencies = {"StatesCities", "StatesCities :: states_cities_model", "StatesCities :: services", "church_module", "church_module :: services", "church_module :: models", "common :: response-api", "common :: response-exception", "StatesCities :: dtos", "auth-module", "auth-module :: service", "auth-module :: dto", "common :: jwt"}
+)
+
+package com.viddefe.viddefe_api.people;
+
+import org.springframework.modulith.ApplicationModule;
+

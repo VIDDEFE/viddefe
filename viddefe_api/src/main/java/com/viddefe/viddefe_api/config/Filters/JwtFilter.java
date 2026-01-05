@@ -1,8 +1,8 @@
 package com.viddefe.viddefe_api.config.Filters;
 
-import com.viddefe.viddefe_api.config.Components.JwtUtil;
+import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import io.jsonwebtoken.Claims;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,61 +18,80 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+
+    private static final String TOKEN_COOKIE = "access_token";
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/error",
-            "/usuarios",
-            "/people"
+            "/auth"
     );
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
 
-        // Permitir solicitudes OPTIONS para CORS
-        if (request.getMethod().equals(HttpMethod.OPTIONS.name())) {
+        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
             return true;
         }
 
-        // Verificar rutas públicas
-        for (String publicPath : PUBLIC_PATHS) {
-
-            if (path.startsWith(publicPath)) {
-                return true;
-            }
-        }
-
-        return false;
+        return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain filterChain) throws IOException, jakarta.servlet.ServletException {
+                                    FilterChain filterChain)
+            throws IOException, jakarta.servlet.ServletException {
 
-        String authHeader = request.getHeader("Authorization");
+        String token = resolveToken(request);
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+        if (token != null && jwtUtil.isTokenValid(token)) {
+            Claims claims = jwtUtil.getClaims(token);
 
-            if (jwtUtil.isTokenValid(token)) {
-                Claims claims = jwtUtil.getClaims(token);
-                String email = claims.getSubject();
-                String role = claims.get("role", String.class);
+            String email = claims.getSubject();
 
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role))
-                );
+            List<String> permissions = claims.get("permissions", String.class).split(",").length == 0
+                    ? null
+                    : List.of(claims.get("permissions", String.class).split(","));
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            }
+            var authorities = permissions == null
+                    ? List.<SimpleGrantedAuthority>of()
+                    : permissions.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .toList();
+
+            var authentication = new UsernamePasswordAuthenticationToken(
+                    email,
+                    null,
+                    authorities
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        // Authorization header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        // Cookie fallback
+        if (request.getCookies() != null) {
+            for (var cookie : request.getCookies()) {
+                if (TOKEN_COOKIE.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        return null;
     }
 }

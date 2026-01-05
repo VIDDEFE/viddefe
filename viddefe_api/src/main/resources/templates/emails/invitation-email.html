@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Viddefe – Account Invitation</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+
+<p>Hello <strong th:text="${name}">User</strong>,</p>
+
+<p>
+    You have been invited to access <strong>Viddefe</strong>.
+    An account has already been created for you.
+</p>
+
+<p><strong>Your access credentials:</strong></p>
+
+<ul>
+    <li>Email: <span th:text="${email}"></span></li>
+    <li>Temporary password: <span th:text="${temporaryPassword}"></span></li>
+</ul>
+
+<p>
+    You can sign in using the following link:
+</p>
+
+<p>
+    <a th:href="${loginUrl}">Go to Viddefe</a>
+</p>
+
+<p style="color: #b00020;">
+    ⚠️ For security reasons, you will be required to change this password on your first login.
+</p>
+
+<p>
+    If you did not expect this invitation, please ignore this email.
+</p>
+
+<br/>
+
+<p>
+    — Viddefe Team
+</p>
+
+</body>
+</html>
