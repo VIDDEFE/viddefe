@@ -226,28 +226,10 @@ export interface WorshipType {
   name: string;
 }
 
-// Persona en la asistencia de culto
-export interface WorshipAttendeePerson {
-  id: string;
-  cc: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  avatar?: string;
-  birthDate: string;
-  typePerson: {
-    id: number;
-    name: string;
-  };
-  state: {
-    id: number;
-    name: string;
-  };
-}
 
 // Registro de asistencia individual
 export interface WorshipAttendance {
-  people: WorshipAttendeePerson;
+  people: Person;
   status: 'PRESENT' | 'ABSENT' | string;
 }
 
@@ -292,31 +274,13 @@ export interface OfferingType {
   name: string;
 }
 
-// Persona en la ofrenda (reutilizamos la estructura existente)
-export interface OfferingPerson {
-  id: string;
-  cc: string;
-  firstName: string;
-  lastName: string;
-  phone: string;
-  avatar?: string;
-  birthDate: string;
-  typePerson: {
-    id: number;
-    name: string;
-  };
-  state: {
-    id: number;
-    name: string;
-  };
-}
 
 // Ofrenda - respuesta del backend
 export interface Offering {
   id?: string; // El id puede venir del backend o no
   eventId: string;
   amount: number;
-  people: OfferingPerson | null;
+  people: Person | null;
   type: OfferingType;
 }
 
@@ -347,4 +311,51 @@ export interface UpdateOfferingDto {
   amount: number;
   peopleId?: string;
   offeringTypeId: number;
+}
+
+// ============================================================================
+// MEETINGS (Reuniones de Grupo)
+// ============================================================================
+
+// Tipo de Reunión
+export interface MeetingType {
+  id: number;
+  name: string;
+}
+
+// Meeting (Reunión) - respuesta del backend
+export interface Meeting {
+  id: string;
+  name: string;
+  description?: string;
+  date: string;
+  type: MeetingType;
+  totalAttendance?: number;
+  presentCount?: number;
+  absentCount?: number;
+}
+
+// Persona en la asistencia de reunión (reutilizamos estructura existente)
+
+
+// Registro de asistencia individual a reunión
+export interface MeetingAttendance {
+  people: Person;
+  status: 'PRESENT' | 'ABSENT' | string;
+}
+
+// DTO para crear una reunión
+export interface CreateMeetingDto {
+  groupMeetingTypeId: number;
+  name: string;
+  description?: string;
+  date: string;
+}
+
+// DTO para actualizar una reunión
+export interface UpdateMeetingDto {
+  groupMeetingTypeId?: number;
+  name?: string;
+  description?: string;
+  date?: string;
 }

@@ -78,12 +78,6 @@ public class WorshipMeetingsController {
         return new ResponseEntity<>(ApiResponse.noContent(), HttpStatus.NO_CONTENT);
     }
 
-    @GetMapping("/types")
-    public ResponseEntity<ApiResponse<List<WorshipMeetingTypes>>> getWorshipMeetingTypes() {
-        List<WorshipMeetingTypes> response = worshipService.getAllWorshipMeetingTypes();
-        return ResponseEntity.ok(ApiResponse.ok(response));
-    }
-
     @PutMapping("/attendance")
     public ResponseEntity<ApiResponse<AttendanceDto>> recordAttendance(
             @RequestBody @Valid CreateAttendanceDto dto
@@ -99,7 +93,7 @@ public class WorshipMeetingsController {
     ) {
         return ResponseEntity.ok(
                 ApiResponse.ok(
-                        attendanceService.getAttendanceByEventId(id, pageable)
+                        attendanceService.getAttendanceByEventId(id, pageable, AttendanceEventType.TEMPLE_WORHSIP)
                 )
         );
     }

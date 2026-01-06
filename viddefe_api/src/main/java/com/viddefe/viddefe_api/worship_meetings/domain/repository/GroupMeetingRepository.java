@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface GroupMeetingRepository extends JpaRepository<GroupMeetings, UUID> {
-    Page<GroupMeetingDto> findAllByGroupId(UUID groupId, Pageable pageable);
+    Page<GroupMeetings> findAllByGroupId(UUID groupId, Pageable pageable);
 }

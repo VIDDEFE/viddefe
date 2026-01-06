@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { HomeGroup } from '../../models';
 import type { MapBounds } from '../../services/churchService';
 import { useNearbyHomeGroups } from '../../hooks/useHomeGroups';
-import { FiEdit2, FiTrash2, FiMapPin, FiUsers, FiLoader, FiRefreshCw } from 'react-icons/fi';
+import { FiEdit2, FiTrash2, FiMapPin, FiUsers, FiLoader, FiRefreshCw, FiEye } from 'react-icons/fi';
 
 interface GroupsMapProps {
   height?: number;
@@ -54,6 +55,7 @@ export default function GroupsMap({
   onEditGroup,
   onDeleteGroup,
 }: GroupsMapProps) {
+  const navigate = useNavigate();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -348,11 +350,19 @@ export default function GroupsMap({
 
             <div className="flex items-center gap-2 pt-2 border-t border-neutral-100">
               <button
+                onClick={() => navigate(`/groups/${selectedGroup.id}`)}
+                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white text-sm rounded-lg transition-colors font-medium"
+              >
+                <FiEye className="w-4 h-4" />
+                <span>Ver más</span>
+              </button>
+
+              <button
                 onClick={openInGoogleMaps}
-                className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-sm rounded-lg transition-colors"
+                className="flex items-center justify-center gap-1.5 px-3 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 text-sm rounded-lg transition-colors"
+                title="Abrir en Google Maps"
               >
                 <FiMapPin className="w-4 h-4" />
-                <span>Google Maps</span>
               </button>
 
               {onEditGroup && (

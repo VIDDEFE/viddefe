@@ -7,6 +7,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class GroupMeetingTypeReaderImpl implements GroupMeetingTypeReader {
@@ -16,5 +18,10 @@ public class GroupMeetingTypeReaderImpl implements GroupMeetingTypeReader {
         return groupMeetingTypeRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("No existe este tipo de reunion grupal: " + id)
         );
+    }
+
+    @Override
+    public List<GroupMeetingTypes> getAllGroupMeetingTypes() {
+        return groupMeetingTypeRepository.findAll();
     }
 }

@@ -7,7 +7,6 @@ import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttenda
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -31,7 +30,7 @@ public interface AttendanceService {
      * @param pageable Pagination information.
      * @return A list of AttendanceDto objects representing the attendance records.
      */
-    Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable);
+    Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable, AttendanceEventType type);
 
     /**
      * Counts the total number of people available for attendance.

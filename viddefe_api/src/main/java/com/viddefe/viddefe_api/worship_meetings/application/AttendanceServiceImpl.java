@@ -49,9 +49,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable) {
+    public Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable, AttendanceEventType type) {
         return attendanceRepository
-                .findAttendanceByEventWithDefaults(eventId, AttendanceEventType.TEMPLE_WORHSIP ,pageable)
+                .findAttendanceByEventWithDefaults(eventId, type ,pageable)
                 .map(AttendanceProjectionDto::toDto);
     }
 

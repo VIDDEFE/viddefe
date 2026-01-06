@@ -60,27 +60,3 @@ export function TextArea({ label, error, className = '', ...props }: TextAreaPro
     </FormGroup>
   );
 }
-
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
-  label?: string;
-  error?: string;
-  options: Array<{ value: string; label: string }>;
-}
-
-export function Select({ label, error, options, className = '', ...props }: SelectProps) {
-  return (
-    <FormGroup label={label} error={error}>
-      <select 
-        className={`px-3 py-3 border-2 border-neutral-200 rounded-lg text-base transition-all duration-300 font-inherit focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-300 focus:ring-opacity-50 placeholder-neutral-400 cursor-pointer ${className}`} 
-        {...props}
-      >
-        <option value="">Seleccionar...</option>
-        {options.map(opt => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </FormGroup>
-  );
-}

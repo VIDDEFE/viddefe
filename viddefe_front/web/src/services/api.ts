@@ -248,12 +248,15 @@ class ApiService {
             } as ApiError);
           }
 
+          // El backend puede enviar "meta" o "metadata"; normalizamos a meta
+          const meta = decodeHtmlEntities(data?.meta || data?.metadata);
+
           const apiError: ApiError = {
             success: false,
             status,
             message: decodeHtmlEntities(data?.message || "Error del servidor"),
             errorCode: data?.errorCode || "INTERNAL_ERROR",
-            meta: decodeHtmlEntities(data?.meta),
+            meta,
             timestamp: data?.timestamp || new Date().toISOString(),
           };
 

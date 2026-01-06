@@ -12,5 +12,5 @@ public class GroupMeetingDto {
     protected UUID id;
     protected String name,description;
     protected LocalDateTime date;
-    protected GroupMeetingTypeDto type;
+    protected MeetingTypeDto type;
 }

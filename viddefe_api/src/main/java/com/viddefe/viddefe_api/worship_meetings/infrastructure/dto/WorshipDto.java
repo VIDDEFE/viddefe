@@ -15,5 +15,5 @@ public class WorshipDto {
     protected String description;
     protected Date creationDate;
     protected LocalDateTime scheduledDate;
-    protected WorshipMeetingTypes worshipType;
+    protected MeetingTypeDto worshipType;
 }

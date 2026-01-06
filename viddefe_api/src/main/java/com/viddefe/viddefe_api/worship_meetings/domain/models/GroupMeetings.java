@@ -4,7 +4,9 @@ import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingGroupDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.GroupMeetingDto;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
@@ -15,6 +17,7 @@ import java.util.UUID;
 @Table(name = "group_meetings")
 @Entity
 @Getter @Setter
+@AllArgsConstructor @NoArgsConstructor
 public class GroupMeetings {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -28,10 +31,10 @@ public class GroupMeetings {
     private GroupMeetingTypes groupMeetingType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
+    @JoinColumn(name = "home_groups_id", nullable = false)
     private HomeGroupsModel group;
 
-    @Column(name = "meeting_date", nullable = false)
+    @Column(nullable = false)
     private LocalDateTime date;
 
     public GroupMeetings fromDto(CreateMeetingGroupDto dto) {
