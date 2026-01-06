@@ -1,4 +1,5 @@
 import { memo, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Modal, Button, DropDown } from '../shared';
 import type { Meeting, MeetingType, CreateMeetingDto, UpdateMeetingDto } from '../../models';
 
@@ -105,6 +106,17 @@ function MeetingFormModal({
 
     // Combinar fecha y hora
     const dateTime = new Date(`${formData.date}T${formData.time}`);
+    const now = new Date();
+    if (Number.isNaN(dateTime.getTime())) {
+      setErrors((prev) => ({ ...prev, date: 'Fecha u hora inválidas' }));
+      toast.error('Fecha u hora inválidas');
+      return;
+    }
+    if (dateTime.getTime() <= now.getTime()) {
+      setErrors((prev) => ({ ...prev, date: 'La fecha debe ser futura' }));
+      toast.error('Meeting date cannot be in the past');
+      return;
+    }
     
     const data: CreateMeetingDto | UpdateMeetingDto = {
       name: formData.name.trim(),

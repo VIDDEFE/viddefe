@@ -155,7 +155,7 @@ function OfferingsSection({
       </div>
 
       {/* Analytics Section with Charts */}
-      {analytics && analytics.length > 0 && (
+      {analytics && analytics.length > 0 ? (
         <div className="mb-6 p-4 bg-linear-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100">
           {/* Header con toggle de tipo de gráfico */}
           <div className="flex items-center justify-between mb-4">
@@ -294,6 +294,42 @@ function OfferingsSection({
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* Estado vacío - Sin ofrendas registradas */
+        <div className="mb-6 p-6 bg-linear-to-r from-neutral-50 to-slate-50 rounded-xl border border-neutral-200 border-dashed">
+          <div className="flex flex-col items-center justify-center text-center">
+            {/* Círculo vacío con icono */}
+            <div className="relative mb-4">
+              <div className="w-24 h-24 rounded-full border-4 border-dashed border-neutral-300 flex items-center justify-center bg-white">
+                <FiPieChart className="w-10 h-10 text-neutral-300" />
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center border-2 border-white">
+                <FiDollarSign className="w-4 h-4 text-green-600" />
+              </div>
+            </div>
+            
+            <h4 className="text-lg font-medium text-neutral-600 mb-1">
+              Sin análisis disponible
+            </h4>
+            <p className="text-sm text-neutral-500 max-w-xs">
+              Registra la primera ofrenda para ver las estadísticas y gráficos de distribución por tipo.
+            </p>
+            
+            {/* Mini indicador de que estará disponible */}
+            <div className="mt-4 flex items-center gap-2 text-xs text-neutral-400">
+              <div className="flex gap-1">
+                {CHART_COLORS.slice(0, 4).map((color, i) => (
+                  <div 
+                    key={i} 
+                    className="w-2 h-2 rounded-full opacity-40"
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+              <span>Los gráficos aparecerán aquí</span>
             </div>
           </div>
         </div>

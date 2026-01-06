@@ -156,8 +156,11 @@ export default function MyGroup() {
 
   // Abrir modal para ver detalle
   const handleOpenViewMeeting = useCallback((meeting: Meeting) => {
-    setViewModal({ isOpen: true, meeting });
-  }, []);
+    // Navegar a la vista de detalle de reunión
+    if (meeting?.id) {
+      navigate(`/group-meetings/${meeting.id}`);
+    }
+  }, [navigate]);
 
   // Cerrar modal de vista
   const handleCloseViewModal = useCallback(() => {
@@ -268,17 +271,9 @@ export default function MyGroup() {
             type="button"
             onClick={() => handleOpenViewMeeting(item.original)}
             className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
-            title="Ver detalle"
+            title="Ver más"
           >
             <FiEye size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={() => handleOpenAttendance(item.original)}
-            className="p-1.5 text-neutral-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-            title="Ver asistencia"
-          >
-            <FiUserCheck size={16} />
           </button>
           <button
             type="button"

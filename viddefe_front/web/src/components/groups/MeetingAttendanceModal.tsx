@@ -42,7 +42,7 @@ function MeetingAttendanceModal({
 }: MeetingAttendanceModalProps) {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
-  // Transformar datos para la tabla
+  // Transformar datos para la tabla (Pageable directo)
   const attendanceTableData: AttendanceTableItem[] = useMemo(
     () =>
       (attendanceData?.content ?? []).map((record: MeetingAttendance) => ({
@@ -58,13 +58,14 @@ function MeetingAttendanceModal({
     [attendanceData?.content]
   );
 
-  // Calcular estadísticas
+  // Calcular estadísticas basadas en el meeting (tiene conteos agregados)
+  // o calcular desde el contenido si no hay meeting
   const stats = useMemo(() => {
-    const total = attendanceData?.totalElements ?? 0;
-    const present = attendanceTableData.filter((r) => r.isPresent).length;
-    const absent = total - present;
+    const total = meeting?.totalAttendance ?? attendanceData?.totalElements ?? 0;
+    const present = meeting?.presentCount ?? 0;
+    const absent = meeting?.absentCount ?? 0;
     return { total, present, absent };
-  }, [attendanceData?.totalElements, attendanceTableData]);
+  }, [meeting?.totalAttendance, meeting?.presentCount, meeting?.absentCount, attendanceData?.totalElements]);
 
   const handleToggle = useCallback(
     (personId: string) => {

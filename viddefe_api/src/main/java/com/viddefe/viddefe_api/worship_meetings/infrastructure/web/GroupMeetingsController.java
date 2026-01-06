@@ -11,7 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.RequestPath;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -41,6 +40,15 @@ public class GroupMeetingsController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @GetMapping("/{meetingId}")
+    public ResponseEntity<ApiResponse<GroupMeetingDetailedDto>> getGroupMeetingById(
+            @PathVariable UUID groupId,
+            @PathVariable UUID meetingId
+    ) {
+        GroupMeetingDetailedDto response = groupMeetingService.getGroupMeetingById(groupId, meetingId);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
     @PutMapping("/{meetingId}")
     public ResponseEntity<ApiResponse<GroupMeetingDto>> updateGroupMeeting(
             @PathVariable UUID groupId,
@@ -61,12 +69,12 @@ public class GroupMeetingsController {
     }
 
     @GetMapping("/{meetingId}/attendance")
-    public ResponseEntity<ApiResponse<GroupMeetingAttendanceDto>> getGroupMeetingAttendance(
+    public ResponseEntity<ApiResponse<Page<AttendanceDto>>> getGroupMeetingAttendance(
             @PathVariable UUID groupId,
             @PathVariable UUID meetingId,
             Pageable pageable
     ){
-        GroupMeetingAttendanceDto response = groupMeetingService.getGroupMeetingAttendance(groupId, meetingId, pageable);
+        Page<AttendanceDto> response = groupMeetingService.getGroupMeetingAttendance(groupId, meetingId, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

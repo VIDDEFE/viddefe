@@ -84,6 +84,7 @@ export function useDeleteMeeting(groupId?: string) {
 
 /**
  * Hook para obtener la asistencia de una reunión paginada
+ * Retorna Pageable<MeetingAttendance> directamente
  */
 export function useMeetingAttendance(groupId?: string, meetingId?: string, params?: PageableRequest) {
   return useQuery<Pageable<MeetingAttendance>, Error>({
@@ -111,21 +112,24 @@ export function useRegisterMeetingAttendance(groupId?: string, meetingId?: strin
       // Snapshot del estado anterior
       const previousAttendance = qc.getQueriesData({ queryKey: ['meetingAttendance', groupId, meetingId] });
 
-      // Actualizar optimistamente la lista de asistencia
+      // Actualizar optimistamente la lista de asistencia (Pageable directo)
       qc.setQueriesData(
         { queryKey: ['meetingAttendance', groupId, meetingId] },
         (old: Pageable<MeetingAttendance> | undefined) => {
           if (!old) return old;
-          return {
-            ...old,
-            content: old.content.map((record) => {
+          // Toggle status in current page
+          const updatedContent = old.content.map((record) => {
               if (record.people.id === data.peopleId) {
                 // Toggle el estado
                 const newStatus = record.status === 'PRESENT' ? 'ABSENT' : 'PRESENT';
                 return { ...record, status: newStatus };
               }
               return record;
-            }),
+          });
+
+          return {
+            ...old,
+            content: updatedContent,
           };
         }
       );
@@ -146,9 +150,10 @@ export function useRegisterMeetingAttendance(groupId?: string, meetingId?: strin
       }
     },
 
-    // Invalidar queries relacionadas
+    // Invalidar queries relacionadas (meeting detail para actualizar conteos)
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['meetings', groupId] });
+      qc.invalidateQueries({ queryKey: ['meeting', groupId, meetingId] });
     },
   });
 }

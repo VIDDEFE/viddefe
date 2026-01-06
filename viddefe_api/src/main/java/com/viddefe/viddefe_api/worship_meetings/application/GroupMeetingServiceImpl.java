@@ -12,7 +12,7 @@ import com.viddefe.viddefe_api.worship_meetings.domain.models.GroupMeetings;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.GroupMeetingRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingGroupDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.GroupMeetingAttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.GroupMeetingDetailedDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.GroupMeetingDto;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
@@ -75,24 +75,35 @@ public class GroupMeetingServiceImpl implements GroupMeetingService {
     }
 
     @Override
-    public GroupMeetingAttendanceDto getGroupMeetingAttendance(UUID groupId, UUID meetingId, Pageable pageable) {
-        Page<AttendanceDto> attendanceDtos = attendanceService.getAttendanceByEventId(
-                meetingId,
-                pageable,
-                AttendanceEventType.GROUP_MEETING
+    public GroupMeetingDetailedDto getGroupMeetingById(UUID groupId, UUID meetingId) {
+        GroupMeetings groupMeeting = groupMeetingRepository.findById(meetingId).orElseThrow(
+                () -> new EntityNotFoundException("No se encontró la reunión de grupo")
         );
-        GroupMeetingAttendanceDto attendanceDto = new GroupMeetingAttendanceDto();
-        Long countTotal = attendanceService.countTotalByEventId(meetingId, AttendanceEventType.GROUP_MEETING);
+        GroupMeetingDetailedDto attendanceDto = new GroupMeetingDetailedDto();
+        attendanceDto.fromDto(groupMeeting.toDto());
         Long countPresent = attendanceService.countByEventIdWithDefaults(
                 meetingId,
                 AttendanceEventType.GROUP_MEETING,
                 AttendanceStatus.PRESENT
         );
-        Long countAbsent = countTotal - countPresent;
-        attendanceDto.setAttendance(attendanceDtos);
+        Long countAbsent = attendanceService.countByEventIdWithDefaults(
+                meetingId,
+                AttendanceEventType.GROUP_MEETING,
+                AttendanceStatus.ABSENT
+        );
+        Long countTotal = countPresent + countAbsent;
         attendanceDto.setTotalAttendance(countTotal);
         attendanceDto.setPresentCount(countPresent);
         attendanceDto.setAbsentCount(countAbsent);
         return attendanceDto;
+    }
+
+    @Override
+    public Page<AttendanceDto> getGroupMeetingAttendance(UUID groupId, UUID meetingId, Pageable pageable) {
+        return attendanceService.getAttendanceByEventId(
+                meetingId,
+                pageable,
+                AttendanceEventType.GROUP_MEETING
+        );
     }
 }

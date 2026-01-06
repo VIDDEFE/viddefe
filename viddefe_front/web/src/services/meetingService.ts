@@ -64,6 +64,7 @@ export const meetingService = {
   /**
    * Obtiene la asistencia de una reunión paginada
    * GET /groups/{groupId}/meetings/{meetingId}/attendance
+   * Retorna Pageable<MeetingAttendance> directamente
    */
   getAttendance: (groupId: string, meetingId: string, params?: PageableRequest) => {
     const queryParts: string[] = [];

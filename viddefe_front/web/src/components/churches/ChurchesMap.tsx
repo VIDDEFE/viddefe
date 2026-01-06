@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { ChurchSummary } from "../../models";
 import type { MapBounds } from "../../services/churchService";
 import { useNearbyChurches } from "../../hooks/useChurches";
-import { FiMapPin, FiUser, FiMap, FiX, FiExternalLink, FiLoader, FiRefreshCw } from "react-icons/fi";
+import { FiMapPin, FiUser, FiMap, FiX, FiExternalLink, FiLoader, FiRefreshCw, FiEye } from "react-icons/fi";
 
 // Posición por defecto (Colombia)
 const DEFAULT_CENTER = { lat: 4.1517, lng: -73.6386 };
@@ -54,6 +55,7 @@ export default function ChurchesMap({
   height = 400,
   onChurchSelect 
 }: Readonly<ChurchesMapProps>) {
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -395,6 +397,15 @@ export default function ChurchesMap({
                   <span>Google Maps</span>
                 </button>
               </div>
+
+              {/* Botón Ver más */}
+              <button
+                onClick={() => navigate(`/churches/${selectedChurch.id}`)}
+                className="w-full mt-2 py-2.5 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors font-medium text-sm"
+              >
+                <FiEye className="w-4 h-4" />
+                Ver más información
+              </button>
             </div>
           </div>
         )}
