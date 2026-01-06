@@ -21,6 +21,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -140,6 +142,20 @@ public class ChurchServiceImpl implements ChurchService {
         );
     }
 
+    @Override
+    public List<ChurchResDto> getChildrenChurchesByPositionInMap(UUID churchId, BigDecimal southLat, BigDecimal westLng, BigDecimal northLat, BigDecimal eastLng) {
+        double latDiff = northLat.subtract(southLat).doubleValue();
+        double lngDiff = eastLng.subtract(westLng).doubleValue();
+
+        if (latDiff > 0.6 || lngDiff > 0.6) {
+            throw new IllegalArgumentException("Zoom too large");
+        }
+        return churchRepository.findChildrenInBoundingBox(churchId, southLat, northLat, westLng, eastLng)
+                .stream()
+                .map(ChurchModel::toDto)
+                .toList();
+    }
+
     /* ===========================
        Métodos privados
        =========================== */
@@ -152,47 +168,6 @@ public class ChurchServiceImpl implements ChurchService {
                 ? dto.getPastorId()
                 : creatorPastorId;
     }
-
-    private Pageable mapSort(Pageable pageable) {
-        if (pageable.getSort().isUnsorted()) {
-            return pageable;
-        }
-
-        Sort newSort = Sort.unsorted();
-
-        for (Sort.Order order : pageable.getSort()) {
-            String property = order.getProperty();
-
-            switch (property) {
-                case "pastor" ->
-                        newSort = newSort.and(
-                                Sort.by(order.getDirection(), "p.lastName")
-                        );
-
-                case "department" ->
-                        newSort = newSort.and(
-                                Sort.by(order.getDirection(), "s.name")
-                        );
-
-                case "name" ->
-                        newSort = newSort.and(
-                                Sort.by(order.getDirection(), "c.name")
-                        );
-
-                default ->
-                        throw new IllegalArgumentException(
-                                "Ordenamiento no permitido: " + property
-                        );
-            }
-        }
-
-        return PageRequest.of(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                newSort
-        );
-    }
-
 
     /**
      * Construye, persiste y asigna el pastor a una iglesia.

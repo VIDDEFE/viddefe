@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { homeGroupService, strategyService, roleService, roleAssignmentService } from '../services/homeGroupService';
+import type { MapBounds } from '../services/churchService';
 import type { 
   HomeGroup, Strategy, CreateHomeGroupDto, UpdateHomeGroupDto, 
   HomeGroupDetailResponse, CreateRoleDto, UpdateRoleDto, RoleStrategyNode,
@@ -22,6 +23,18 @@ export function useHomeGroups(params?: PageableRequest) {
 }
 
 /**
+ * Hook para obtener grupos cercanos según los bounds del mapa
+ */
+export function useNearbyHomeGroups(bounds?: MapBounds | null) {
+  return useQuery<HomeGroup[], Error>({
+    queryKey: ['homeGroups', 'nearby', bounds?.southLat, bounds?.westLng, bounds?.northLat, bounds?.eastLng],
+    queryFn: () => homeGroupService.getNearby(bounds!),
+    enabled: !!bounds,
+    staleTime: 30000, // 30 segundos para evitar refetches excesivos al mover el mapa
+  });
+}
+
+/**
  * Hook para obtener un grupo por ID (respuesta básica)
  */
 export function useHomeGroup(id?: string) {
@@ -40,6 +53,16 @@ export function useHomeGroupDetail(id?: string) {
     queryKey: ['homeGroupDetail', id],
     queryFn: () => homeGroupService.getDetail(id!),
     enabled: !!id,
+  });
+}
+
+/**
+ * Hook para obtener el grupo al que pertenece el usuario actual
+ */
+export function useMyHomeGroup() {
+  return useQuery<HomeGroupDetailResponse, Error>({
+    queryKey: ['myHomeGroup'],
+    queryFn: () => homeGroupService.getMine(),
   });
 }
 

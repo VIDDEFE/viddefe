@@ -17,7 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -30,10 +32,22 @@ public class HomeGroupServiceImpl implements HomeGroupService {
     private final StrategyReader strategyReader;
     private final RolesStrategiesService rolesStrategiesService;
 
+    /**
+     * Valida si una persona ya es líder de otro grupo.
+     * @param personId ID de la persona a validar.
+     * @throws IllegalArgumentException si la persona ya es líder de otro grupo.
+     */
+    private void validateIfPersonIsLeaderInOtherHomeGroup(UUID personId, UUID groupId) {
+        Optional<HomeGroupsModel> homeGroup = homeGroupsRepository.findByLeaderId(personId);
+        if (homeGroup.isPresent() && homeGroup.get().getId() != groupId) {
+            throw new IllegalArgumentException("La persona ya es líder de otro grupo");
+        }
+    }
+
     @Override
     public HomeGroupsDTO createHomeGroup(CreateHomeGroupsDto dto, UUID churchId) {
+        validateIfPersonIsLeaderInOtherHomeGroup(dto.getLeaderId(),null);
         StrategiesModel strategy = strategyReader.findById(dto.getStrategyId());
-
         HomeGroupsModel homeGroup = new HomeGroupsModel();
         homeGroup.fromDto(dto);
         homeGroup.setStrategy(strategy);
@@ -48,7 +62,7 @@ public class HomeGroupServiceImpl implements HomeGroupService {
     public HomeGroupsDTO updateHomeGroup(CreateHomeGroupsDto dto, UUID id) {
         HomeGroupsModel homeGroup = homeGroupsRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Grupo no encontrado"));
-
+        validateIfPersonIsLeaderInOtherHomeGroup(dto.getLeaderId(),id);
         StrategiesModel strategy = strategyReader.findById(dto.getStrategyId());
 
         homeGroup.fromDto(dto);
@@ -84,5 +98,38 @@ public class HomeGroupServiceImpl implements HomeGroupService {
         }
         homeGroupsRepository.deleteById(id);
         return null;
+    }
+
+    @Override
+    public List<HomeGroupsDTO> getHomeGroupsByPositionInMap(UUID churchId, BigDecimal southLat, BigDecimal westLng, BigDecimal northLat, BigDecimal eastLng) {
+        double latDiff = northLat.subtract(southLat).doubleValue();
+        double lngDiff = eastLng.subtract(westLng).doubleValue();
+
+        if (latDiff > 0.6 || lngDiff > 0.6) {
+            throw new IllegalArgumentException("Zoom too large");
+        }
+        return homeGroupsRepository.findByChurchIdInBoundingBox(
+                        southLat,
+                        northLat,
+                        westLng,
+                        eastLng,
+                        churchId
+                )
+                .stream()
+                .map(HomeGroupsModel::toDto)
+                .toList();
+    }
+
+    @Override
+    public HomeGroupsDetailDto getHomeGroupByIntegrantId(UUID leaderId) {
+        HomeGroupsDTO homeGroupsDTO = homeGroupsRepository.getHomeGroupByIntegrantId(leaderId)
+                .orElseThrow(() -> new EntityNotFoundException("No pertence a ningún grupo"))
+                .toDto();
+        List<RolesStrategiesWithPeopleDto> hierarchy = rolesStrategiesService.getTreeRolesWithPeople(homeGroupsDTO.getStrategy().getId());
+        HomeGroupsDetailDto dto = new HomeGroupsDetailDto();
+        dto.setHomeGroup(homeGroupsDTO);
+        dto.setStrategy(homeGroupsDTO.getStrategy());
+        dto.setHierarchy(hierarchy);
+        return dto;
     }
 }

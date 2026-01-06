@@ -286,12 +286,12 @@ export default function Churches() {
       />
 
       {/* Vista de Mapa */}
-      {viewMode === 'map' && (
+      {viewMode === 'map' && churchId && (
         <div className="mb-6 animate-fadeIn">
           <ChurchesMap
-            churches={churchesArray}
+            churchId={churchId}
             height={600}
-            onChurchSelect={(church) => openModal(null, church)}
+            onChurchSelect={(church) => openModal('view', church)}
           />
         </div>
       )}

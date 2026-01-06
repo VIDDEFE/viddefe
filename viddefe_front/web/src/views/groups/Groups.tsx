@@ -410,7 +410,6 @@ export default function Groups() {
           />
         ) : (
           <GroupsMap
-            groups={groupsArray}
             height={600}
             onGroupSelect={(group) => {
               if (group) setSelectedGroup(group);

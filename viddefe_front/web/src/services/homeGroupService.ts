@@ -10,6 +10,7 @@ import type {
   UpdateRoleDto,
   RolePeopleDto
 } from '../models';
+import type { MapBounds } from './churchService';
 
 // Helper para construir query string de sort para Spring Boot
 const buildSortParam = (sort?: SortConfig): string => {
@@ -31,6 +32,14 @@ export const homeGroupService = {
   },
 
   /**
+   * Obtiene grupos cercanos según los bounds del mapa
+   */
+  getNearby: (bounds: MapBounds) => {
+    const queryParams = `?southLat=${bounds.southLat}&westLng=${bounds.westLng}&northLat=${bounds.northLat}&eastLng=${bounds.eastLng}`;
+    return apiService.get<HomeGroup[]>(`/groups/nearby${queryParams}`);
+  },
+
+  /**
    * Obtiene un grupo por ID (respuesta básica)
    */
   getById: (id: string) => apiService.get<HomeGroup>(`/groups/${id}`),
@@ -39,6 +48,11 @@ export const homeGroupService = {
    * Obtiene el detalle completo de un grupo incluyendo jerarquía de roles
    */
   getDetail: (id: string) => apiService.get<HomeGroupDetailResponse>(`/groups/${id}`),
+
+  /**
+   * Obtiene el grupo al que pertenece el usuario actual
+   */
+  getMine: () => apiService.get<HomeGroupDetailResponse>('/groups/mine'),
 
   /**
    * Crea un nuevo grupo

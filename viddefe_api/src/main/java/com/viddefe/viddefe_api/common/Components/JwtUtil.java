@@ -44,6 +44,7 @@ public class JwtUtil {
             String firstName,
             String lastName,
             UUID userId,
+            UUID personId,
             UUID churchId,
             List<String> permissions) {
         Map<String, String > claims = Map.of(
@@ -51,6 +52,7 @@ public class JwtUtil {
                 "first_name", firstName,
                 "last_name", lastName,
                 "userId", userId.toString(),
+                "personId", personId.toString(), // Placeholder for personId
                 "churchId", churchId.toString(), // Placeholder for churchId
                 "permissions", String.join(",", permissions)
         );
@@ -82,6 +84,11 @@ public class JwtUtil {
     public UUID getUserId(String token) {
         String userIdStr = getClaims(token).get("userId", String.class);
         return UUID.fromString(userIdStr);
+    }
+
+    public UUID getPersonId(String token) {
+        String personIdStr = getClaims(token).get("personId", String.class);
+        return UUID.fromString(personIdStr);
     }
 
     public UUID getChurchId(String token) {

@@ -269,8 +269,16 @@ class ApiService {
             return Promise.reject(apiError);
           }
 
-          console.log('🔴 Showing generic error toast:', apiError.message);
-          toast.error(apiError.message);
+          // Mensajes que no deben mostrarse como toast (errores esperados/controlados)
+          const silentMessages = ['Zoom to large', 'Zoom too large'];
+          const shouldSilence = silentMessages.some(msg => 
+            apiError.message?.toLowerCase().includes(msg.toLowerCase())
+          );
+
+          if (!shouldSilence) {
+            console.log('🔴 Showing generic error toast:', apiError.message);
+            toast.error(apiError.message);
+          }
           return Promise.reject(apiError);
         }
 
