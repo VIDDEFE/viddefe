@@ -50,8 +50,9 @@ export const worshipService = {
 
   /**
    * Obtiene todos los tipos de culto disponibles
+   * GET /meetings/worship/types
    */
-  getTypes: () => apiService.get<WorshipType[]>('/worship/meeting/types'),
+  getTypes: () => apiService.get<WorshipType[]>('/meetings/worship/types'),
 
   /**
    * Obtiene la asistencia de un culto paginada

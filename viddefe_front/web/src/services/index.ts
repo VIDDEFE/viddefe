@@ -9,3 +9,4 @@ export * from './eventService';
 export * from './userService';
 export * from './worshipService';
 export * from './offeringService';
+export * from './meetingService';

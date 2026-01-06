@@ -249,7 +249,7 @@ class AttendanceServiceImplTest {
                     .thenReturn(projectionPage);
 
             // Act
-            Page<AttendanceDto> result = attendanceService.getAttendanceByEventId(eventId, pageable);
+            Page<AttendanceDto> result = attendanceService.getAttendanceByEventId(eventId, pageable, AttendanceEventType.TEMPLE_WORHSIP);
 
             // Assert
             assertNotNull(result);
@@ -266,7 +266,7 @@ class AttendanceServiceImplTest {
                     .thenReturn(Page.empty());
 
             // Act
-            Page<AttendanceDto> result = attendanceService.getAttendanceByEventId(eventId, pageable);
+            Page<AttendanceDto> result = attendanceService.getAttendanceByEventId(eventId, pageable, AttendanceEventType.TEMPLE_WORHSIP);
 
             // Assert
             assertTrue(result.isEmpty());
@@ -282,7 +282,7 @@ class AttendanceServiceImplTest {
                     .thenReturn(Page.empty());
 
             // Act
-            attendanceService.getAttendanceByEventId(eventId, pageable);
+            attendanceService.getAttendanceByEventId(eventId, pageable, AttendanceEventType.TEMPLE_WORHSIP);
 
             // Assert
             verify(attendanceRepository).findAttendanceByEventWithDefaults(
@@ -299,7 +299,7 @@ class AttendanceServiceImplTest {
                     .thenReturn(Page.empty());
 
             // Act
-            attendanceService.getAttendanceByEventId(eventId, pageable);
+            attendanceService.getAttendanceByEventId(eventId, pageable, AttendanceEventType.TEMPLE_WORHSIP);
 
             // Assert
             verify(attendanceRepository).findAttendanceByEventWithDefaults(

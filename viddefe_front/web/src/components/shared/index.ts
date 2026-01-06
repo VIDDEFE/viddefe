@@ -1,6 +1,6 @@
 export { default as Button } from './Button';
 export { default as Card } from './Card';
-export { Form, FormGroup, Input, TextArea, Select } from './Form';
+export { Form, FormGroup, Input, TextArea } from './Form';
 export { default as Table } from './Table';
 export { default as PageHeader } from './PageHeader';
 export { default as Modal } from './Modal';

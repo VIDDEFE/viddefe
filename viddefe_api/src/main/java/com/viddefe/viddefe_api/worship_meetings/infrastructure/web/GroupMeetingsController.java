@@ -1,11 +1,10 @@
 package com.viddefe.viddefe_api.worship_meetings.infrastructure.web;
 
 import com.viddefe.viddefe_api.common.response.ApiResponse;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.GroupMeetingService;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingGroupDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.GroupMeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,6 +22,7 @@ import java.util.UUID;
 public class GroupMeetingsController {
     private final GroupMeetingService groupMeetingService;
     private final AttendanceService attendanceService;
+
     @PostMapping
     public ResponseEntity<ApiResponse<GroupMeetingDto>> createGroupMeeting(
             @Valid @RequestBody CreateMeetingGroupDto dto,
@@ -41,13 +41,41 @@ public class GroupMeetingsController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @PutMapping("/{meetingId}")
+    public ResponseEntity<ApiResponse<GroupMeetingDto>> updateGroupMeeting(
+            @PathVariable UUID groupId,
+            @PathVariable UUID meetingId,
+            @Valid @RequestBody CreateMeetingGroupDto dto
+    ){
+        GroupMeetingDto response = groupMeetingService.updateGroupMeeting(dto, groupId, meetingId);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @DeleteMapping("/{meetingId}")
+    public ResponseEntity<ApiResponse<Void>> deleteGroupMeeting(
+            @PathVariable UUID groupId,
+            @PathVariable UUID meetingId
+    ){
+        groupMeetingService.deleteGroupMeeting(groupId, meetingId);
+        return new ResponseEntity<>(ApiResponse.noContent(), HttpStatus.NO_CONTENT);
+    }
+
     @GetMapping("/{meetingId}/attendance")
-    public ResponseEntity<ApiResponse<Page<AttendanceDto>>> getGroupMeetingAttendance(
+    public ResponseEntity<ApiResponse<GroupMeetingAttendanceDto>> getGroupMeetingAttendance(
+            @PathVariable UUID groupId,
             @PathVariable UUID meetingId,
             Pageable pageable
     ){
-        Page<AttendanceDto> response = attendanceService.getAttendanceByEventId(meetingId, pageable);
+        GroupMeetingAttendanceDto response = groupMeetingService.getGroupMeetingAttendance(groupId, meetingId, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @PutMapping("/attendance")
+    public ResponseEntity<ApiResponse<AttendanceDto>> recordAttendance(
+            @RequestBody @Valid CreateAttendanceDto dto
+    ) {
+        AttendanceDto response = attendanceService.updateAttendance(dto, AttendanceEventType.GROUP_MEETING);
+        return new ResponseEntity<>(ApiResponse.ok(response), HttpStatus.OK);
     }
 
 }

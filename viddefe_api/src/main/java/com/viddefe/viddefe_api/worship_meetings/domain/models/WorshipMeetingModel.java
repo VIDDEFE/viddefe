@@ -57,7 +57,7 @@ public class WorshipMeetingModel {
                 .withMinute(0)
                 .withSecond(0)
                 .withNano(0));
-        worshipDto.setWorshipType(this.worshipType);
+        worshipDto.setWorshipType(this.worshipType.toDto());
         return worshipDto;
     }
 

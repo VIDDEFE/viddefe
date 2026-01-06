@@ -1,15 +1,26 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   useMyHomeGroup, 
   useAssignPeopleToRole,
-  useRemovePeopleFromRole
+  useRemovePeopleFromRole,
+  useMeetings,
+  useMeetingTypes,
+  useCreateMeeting,
+  useUpdateMeeting,
+  useDeleteMeeting,
+  useMeetingAttendance,
+  useRegisterMeetingAttendance
 } from '../../hooks';
-import { Card, Button, PageHeader } from '../../components/shared';
+import { Card, Button, PageHeader, Table } from '../../components/shared';
 import RoleTree from '../../components/groups/RoleTree';
 import RolePeopleAssignmentModal from '../../components/groups/RolePeopleAssignmentModal';
-import { FiMapPin, FiUser, FiGrid, FiUsers } from 'react-icons/fi';
-import type { RoleStrategyNode } from '../../models';
+import MeetingFormModal from '../../components/groups/MeetingFormModal';
+import MeetingViewModal from '../../components/groups/MeetingViewModal';
+import MeetingDeleteModal from '../../components/groups/MeetingDeleteModal';
+import MeetingAttendanceModal from '../../components/groups/MeetingAttendanceModal';
+import { FiMapPin, FiUser, FiGrid, FiUsers, FiPlus, FiCalendar, FiEye, FiEdit2, FiTrash2, FiUserCheck } from 'react-icons/fi';
+import type { RoleStrategyNode, Meeting, CreateMeetingDto, UpdateMeetingDto } from '../../models';
 
 export default function MyGroup() {
   const navigate = useNavigate();
@@ -28,6 +39,53 @@ export default function MyGroup() {
     isOpen: false,
     role: null,
   });
+
+  // ========== MEETINGS STATE ==========
+  const [meetingPage, setMeetingPage] = useState(0);
+  const [meetingPageSize, setMeetingPageSize] = useState(5);
+  const [meetingViewMode, setMeetingViewMode] = useState<'table' | 'cards'>('table');
+
+  // Meetings queries y mutations
+  const { data: meetingsData, isLoading: isLoadingMeetings } = useMeetings(
+    groupId,
+    { page: meetingPage, size: meetingPageSize }
+  );
+  const { data: meetingTypes = [] } = useMeetingTypes();
+  const createMeetingMutation = useCreateMeeting(groupId);
+  const updateMeetingMutation = useUpdateMeeting(groupId);
+  const deleteMeetingMutation = useDeleteMeeting(groupId);
+
+  // Meeting modals state
+  const [formModal, setFormModal] = useState<{
+    isOpen: boolean;
+    meeting: Meeting | null;
+  }>({ isOpen: false, meeting: null });
+
+  const [viewModal, setViewModal] = useState<{
+    isOpen: boolean;
+    meeting: Meeting | null;
+  }>({ isOpen: false, meeting: null });
+
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    meeting: Meeting | null;
+  }>({ isOpen: false, meeting: null });
+
+  // Attendance modal state
+  const [attendanceModal, setAttendanceModal] = useState<{
+    isOpen: boolean;
+    meeting: Meeting | null;
+  }>({ isOpen: false, meeting: null });
+  const [attendancePage, setAttendancePage] = useState(0);
+  const [attendancePageSize, setAttendancePageSize] = useState(10);
+
+  // Attendance query
+  const { data: attendanceData, isLoading: isLoadingAttendance } = useMeetingAttendance(
+    groupId,
+    attendanceModal.meeting?.id,
+    { page: attendancePage, size: attendancePageSize }
+  );
+  const registerAttendanceMutation = useRegisterMeetingAttendance(groupId, attendanceModal.meeting?.id);
 
   // Abrir modal para gestionar personas de un rol
   const handleManagePeople = useCallback((node: RoleStrategyNode) => {
@@ -66,6 +124,182 @@ export default function MyGroup() {
   const handleRemovePerson = useCallback((roleId: string, personId: string) => {
     removePeopleMutation.mutate({ roleId, peopleIds: [personId] });
   }, [removePeopleMutation]);
+
+  // ========== MEETINGS HANDLERS ==========
+  
+  // Abrir modal para crear reunión
+  const handleOpenCreateMeeting = useCallback(() => {
+    setFormModal({ isOpen: true, meeting: null });
+  }, []);
+
+  // Abrir modal para editar reunión
+  const handleOpenEditMeeting = useCallback((meeting: Meeting) => {
+    setFormModal({ isOpen: true, meeting });
+  }, []);
+
+  // Cerrar modal de formulario
+  const handleCloseFormModal = useCallback(() => {
+    setFormModal({ isOpen: false, meeting: null });
+  }, []);
+
+  // Guardar reunión (crear o editar)
+  const handleSaveMeeting = useCallback((data: CreateMeetingDto | UpdateMeetingDto) => {
+    if (formModal.meeting) {
+      updateMeetingMutation.mutate(
+        { meetingId: formModal.meeting.id, data },
+        { onSuccess: handleCloseFormModal }
+      );
+    } else {
+      createMeetingMutation.mutate(data as CreateMeetingDto, { onSuccess: handleCloseFormModal });
+    }
+  }, [formModal.meeting, createMeetingMutation, updateMeetingMutation, handleCloseFormModal]);
+
+  // Abrir modal para ver detalle
+  const handleOpenViewMeeting = useCallback((meeting: Meeting) => {
+    setViewModal({ isOpen: true, meeting });
+  }, []);
+
+  // Cerrar modal de vista
+  const handleCloseViewModal = useCallback(() => {
+    setViewModal({ isOpen: false, meeting: null });
+  }, []);
+
+  // Abrir modal de eliminación
+  const handleOpenDeleteMeeting = useCallback((meeting: Meeting) => {
+    setDeleteModal({ isOpen: true, meeting });
+  }, []);
+
+  // Cerrar modal de eliminación
+  const handleCloseDeleteModal = useCallback(() => {
+    setDeleteModal({ isOpen: false, meeting: null });
+  }, []);
+
+  // Confirmar eliminación
+  const handleConfirmDelete = useCallback(() => {
+    if (deleteModal.meeting) {
+      deleteMeetingMutation.mutate(deleteModal.meeting.id, { onSuccess: handleCloseDeleteModal });
+    }
+  }, [deleteModal.meeting, deleteMeetingMutation, handleCloseDeleteModal]);
+
+  // Abrir modal de asistencia
+  const handleOpenAttendance = useCallback((meeting: Meeting) => {
+    setAttendancePage(0);
+    setAttendanceModal({ isOpen: true, meeting });
+  }, []);
+
+  // Cerrar modal de asistencia
+  const handleCloseAttendance = useCallback(() => {
+    setAttendanceModal({ isOpen: false, meeting: null });
+  }, []);
+
+  // Toggle asistencia
+  const handleToggleAttendance = useCallback((personId: string) => {
+    if (attendanceModal.meeting) {
+      registerAttendanceMutation.mutate({
+        peopleId: personId,
+        eventId: attendanceModal.meeting.id,
+      });
+    }
+  }, [attendanceModal.meeting, registerAttendanceMutation]);
+
+  // Transformar meetings para la tabla
+  const meetingsTableData = useMemo(() => 
+    (meetingsData?.content ?? []).map((meeting: Meeting) => ({
+      id: meeting.id,
+      name: meeting.name,
+      type: meeting.type?.name || '-',
+      date: new Date(meeting.date).toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
+      time: new Date(meeting.date).toLocaleTimeString('es-ES', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+      description: meeting.description || '-',
+      original: meeting,
+    })),
+    [meetingsData?.content]
+  );
+
+  // Columnas de la tabla de reuniones
+  const meetingColumns = useMemo(() => [
+    {
+      key: 'name' as const,
+      label: 'Nombre',
+      priority: 1,
+      render: (_value: (typeof meetingsTableData)[0][keyof (typeof meetingsTableData)[0]], item: (typeof meetingsTableData)[0]) => (
+        <div>
+          <p className="font-medium text-neutral-800">{item.name}</p>
+          <p className="text-xs text-neutral-500 md:hidden">{item.type}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'type' as const,
+      label: 'Tipo',
+      priority: 3,
+      hideOnMobile: true,
+      render: (value: (typeof meetingsTableData)[0][keyof (typeof meetingsTableData)[0]]) => (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-violet-100 text-violet-700">
+          {typeof value === 'string' ? value : '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'date' as const,
+      label: 'Fecha',
+      priority: 2,
+    },
+    {
+      key: 'time' as const,
+      label: 'Hora',
+      priority: 4,
+      hideOnMobile: true,
+    },
+    {
+      key: 'id' as const,
+      label: 'Acciones',
+      priority: 1,
+      render: (_value: (typeof meetingsTableData)[0][keyof (typeof meetingsTableData)[0]], item: (typeof meetingsTableData)[0]) => (
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => handleOpenViewMeeting(item.original)}
+            className="p-1.5 text-neutral-500 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+            title="Ver detalle"
+          >
+            <FiEye size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleOpenAttendance(item.original)}
+            className="p-1.5 text-neutral-500 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
+            title="Ver asistencia"
+          >
+            <FiUserCheck size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleOpenEditMeeting(item.original)}
+            className="p-1.5 text-neutral-500 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
+            title="Editar"
+          >
+            <FiEdit2 size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleOpenDeleteMeeting(item.original)}
+            className="p-1.5 text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+            title="Eliminar"
+          >
+            <FiTrash2 size={16} />
+          </button>
+        </div>
+      ),
+    },
+  ], [handleOpenViewMeeting, handleOpenEditMeeting, handleOpenDeleteMeeting, handleOpenAttendance]);
 
   // Estado de carga
   if (isLoading) {
@@ -294,7 +528,42 @@ export default function MyGroup() {
         </div>
       </div>
 
-      {/* ========== MODALES ========== */}
+      {/* ========== SECCIÓN DE REUNIONES ========== */}
+      <div className="mt-6 animate-fadeIn">
+        <Card>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+              <FiCalendar className="text-primary-600" />
+              Reuniones
+            </h3>
+            <Button variant="primary" onClick={handleOpenCreateMeeting}>
+              <span className="flex items-center gap-2">
+                <FiPlus size={16} />
+                Nueva Reunión
+              </span>
+            </Button>
+          </div>
+
+          <Table<(typeof meetingsTableData)[0]>
+            data={meetingsTableData}
+            columns={meetingColumns}
+            loading={isLoadingMeetings && meetingsTableData.length === 0}
+            viewMode={meetingViewMode}
+            onViewModeChange={setMeetingViewMode}
+            pagination={{
+              mode: 'manual',
+              currentPage: meetingPage,
+              totalPages: meetingsData?.totalPages ?? 0,
+              totalElements: meetingsData?.totalElements ?? 0,
+              pageSize: meetingPageSize,
+              onPageChange: setMeetingPage,
+              onPageSizeChange: setMeetingPageSize,
+            }}
+          />
+        </Card>
+      </div>
+
+      {/* ========== MODALES ==========/ */}
 
       {/* Modal para asignar personas a un rol */}
       <RolePeopleAssignmentModal
@@ -309,6 +578,62 @@ export default function MyGroup() {
         onClose={handleClosePeopleModal}
         isSaving={assignPeopleMutation.isPending || removePeopleMutation.isPending}
       />
-    </div>
+      {/* Modal de formulario de reunión (crear/editar) */}
+      <MeetingFormModal
+        isOpen={formModal.isOpen}
+        meeting={formModal.meeting}
+        meetingTypes={meetingTypes}
+        onClose={handleCloseFormModal}
+        onSave={handleSaveMeeting}
+        isSaving={createMeetingMutation.isPending || updateMeetingMutation.isPending}
+      />
+
+      {/* Modal de vista de reunión */}
+      <MeetingViewModal
+        isOpen={viewModal.isOpen}
+        meeting={viewModal.meeting}
+        onClose={handleCloseViewModal}
+        onEdit={() => {
+          if (viewModal.meeting) {
+            handleCloseViewModal();
+            handleOpenEditMeeting(viewModal.meeting);
+          }
+        }}
+        onDelete={() => {
+          if (viewModal.meeting) {
+            handleCloseViewModal();
+            handleOpenDeleteMeeting(viewModal.meeting);
+          }
+        }}
+        onViewAttendance={() => {
+          if (viewModal.meeting) {
+            handleCloseViewModal();
+            handleOpenAttendance(viewModal.meeting);
+          }
+        }}
+      />
+
+      {/* Modal de confirmación de eliminación */}
+      <MeetingDeleteModal
+        isOpen={deleteModal.isOpen}
+        meetingName={deleteModal.meeting?.name}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        isDeleting={deleteMeetingMutation.isPending}
+      />
+
+      {/* Modal de asistencia */}
+      <MeetingAttendanceModal
+        isOpen={attendanceModal.isOpen}
+        meeting={attendanceModal.meeting}
+        attendanceData={attendanceData}
+        isLoading={isLoadingAttendance}
+        onClose={handleCloseAttendance}
+        onToggleAttendance={handleToggleAttendance}
+        page={attendancePage}
+        pageSize={attendancePageSize}
+        onPageChange={setAttendancePage}
+        onPageSizeChange={setAttendancePageSize}
+      />    </div>
   );
 }
