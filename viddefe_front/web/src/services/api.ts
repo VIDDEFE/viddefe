@@ -29,6 +29,8 @@ export type Pageable<T> = {
   totalPages: number;
   number: number;
   size: number;
+  last?: boolean;
+  first?: boolean;
 };
 
 // Dirección de ordenamiento compatible con Spring Boot
@@ -162,9 +164,18 @@ class ApiService {
           res.message = decodeHtmlEntities(res.message);
 
           if (res.success) {
-            // Evitar spamear toasts en respuestas 200 triviales
-            if (res.message && !["OK", "Created"].includes(res.message)) {
-              toast.success(res.message);
+            // Solo mostrar toast para operaciones de mutación (no GET)
+            const method = response.config.method?.toUpperCase();
+            const isMutationRequest = method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+            
+            if (res.message && isMutationRequest) {
+              // Mapear mensajes genéricos a mensajes más descriptivos
+              const friendlyMessages: Record<string, string> = {
+                'OK': 'Cambios guardados exitosamente',
+                'Created': 'Registro creado exitosamente',
+              };
+              const displayMessage = friendlyMessages[res.message] || res.message;
+              toast.success(displayMessage);
             }
 
             // Si hay metadata con permissions, actualizarlos en el AppContext
@@ -237,12 +248,15 @@ class ApiService {
             } as ApiError);
           }
 
+          // El backend puede enviar "meta" o "metadata"; normalizamos a meta
+          const meta = decodeHtmlEntities(data?.meta || data?.metadata);
+
           const apiError: ApiError = {
             success: false,
             status,
             message: decodeHtmlEntities(data?.message || "Error del servidor"),
             errorCode: data?.errorCode || "INTERNAL_ERROR",
-            meta: decodeHtmlEntities(data?.meta),
+            meta,
             timestamp: data?.timestamp || new Date().toISOString(),
           };
 
@@ -258,8 +272,16 @@ class ApiService {
             return Promise.reject(apiError);
           }
 
-          console.log('🔴 Showing generic error toast:', apiError.message);
-          toast.error(apiError.message);
+          // Mensajes que no deben mostrarse como toast (errores esperados/controlados)
+          const silentMessages = ['Zoom to large', 'Zoom too large'];
+          const shouldSilence = silentMessages.some(msg => 
+            apiError.message?.toLowerCase().includes(msg.toLowerCase())
+          );
+
+          if (!shouldSilence) {
+            console.log('🔴 Showing generic error toast:', apiError.message);
+            toast.error(apiError.message);
+          }
           return Promise.reject(apiError);
         }
 

@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -79,5 +81,19 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
             Pageable pageable
     );
 
+    @Query("""
+        SELECT c
+        FROM ChurchModel c
+        WHERE c.parentChurch.id = :churchId
+        AND c.latitude BETWEEN :southLat AND :northLat
+        AND c.longitude BETWEEN :westLng AND :eastLng
+    """)
+    List<ChurchModel> findChildrenInBoundingBox(
+            UUID churchId,
+            BigDecimal southLat,
+            BigDecimal northLat,
+            BigDecimal westLng,
+            BigDecimal eastLng
+    );
 
 }

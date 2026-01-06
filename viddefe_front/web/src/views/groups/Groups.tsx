@@ -4,7 +4,6 @@ import type { HomeGroup } from '../../models';
 import { Button, PageHeader, Table } from '../../components/shared';
 import {
   HomeGroupFormModal,
-  HomeGroupViewModal,
   HomeGroupDeleteModal,
   StrategyManager,
   GroupsMap,
@@ -18,14 +17,13 @@ import {
   useCreateHomeGroup,
   useUpdateHomeGroup,
   useDeleteHomeGroup,
-  usePeople,
 } from '../../hooks';
 import { useAppContext } from '../../context/AppContext';
 import type { SortConfig } from '../../services/api';
 import { GroupPermission } from '../../services/userService';
 import { FiSettings, FiList, FiMap } from 'react-icons/fi';
 
-type ModalMode = 'create' | 'edit' | 'view' | 'delete' | 'strategies' | null;
+type ModalMode = 'create' | 'edit' | 'delete' | 'strategies' | null;
 type ViewMode = 'table' | 'map';
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -63,7 +61,6 @@ export default function Groups() {
     sort: viewMode === 'map' ? undefined : sortConfig,
   });
   const { data: strategies, isLoading: isLoadingStrategies } = useStrategies();
-  const { data: peopleData, isLoading: isLoadingPeople } = usePeople({ page: 0, size: 100 });
 
   // Modal state
   const [modalMode, setModalMode] = useState<ModalMode>(null);
@@ -82,14 +79,14 @@ export default function Groups() {
   // Track if form was already populated
   const [formPopulated, setFormPopulated] = useState(false);
 
-  // Load group details when editing/viewing
+  // Load group details when editing
   useEffect(() => {
-    if (!groupDetails || !selectedGroup || !(modalMode === 'edit' || modalMode === 'view'))
+    if (!groupDetails || !selectedGroup || modalMode !== 'edit')
       return;
     // Verificar que los datos correspondan al grupo seleccionado
     if (groupDetails.id !== selectedGroup.id) return;
-    // Si ya se pobló el form en modo edit, no sobreescribir
-    if (formPopulated && modalMode === 'edit') return;
+    // Si ya se pobló el form, no sobreescribir
+    if (formPopulated) return;
 
     setFormData({
       name: groupDetails.name ?? '',
@@ -100,9 +97,7 @@ export default function Groups() {
       strategyId: groupDetails.strategy?.id ?? '',
     });
 
-    if (modalMode === 'edit') {
-      setFormPopulated(true);
-    }
+    setFormPopulated(true);
   }, [groupDetails, modalMode, formPopulated, selectedGroup]);
 
   // Modal handlers
@@ -306,11 +301,6 @@ export default function Groups() {
     ? groupsData
     : (groupsData?.content ?? []);
 
-  // People array
-  const peopleArray = Array.isArray(peopleData)
-    ? peopleData
-    : (peopleData?.content ?? []);
-
   // Información de paginación del servidor
   const paginationData =
     groupsData && !Array.isArray(groupsData)
@@ -417,10 +407,9 @@ export default function Groups() {
           />
         ) : (
           <GroupsMap
-            groups={groupsArray}
             height={600}
-            onGroupSelect={(group) => {
-              if (group) setSelectedGroup(group);
+            onGroupSelect={() => {
+              // La navegación al detalle se hace desde el mapa con el botón "Ver más"
             }}
             onEditGroup={canEdit ? (group) => openModal('edit', group) : undefined}
             onDeleteGroup={canDelete ? (group) => openModal('delete', group) : undefined}
@@ -439,19 +428,8 @@ export default function Groups() {
         isLoading={modalMode === 'edit' && isLoadingDetails}
         isSaving={isMutating}
         strategies={strategies}
-        people={peopleArray}
         isLoadingStrategies={isLoadingStrategies}
-        isLoadingPeople={isLoadingPeople}
         errors={formErrors}
-      />
-
-      {/* Modal de Ver */}
-      <HomeGroupViewModal
-        isOpen={modalMode === 'view'}
-        group={groupDetails ?? selectedGroup}
-        isLoading={isLoadingDetails}
-        onEdit={canEdit ? () => selectedGroup && openModal('edit', selectedGroup) : undefined}
-        onClose={closeModal}
       />
 
       {/* Modal de Eliminar */}

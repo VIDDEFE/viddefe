@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Event } from '../../models';
-import { Button, PageHeader, Table, Modal, Form, Input, Select } from '../../components/shared';
+import { Button, PageHeader, Table, Modal, Form, Input, DropDown } from '../../components/shared';
 import { useEvents, useCreateEvent } from '../../hooks';
 
 const eventStatusOptions = [
@@ -124,11 +124,11 @@ export default function Events() {
             value={formData.maxCapacity || '100'}
             onChange={(e) => setFormData({ ...formData, maxCapacity: parseInt(e.target.value) })}
           />
-          <Select
+          <DropDown
             label="Estado"
             options={eventStatusOptions}
             value={formData.status || 'planned'}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+            onChangeValue={(value) => setFormData({ ...formData, status: value as any })}
           />
         </Form>
       </Modal>

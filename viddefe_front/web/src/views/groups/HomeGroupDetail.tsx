@@ -1,76 +1,17 @@
-import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  useHomeGroupDetail, 
-  useAssignPeopleToRole,
-  useRemovePeopleFromRole
-} from '../../hooks';
+import { useHomeGroupDetail } from '../../hooks';
 import { Card, Button, PageHeader } from '../../components/shared';
 import RoleTree from '../../components/groups/RoleTree';
-import RolePeopleAssignmentModal from '../../components/groups/RolePeopleAssignmentModal';
 import { FiArrowLeft, FiMapPin, FiUser, FiGrid } from 'react-icons/fi';
-import type { RoleStrategyNode } from '../../models';
 
 export default function HomeGroupDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, isLoading, error } = useHomeGroupDetail(id);
 
-  // Hooks de mutación para asignación de personas
-  const assignPeopleMutation = useAssignPeopleToRole(id || '');
-  const removePeopleMutation = useRemovePeopleFromRole(id || '');
-
-  // Estado para modal de asignación de personas
-  const [peopleModal, setPeopleModal] = useState<{
-    isOpen: boolean;
-    role: RoleStrategyNode | null;
-  }>({
-    isOpen: false,
-    role: null,
-  });
-
   const handleGoBack = () => {
     navigate('/groups');
   };
-
-
-  // Abrir modal para gestionar personas de un rol
-  const handleManagePeople = useCallback((node: RoleStrategyNode) => {
-    setPeopleModal({
-      isOpen: true,
-      role: node,
-    });
-  }, []);
-
-  // Cerrar modal de personas
-  const handleClosePeopleModal = useCallback(() => {
-    setPeopleModal({
-      isOpen: false,
-      role: null,
-    });
-  }, []);
-
-  // Asignar personas a un rol
-  const handleAssignPeople = useCallback((personIds: string[]) => {
-    if (peopleModal.role && personIds.length > 0) {
-      assignPeopleMutation.mutate(
-        {
-          roleId: peopleModal.role.id,
-          peopleIds: personIds,
-        },
-        {
-          onSuccess: () => {
-            handleClosePeopleModal();
-          },
-        }
-      );
-    }
-  }, [peopleModal.role, assignPeopleMutation, handleClosePeopleModal]);
-
-  // Remover persona de un rol (desde el badge o modal)
-  const handleRemovePerson = useCallback((roleId: string, personId: string) => {
-    removePeopleMutation.mutate({ roleId, peopleIds: [personId] });
-  }, [removePeopleMutation]);
 
   // Estado de carga
   if (isLoading) {
@@ -145,18 +86,18 @@ export default function HomeGroupDetail() {
             <div className="space-y-4">
               {/* Nombre */}
               <div>
-                <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
                   Nombre
-                </label>
+                </span>
                 <p className="text-neutral-800 font-medium mt-1">{homeGroup.name}</p>
               </div>
 
               {/* Descripción */}
               {homeGroup.description && (
                 <div>
-                  <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
                     Descripción
-                  </label>
+                  </span>
                   <p className="text-neutral-700 mt-1 whitespace-pre-wrap">
                     {homeGroup.description}
                   </p>
@@ -165,9 +106,9 @@ export default function HomeGroupDetail() {
 
               {/* Ubicación */}
               <div>
-                <label className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
                   Ubicación
-                </label>
+                </span>
                 <div className="flex items-center gap-2 mt-1">
                   <FiMapPin className="text-neutral-400" size={16} />
                   <span className="text-neutral-700 text-sm font-mono">
@@ -260,7 +201,8 @@ export default function HomeGroupDetail() {
             {strategy && (
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
-                  Para editar la estructura de roles, ve a{' '}
+                  Para editar la estructura de roles o asignar personas, ve a{' '}
+                  <strong>"Mi Grupo"</strong> si eres parte de este grupo, o{' '}
                   <strong>Gestionar Estrategias</strong> desde la lista de grupos.
                 </p>
               </div>
@@ -274,9 +216,7 @@ export default function HomeGroupDetail() {
                     ? 'Esta estrategia no tiene roles definidos. Configúralos desde "Gestionar Estrategias".'
                     : 'Asigna una estrategia al grupo para poder ver y asignar roles'
                 }
-                // Solo acciones de asignación de personas (ya no hay edición de estructura aquí)
-                onManagePeople={strategy ? handleManagePeople : undefined}
-                onRemovePerson={strategy ? handleRemovePerson : undefined}
+                // Vista de solo lectura: sin acciones de gestión de personas
               />
             </div>
 
@@ -307,22 +247,6 @@ export default function HomeGroupDetail() {
           </Card>
         </div>
       </div>
-
-      {/* ========== MODALES ========== */}
-
-      {/* Modal para asignar personas a un rol */}
-      <RolePeopleAssignmentModal
-        isOpen={peopleModal.isOpen}
-        role={peopleModal.role}
-        onAssign={handleAssignPeople}
-        onRemove={(personId) => {
-          if (peopleModal.role) {
-            handleRemovePerson(peopleModal.role.id, personId);
-          }
-        }}
-        onClose={handleClosePeopleModal}
-        isSaving={assignPeopleMutation.isPending || removePeopleMutation.isPending}
-      />
     </div>
   );
 }

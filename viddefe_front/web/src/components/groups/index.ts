@@ -8,3 +8,8 @@ export { default as RoleTree } from './RoleTree';
 export { default as RoleFormModal } from './RoleFormModal';
 export { default as RoleDeleteModal } from './RoleDeleteModal';
 export { default as RolePeopleAssignmentModal } from './RolePeopleAssignmentModal';
+// Meetings
+export { default as MeetingFormModal } from './MeetingFormModal';
+export { default as MeetingViewModal } from './MeetingViewModal';
+export { default as MeetingDeleteModal } from './MeetingDeleteModal';
+export { default as MeetingAttendanceModal } from './MeetingAttendanceModal';

@@ -52,10 +52,4 @@ public interface WorshipService {
      * @param id
      */
     void deleteWorship(UUID id);
-
-    /**
-     * Retrieves all worship meeting types.
-     * @return A list of Worship Meeting Types, {{@link List}} of {{@link WorshipMeetingTypes}}.
-     */
-    List<WorshipMeetingTypes> getAllWorshipMeetingTypes();
 }

@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { ChurchSummary } from "../../models";
-import { FiMapPin, FiUser, FiMap, FiX, FiExternalLink } from "react-icons/fi";
+import type { MapBounds } from "../../services/churchService";
+import { useNearbyChurches } from "../../hooks/useChurches";
+import { FiMapPin, FiUser, FiMap, FiX, FiExternalLink, FiLoader, FiRefreshCw, FiEye } from "react-icons/fi";
 
 // Posición por defecto (Colombia)
 const DEFAULT_CENTER = { lat: 4.1517, lng: -73.6386 };
-const DEFAULT_ZOOM = 6;
+const DEFAULT_ZOOM = 12;
 
 // Crear un icono personalizado para las iglesias
 const createChurchIcon = (isSelected: boolean = false) => {
@@ -42,22 +45,64 @@ const createChurchIcon = (isSelected: boolean = false) => {
 };
 
 interface ChurchesMapProps {
-  churches: ChurchSummary[];
+  churchId: string; // ID de la iglesia padre para buscar hijas cercanas
   height?: number;
   onChurchSelect?: (church: ChurchSummary) => void;
 }
 
 export default function ChurchesMap({ 
-  churches, 
+  churchId,
   height = 400,
   onChurchSelect 
-}: ChurchesMapProps) {
+}: Readonly<ChurchesMapProps>) {
+  const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
-  const circlesRef = useRef<Map<string, L.Circle>>(new Map()); // Nueva referencia para círculos
+  const circlesRef = useRef<Map<string, L.Circle>>(new Map());
   const [selectedChurch, setSelectedChurch] = useState<ChurchSummary | null>(null);
   const [isCardVisible, setIsCardVisible] = useState(false);
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+  const initialBoundsSet = useRef(false);
+
+  // Hook para obtener iglesias cercanas según los bounds del mapa
+  const { 
+    data: churches = [], 
+    isLoading, 
+    isFetching,
+    refetch,
+    error 
+  } = useNearbyChurches(churchId, mapBounds);
+
+  // Detectar si el error es por zoom muy lejano
+  const isZoomTooLarge = error?.message?.toLowerCase().includes('zoom') || 
+                         error?.message?.toLowerCase().includes('large');
+
+  // Función para actualizar los bounds
+  const updateBounds = useCallback(() => {
+    if (!mapRef.current) return;
+    
+    const bounds = mapRef.current.getBounds();
+    const newBounds: MapBounds = {
+      southLat: bounds.getSouth(),
+      westLng: bounds.getWest(),
+      northLat: bounds.getNorth(),
+      eastLng: bounds.getEast(),
+    };
+    
+    setMapBounds(newBounds);
+  }, []);
+
+  // Debounce para evitar muchas llamadas al mover el mapa
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debouncedUpdateBounds = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      updateBounds();
+    }, 500); // 500ms de debounce
+  }, [updateBounds]);
 
   // ─────────────────────────────────────────────
   // Init map
@@ -78,19 +123,34 @@ export default function ChurchesMap({
       attribution: "&copy; OpenStreetMap contributors",
     }).addTo(map);
 
+    // Capturar bounds iniciales
+    map.whenReady(() => {
+      updateBounds();
+      initialBoundsSet.current = true;
+    });
+
+    // Actualizar bounds cuando el mapa se mueve o hace zoom
+    map.on('moveend', debouncedUpdateBounds);
+    map.on('zoomend', debouncedUpdateBounds);
+
     return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+      map.off('moveend', debouncedUpdateBounds);
+      map.off('zoomend', debouncedUpdateBounds);
       map.remove();
       mapRef.current = null;
       markersRef.current.clear();
       circlesRef.current.clear();
     };
-  }, []);
+  }, [debouncedUpdateBounds, updateBounds]);
 
   // ─────────────────────────────────────────────
   // Sync churches markers and circles
   // ─────────────────────────────────────────────
   useEffect(() => {
-    if (!mapRef.current || !churches?.length) return;
+    if (!mapRef.current) return;
 
     // Limpiar marcadores anteriores
     markersRef.current.forEach(marker => marker.remove());
@@ -100,8 +160,7 @@ export default function ChurchesMap({
     circlesRef.current.forEach(circle => circle.remove());
     circlesRef.current.clear();
 
-    // Crear bounds para ajustar el zoom
-    const bounds = L.latLngBounds([]);
+    if (!churches?.length) return;
 
     churches.forEach((church) => {
       if (church.latitude && church.longitude) {
@@ -131,23 +190,13 @@ export default function ChurchesMap({
           fillOpacity: circleOpacity,
           weight: isSelected ? 3 : 1.5,
           stroke: true,
-          dashArray: isSelected ? null : '5, 10',
+          dashArray: isSelected ? undefined : '5, 10',
         }).addTo(mapRef.current!);
         
         circlesRef.current.set(church.id, circle);
-        
-        bounds.extend([church.latitude, church.longitude]);
       }
     });
-
-    // Ajustar el mapa para mostrar todos los marcadores
-    if (bounds.isValid()) {
-      mapRef.current.fitBounds(bounds, { 
-        padding: [50, 50],
-        maxZoom: 14 
-      });
-    }
-  }, [churches]);
+  }, [churches, selectedChurch?.id]);
 
   // ─────────────────────────────────────────────
   // Update selected marker icon and circle
@@ -162,16 +211,15 @@ export default function ChurchesMap({
       if (circle) {
         const circleColor = isSelected ? '#059669' : '#3B82F6';
         const circleOpacity = isSelected ? 0.35 : 0.3;
-        const circleRadius = isSelected ? 1000 : 500;
         
         circle.setStyle({
           color: circleColor,
           fillColor: circleColor,
           fillOpacity: circleOpacity,
           weight: isSelected ? 3 : 1.5,
-          radius: circleRadius,
-          dashArray: isSelected ? null : '5, 10',
+          dashArray: isSelected ? undefined : '5, 10',
         });
+        circle.setRadius(isSelected ? 1500 : 1000);
       }
     });
   }, [selectedChurch]);
@@ -210,18 +258,44 @@ export default function ChurchesMap({
       {/* Mapa */}
       <div ref={containerRef} className="w-full h-full z-0" />
 
-      {/* Contador de iglesias */}
-      <div className="absolute top-4 left-4  bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200">
+      {/* Contador de iglesias y estado de carga */}
+      <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200">
         <div className="flex items-center gap-2">
-          <FiMapPin className="w-4 h-4 text-primary-600" />
-          <span className="text-sm font-medium text-neutral-700">
-            {churches?.length || 0} iglesia{churches?.length !== 1 ? 's' : ''}
+          {isFetching ? (
+            <FiLoader className="w-4 h-4 text-primary-600 animate-spin" />
+          ) : isZoomTooLarge ? (
+            <FiMapPin className="w-4 h-4 text-amber-500" />
+          ) : (
+            <FiMapPin className="w-4 h-4 text-primary-600" />
+          )}
+          <span className={`text-sm font-medium ${isZoomTooLarge ? 'text-amber-600' : 'text-neutral-700'}`}>
+            {isZoomTooLarge 
+              ? '🔍 Acerca el mapa para ver iglesias' 
+              : `${churches?.length || 0} iglesia${churches?.length !== 1 ? 's' : ''}`
+            }
           </span>
+          {!isZoomTooLarge && (
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="ml-2 p-1 hover:bg-neutral-100 rounded transition-colors disabled:opacity-50"
+              title="Recargar"
+            >
+              <FiRefreshCw className={`w-3.5 h-3.5 text-neutral-500 ${isFetching ? 'animate-spin' : ''}`} />
+            </button>
+          )}
         </div>
       </div>
 
+      {/* Indicador de zona de búsqueda */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-lg border border-neutral-200">
+        <p className="text-xs text-neutral-500">
+          📍 Mueve el mapa para buscar en otras zonas
+        </p>
+      </div>
+
       {/* Leyenda */}
-      <div className="absolute bottom-4 left-4  bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200">
+      <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200">
         <div className="flex items-center gap-4 text-xs text-neutral-600">
           <div className="flex items-center gap-1">
             <span className="w-3 h-3 rounded-full bg-blue-500" />
@@ -305,7 +379,7 @@ export default function ChurchesMap({
                   <p className="text-sm font-medium text-blue-800">Área de influencia</p>
                 </div>
                 <p className="text-xs text-blue-600">
-                  Radio aproximado: {selectedChurch.id === selectedChurch?.id ? '1.5 km' : '1 km'} alrededor de la iglesia
+                  Radio aproximado: 1.5 km alrededor de la iglesia
                 </p>
               </div>
 
@@ -323,18 +397,26 @@ export default function ChurchesMap({
                   <span>Google Maps</span>
                 </button>
               </div>
+
+              {/* Botón Ver más */}
+              <button
+                onClick={() => navigate(`/churches/${selectedChurch.id}`)}
+                className="w-full mt-2 py-2.5 px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors font-medium text-sm"
+              >
+                <FiEye className="w-4 h-4" />
+                Ver más información
+              </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Mensaje cuando no hay iglesias */}
-      {(!churches || churches.length === 0) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-neutral-50/80 z-0">
-          <div className="text-center p-6">
-            <span className="text-5xl mb-4 block">🗺️</span>
-            <h3 className="text-lg font-semibold text-neutral-700 mb-2">Sin iglesias para mostrar</h3>
-            <p className="text-sm text-neutral-500">No hay iglesias hijas registradas aún</p>
+      {/* Indicador de carga pequeño */}
+      {isFetching && (
+        <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200 z-10">
+          <div className="flex items-center gap-2">
+            <FiLoader className="w-4 h-4 text-primary-600 animate-spin" />
+            <span className="text-xs text-neutral-600">Buscando...</span>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 package com.viddefe.viddefe_api.homeGroups.domain.model;
 
-import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupReader;
+import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
 import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupsRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

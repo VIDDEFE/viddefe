@@ -124,9 +124,4 @@ public class WorshipServicesImpl implements WorshipService {
 
         worshipRepository.delete(worship);
     }
-
-    @Override
-    public List<WorshipMeetingTypes> getAllWorshipMeetingTypes() {
-        return typesWorshipMeetingReader.getAllWorshipMeetingTypes();
-    }
 }

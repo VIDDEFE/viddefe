@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.homeGroups.infrastructure.web;
 
+import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupService;
@@ -16,6 +17,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +28,7 @@ public class HomeGroupsController {
     private final HomeGroupService homeGroupService;
     private final RolesPeopleStrategiesService rolesPeopleStrategiesService;
     private final JwtUtil jwtUtil;
+
     @PostMapping
     public ResponseEntity<ApiResponse<HomeGroupsDTO>> createHomeGroup(
             @Valid @RequestBody CreateHomeGroupsDto dto,
@@ -62,6 +66,26 @@ public class HomeGroupsController {
         return ResponseEntity.ok(ApiResponse.ok(groups));
     }
 
+    @GetMapping(value = "/nearby")
+    public ResponseEntity<ApiResponse<List<HomeGroupsDTO>>> getChildChurchesByPositionInMap(
+            @CookieValue("access_token") String accessToken,
+            @RequestParam BigDecimal southLat,
+            @RequestParam BigDecimal westLng,
+            @RequestParam BigDecimal northLat,
+            @RequestParam BigDecimal eastLng
+    ){
+        UUID churchId = jwtUtil.getChurchId(accessToken);
+
+        List<HomeGroupsDTO> response = homeGroupService.getHomeGroupsByPositionInMap(
+                churchId,
+                southLat,
+                westLng,
+                northLat,
+                eastLng
+        );
+        return new ResponseEntity<>(ApiResponse.ok(response), HttpStatus.OK);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteHomeGroup(
             @PathVariable UUID id
@@ -86,6 +110,15 @@ public class HomeGroupsController {
     ) {
         rolesPeopleStrategiesService.removeRoleFromPeopleInStrategy(roleId, dto);
         return new ResponseEntity<>(ApiResponse.noContent(), HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/mine")
+    public ResponseEntity<ApiResponse<HomeGroupsDetailDto >> getMyHomeGroup(
+            @CookieValue("access_token") String accessToken
+    ) {
+        UUID personId = jwtUtil.getPersonId(accessToken);
+        HomeGroupsDetailDto myGroup = homeGroupService.getHomeGroupByIntegrantId(personId);
+        return ResponseEntity.ok(ApiResponse.ok(myGroup));
     }
 
 }

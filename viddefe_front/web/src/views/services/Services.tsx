@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Service } from '../../models';
-import { Button, PageHeader, Table, Modal, Form, Input, Select } from '../../components/shared';
+import { Button, PageHeader, Table, Modal, Form, Input, DropDown } from '../../components/shared';
 import { useServices, useCreateService } from '../../hooks';
 
 const serviceTypeOptions = [
@@ -95,11 +95,11 @@ export default function Services() {
             value={formData.description || ''}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           />
-          <Select
+          <DropDown
             label="Tipo"
             options={serviceTypeOptions}
             value={formData.type || 'sunday_service'}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+            onChangeValue={(value) => setFormData({ ...formData, type: value as any })}
           />
           <Input
             label="Fecha"

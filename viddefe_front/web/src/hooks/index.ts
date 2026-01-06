@@ -9,3 +9,4 @@ export * from './useStateCities';
 export * from './useUsers';
 export * from './useWorships';
 export * from './useOfferings';
+export * from './useMeetings';

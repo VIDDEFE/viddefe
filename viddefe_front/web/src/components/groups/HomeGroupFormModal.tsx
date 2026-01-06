@@ -1,6 +1,6 @@
 import { Modal, Button } from '../shared';
 import HomeGroupForm, { type HomeGroupFormData } from './HomeGroupForm';
-import type { Strategy, Person } from '../../models';
+import type { Strategy } from '../../models';
 
 interface HomeGroupFormModalProps {
   isOpen: boolean;
@@ -12,9 +12,7 @@ interface HomeGroupFormModalProps {
   isLoading?: boolean;
   isSaving?: boolean;
   strategies?: Strategy[];
-  people?: Person[];
   isLoadingStrategies?: boolean;
-  isLoadingPeople?: boolean;
   errors?: Partial<Record<keyof HomeGroupFormData, string>>;
 }
 
@@ -28,11 +26,9 @@ export default function HomeGroupFormModal({
   isLoading = false,
   isSaving = false,
   strategies = [],
-  people = [],
   isLoadingStrategies = false,
-  isLoadingPeople = false,
   errors = {},
-}: HomeGroupFormModalProps) {
+}: Readonly<HomeGroupFormModalProps>) {
   return (
     <Modal
       isOpen={isOpen}
@@ -63,9 +59,7 @@ export default function HomeGroupFormModal({
           value={formData}
           onChange={onFormChange}
           strategies={strategies}
-          people={people}
           isLoadingStrategies={isLoadingStrategies}
-          isLoadingPeople={isLoadingPeople}
           errors={errors}
         />
       )}

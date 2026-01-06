@@ -148,6 +148,7 @@ public class AuthServiceImpl implements AuthService {
                 dto.getFirstName(),
                 dto.getLastName(),
                 dto.getUserId(),
+                dto.getPeopleId(),
                 dto.getChurchId(),
                 permissions
         );

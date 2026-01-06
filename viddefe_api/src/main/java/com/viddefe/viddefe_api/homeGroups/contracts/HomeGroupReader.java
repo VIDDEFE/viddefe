@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.homeGroups.domain.repository;
+package com.viddefe.viddefe_api.homeGroups.contracts;
 
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 

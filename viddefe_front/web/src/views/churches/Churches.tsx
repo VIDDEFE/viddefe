@@ -1,23 +1,24 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { ChurchSummary, PersonSummary} from '../../models';
 import { Button, PageHeader, Table } from '../../components/shared';
 import { type ChurchFormData, initialChurchFormData } from '../../components/churches/ChurchForm';
 import { useChurchChildren, useStates, useCities, useCreateChildrenChurch, useUpdateChurch, useDeleteChurch, useChurch } from '../../hooks';
 import { useAppContext } from '../../context/AppContext';
 import ChurchFormModal from '../../components/churches/ChurchFormModal';
-import ChurchViewModal from '../../components/churches/ChurchViewModal';
 import ChurchDeleteModal from '../../components/churches/ChurchDeleteModal';
 import ChurchesMap from '../../components/churches/ChurchesMap';
 import { FiMap, FiList } from 'react-icons/fi';
 import { ChurchPermission } from '../../services/userService';
 import type { SortConfig } from '../../services/api';
 
-type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
+type ModalMode = 'create' | 'edit' | 'delete' | null;
 type ViewMode = 'table' | 'map';
 
 const DEFAULT_PAGE_SIZE = 10;
 
 export default function Churches() {
+  const navigate = useNavigate();
   const { user, hasPermission } = useAppContext();
   const churchId = user?.church.id;
 
@@ -78,14 +79,14 @@ export default function Churches() {
   // Track if form was already populated to prevent overwriting user changes
   const [formPopulated, setFormPopulated] = useState(false);
 
-  // Load church details when editing/viewing
+  // Load church details when editing
   useEffect(() => {
-    // Solo cargar si hay datos, hay iglesia seleccionada, estamos en modo edit/view Y no se ha llenado ya
-    if (!churchDetails || !selectedChurch || !(modalMode === 'edit' || modalMode === 'view')) return;
+    // Solo cargar si hay datos, hay iglesia seleccionada, estamos en modo edit Y no se ha llenado ya
+    if (!churchDetails || !selectedChurch || modalMode !== 'edit') return;
     // Verificar que los datos correspondan a la iglesia seleccionada
     if (churchDetails.id !== selectedChurch.id) return;
     // Si ya se pobló el form en modo edit, no sobreescribir
-    if (formPopulated && modalMode === 'edit') return;
+    if (formPopulated) return;
     
     setFormData({
       name: churchDetails.name ?? '',
@@ -100,9 +101,7 @@ export default function Churches() {
       cityId: churchDetails.city?.cityId ?? undefined,
     });
 
-    if (modalMode === 'edit') {
-      setFormPopulated(true);
-    }
+    setFormPopulated(true);
   }, [churchDetails, modalMode, formPopulated, selectedChurch]);
 
   // Modal handlers
@@ -214,7 +213,7 @@ export default function Churches() {
 
   // Construir acciones basadas en permisos
   const tableActions = [
-    ...(canView ? [{ icon: 'view' as const, label: 'Ver', onClick: (c: ChurchSummary) => openModal('view', c), variant: 'secondary' as const }] : []),
+    ...(canView ? [{ icon: 'view' as const, label: 'Ver', onClick: (c: ChurchSummary) => navigate(`/churches/${c.id}`), variant: 'secondary' as const }] : []),
     ...(canEdit ? [{ icon: 'edit' as const, label: 'Editar', onClick: (c: ChurchSummary) => openModal('edit', c), variant: 'primary' as const }] : []),
     ...(canDelete ? [{ icon: 'delete' as const, label: 'Eliminar', onClick: (c: ChurchSummary) => openModal('delete', c), variant: 'danger' as const }] : []),
   ];
@@ -285,13 +284,13 @@ export default function Churches() {
         }
       />
 
-      {/* Vista de Mapa */}
-      {viewMode === 'map' && (
+      {/* Vista de Mapa - no abre modal, el mapa tiene su botón de "Ver más" */}
+      {viewMode === 'map' && churchId && (
         <div className="mb-6 animate-fadeIn">
           <ChurchesMap
-            churches={churchesArray}
+            churchId={churchId}
             height={600}
-            onChurchSelect={(church) => openModal(null, church)}
+            onChurchSelect={() => {/* No hacer nada, el mapa maneja la navegación internamente */}}
           />
         </div>
       )}
@@ -333,15 +332,6 @@ export default function Churches() {
         isSaving={isMutating}
         states={states}
         cities={cities}
-      />
-
-      <ChurchViewModal
-        isOpen={modalMode === 'view'}
-        church={selectedChurch!!}
-        churchDetails={churchDetails!!}
-        isLoading={isLoadingDetails}
-        onEdit={() => selectedChurch && openModal('edit', selectedChurch)}
-        onClose={closeModal}
       />
 
       <ChurchDeleteModal
