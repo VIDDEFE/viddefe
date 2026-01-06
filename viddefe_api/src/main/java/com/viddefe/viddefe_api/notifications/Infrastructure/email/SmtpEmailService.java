@@ -38,7 +38,7 @@ public class SmtpEmailService implements Notificator {
     @Override
     public void sendWithAttachment(@Valid NotificationDto dto,@NotNull Path attachment) {
 
-        if (attachment == null) {
+        if (attachment == null || attachment.toString().isBlank()) {
             throw new IllegalArgumentException("Attachment path must not be null");
         }
 

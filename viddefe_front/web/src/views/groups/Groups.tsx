@@ -18,7 +18,6 @@ import {
   useCreateHomeGroup,
   useUpdateHomeGroup,
   useDeleteHomeGroup,
-  usePeople,
 } from '../../hooks';
 import { useAppContext } from '../../context/AppContext';
 import type { SortConfig } from '../../services/api';
@@ -63,7 +62,6 @@ export default function Groups() {
     sort: viewMode === 'map' ? undefined : sortConfig,
   });
   const { data: strategies, isLoading: isLoadingStrategies } = useStrategies();
-  const { data: peopleData, isLoading: isLoadingPeople } = usePeople({ page: 0, size: 100 });
 
   // Modal state
   const [modalMode, setModalMode] = useState<ModalMode>(null);
@@ -306,11 +304,6 @@ export default function Groups() {
     ? groupsData
     : (groupsData?.content ?? []);
 
-  // People array
-  const peopleArray = Array.isArray(peopleData)
-    ? peopleData
-    : (peopleData?.content ?? []);
-
   // Información de paginación del servidor
   const paginationData =
     groupsData && !Array.isArray(groupsData)
@@ -417,7 +410,6 @@ export default function Groups() {
           />
         ) : (
           <GroupsMap
-            groups={groupsArray}
             height={600}
             onGroupSelect={(group) => {
               if (group) setSelectedGroup(group);
@@ -439,9 +431,7 @@ export default function Groups() {
         isLoading={modalMode === 'edit' && isLoadingDetails}
         isSaving={isMutating}
         strategies={strategies}
-        people={peopleArray}
         isLoadingStrategies={isLoadingStrategies}
-        isLoadingPeople={isLoadingPeople}
         errors={formErrors}
       />
 

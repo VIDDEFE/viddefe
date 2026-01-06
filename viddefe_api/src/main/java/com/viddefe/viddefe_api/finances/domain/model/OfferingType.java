@@ -13,6 +13,8 @@ public class OfferingType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String code;
+
     @Column(nullable = false, unique = true)
     private String name;
 

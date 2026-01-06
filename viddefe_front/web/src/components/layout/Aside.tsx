@@ -11,6 +11,7 @@ import {
   IconLogout,
   IconWorship,
 } from "../../components/icons";
+import { FiHome, FiUsers } from "react-icons/fi";
 
 // Estructura de menú con secciones para mejor organización
 interface MenuItem {
@@ -30,6 +31,13 @@ const menuSections: MenuSection[] = [
     title: "",
     items: [
       { path: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
+    ],
+  },
+  {
+    title: "Mi Espacio",
+    items: [
+      { path: "/my-church", label: "Mi Iglesia", icon: <FiHome size={20} /> },
+      { path: "/my-group", label: "Mi Grupo", icon: <FiUsers size={20} /> },
     ],
   },
   {

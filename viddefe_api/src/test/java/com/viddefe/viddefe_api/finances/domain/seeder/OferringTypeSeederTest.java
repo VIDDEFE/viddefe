@@ -204,26 +204,6 @@ class OferringTypeSeederTest {
                 assertTrue(found, "Falta el tipo: " + enumValue.getDescription());
             }
         }
-
-        @Test
-        @DisplayName("Debe incluir tipos especiales como FAITH_PROMISE")
-        void seed_ShouldIncludeSpecialTypes() {
-            // Arrange
-            when(offeringTypeRepository.findAll()).thenReturn(Collections.emptyList());
-
-            // Act
-            offeringTypeSeeder.seed();
-
-            // Assert
-            verify(offeringTypeRepository).saveAll(offeringTypeListCaptor.capture());
-            List<String> savedNames = offeringTypeListCaptor.getValue().stream()
-                    .map(OfferingType::getName)
-                    .toList();
-
-            assertTrue(savedNames.contains("Promesa de fe"));
-            assertTrue(savedNames.contains("Ofrenda de amor"));
-            assertTrue(savedNames.contains("Sostenimiento pastoral"));
-        }
     }
 }
 

@@ -1,4 +1,5 @@
-import { usePeople } from '../../hooks';
+import { useMemo, useCallback } from 'react';
+import { useInfinitePeople, usePerson } from '../../hooks';
 import DropDown from './DropDown';
 import Avatar from './Avatar';
 
@@ -18,31 +19,55 @@ export default function PastorSelector({
   error,
   className = '',
   placeholder = 'Seleccionar pastor...',
-}: PastorSelectorProps) {
-  const { data: people } = usePeople();
-  console.log('PastorSelector render with value:', value, 'people:', people);
-  const peopleList = Array.isArray(people) ? people : (people?.content ?? []);
+}: Readonly<PastorSelectorProps>) {
+  // Cargar el pastor seleccionado directamente por ID
+  const { data: selectedPerson, isLoading: isLoadingPerson } = usePerson(value);
   
-  const options = peopleList.map((person) => ({
-    value: person.id,
-    label: `${person.firstName} ${person.lastName}`,
-    avatar: (person as any).avatar,
-  }));
+  // Cargar lista con paginación infinita para el dropdown
+  const { 
+    data: peoplePages, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useInfinitePeople({ size: 20 });
+  
+  // Aplanar todas las páginas en una sola lista
+  const peopleList = useMemo(() => {
+    if (!peoplePages?.pages) return [];
+    return peoplePages.pages.flatMap(page => page.content ?? []);
+  }, [peoplePages]);
+  
+  const options = useMemo(() => 
+    peopleList.map((person) => ({
+      value: person.id,
+      label: `${person.firstName} ${person.lastName}`,
+      avatar: person.avatar,
+    })), [peopleList]);
 
-  const selectedPerson = peopleList.find((p) => p.id === value);
+  const handleLoadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className={className}>
-      {selectedPerson && (
+      {selectedPerson && !isLoadingPerson && (
         <div className="flex items-center gap-2 mb-2 p-2 bg-primary-50 rounded-lg">
           <Avatar
-            src={(selectedPerson as any).avatar}
+            src={selectedPerson.avatar}
             name={`${selectedPerson.firstName} ${selectedPerson.lastName}`}
             size="sm"
           />
           <span className="text-sm text-primary-800 font-medium">
             {selectedPerson.firstName} {selectedPerson.lastName}
           </span>
+        </div>
+      )}
+      {isLoadingPerson && value && (
+        <div className="flex items-center gap-2 mb-2 p-2 bg-primary-50 rounded-lg animate-pulse">
+          <div className="w-8 h-8 bg-primary-200 rounded-full" />
+          <div className="h-4 w-32 bg-primary-200 rounded" />
         </div>
       )}
       <DropDown
@@ -53,6 +78,9 @@ export default function PastorSelector({
         placeholder={placeholder}
         error={error}
         searchKey="label"
+        hasMore={hasNextPage}
+        isLoadingMore={isFetchingNextPage}
+        onLoadMore={handleLoadMore}
       />
     </div>
   );

@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.finances.domain.seeder;
 import com.viddefe.viddefe_api.finances.configuration.OfferingTypeEnum;
 import com.viddefe.viddefe_api.finances.contracts.OfferingService;
 import com.viddefe.viddefe_api.finances.domain.model.OfferingType;
+import com.viddefe.viddefe_api.finances.domain.model.Offerings;
 import com.viddefe.viddefe_api.finances.domain.repositories.OfferingTypeRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class OferringTypeSeeder {
                 .filter(offeringTypeEnum -> !existingNames.contains(offeringTypeEnum.getDescription()))
                 .map(offeringTypeEnum -> {
                     OfferingType offeringType = new OfferingType();
+                    offeringType.setCode(offeringTypeEnum.name());
                     offeringType.setName(offeringTypeEnum.getDescription());
                     return offeringType;
                 })

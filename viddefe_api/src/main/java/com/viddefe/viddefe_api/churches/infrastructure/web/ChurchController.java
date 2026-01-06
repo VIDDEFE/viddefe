@@ -14,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.viddefe.viddefe_api.churches.contracts.ChurchService;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -58,6 +60,19 @@ public class ChurchController {
         Page<ChurchResDto> response = churchService.getChildrenChurches(pageable, churchId);
         return new ResponseEntity<>(ApiResponse.ok(response), HttpStatus.OK);
     }
+
+    @GetMapping(value = "/{churchId}/childrens/nearby")
+    public ResponseEntity<ApiResponse<List<ChurchResDto>>> getChildChurchesByPositionInMap(
+            @PathVariable UUID churchId,
+            @RequestParam BigDecimal southLat,
+            @RequestParam BigDecimal westLng,
+            @RequestParam BigDecimal northLat,
+            @RequestParam BigDecimal eastLng
+            ) {
+        List<ChurchResDto> response = churchService.getChildrenChurchesByPositionInMap(churchId, southLat, westLng, northLat, eastLng);
+        return new ResponseEntity<>(ApiResponse.ok(response), HttpStatus.OK);
+    }
+
     @PostMapping("/{churchId}/childrens")
     public ResponseEntity<ApiResponse<ChurchResDto>> addChildChurch(@PathVariable UUID churchId,
                                                                     @Valid @RequestBody ChurchDTO dto,

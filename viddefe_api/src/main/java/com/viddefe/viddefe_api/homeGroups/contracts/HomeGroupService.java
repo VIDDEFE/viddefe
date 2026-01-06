@@ -6,6 +6,8 @@ import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDetailDto
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 public interface HomeGroupService {
@@ -44,6 +46,24 @@ public interface HomeGroupService {
      * @param id UUID of the home group to be deleted
      */
     Void deleteHomeGroup(UUID id);
+
+    /**
+     * Get home groups within a specific geographical area for a church.
+     * @param churchId UUID of the church
+     * @param southLat BigDecimal representing the southern latitude boundary
+     * @param westLng  BigDecimal representing the western longitude boundary
+     * @param northLat BigDecimal representing the northern latitude boundary
+     * @param eastLng  BigDecimal representing the eastern longitude boundary
+     * @return List<HomeGroupsDTO> {@link HomeGroupsDTO} containing the list of home groups within the specified area
+     */
+    List<HomeGroupsDTO>getHomeGroupsByPositionInMap(UUID churchId,BigDecimal southLat, BigDecimal westLng, BigDecimal northLat, BigDecimal eastLng);
+
+    /**
+     * Get a home group by the ID of its integrant.
+     * @param leaderId UUID of the integrant whose home group is to be retrieved
+     * @return HomeGroupsDetailDto {@link HomeGroupsDetailDto} of the retrieved home group
+     */
+    HomeGroupsDetailDto getHomeGroupByIntegrantId(UUID leaderId);
 
 }
 

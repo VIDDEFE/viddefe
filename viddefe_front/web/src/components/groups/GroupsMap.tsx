@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { HomeGroup } from '../../models';
-import { FiEdit2, FiTrash2, FiMapPin, FiUsers } from 'react-icons/fi';
+import type { MapBounds } from '../../services/churchService';
+import { useNearbyHomeGroups } from '../../hooks/useHomeGroups';
+import { FiEdit2, FiTrash2, FiMapPin, FiUsers, FiLoader, FiRefreshCw } from 'react-icons/fi';
 
 interface GroupsMapProps {
-  groups: HomeGroup[];
   height?: number;
   onGroupSelect?: (group: HomeGroup | null) => void;
   onEditGroup?: (group: HomeGroup) => void;
@@ -42,8 +43,12 @@ const createGroupIcon = (isSelected: boolean = false) => {
   });
 };
 
+// Centro predeterminado (Colombia)
+const DEFAULT_CENTER = { lat: 4.1420, lng: -73.6266 };
+
+const DEFAULT_ZOOM = 12;
+
 export default function GroupsMap({
-  groups,
   height = 500,
   onGroupSelect,
   onEditGroup,
@@ -54,36 +59,54 @@ export default function GroupsMap({
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const circlesRef = useRef<Map<string, L.Circle>>(new Map());
   const [selectedGroup, setSelectedGroup] = useState<HomeGroup | null>(null);
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
 
-  // Filtrar grupos con coordenadas válidas
-  const validGroups = useMemo(
-    () => groups.filter((g) => g.latitude && g.longitude),
-    [groups]
-  );
+  // Hook para obtener grupos cercanos según los bounds del mapa
+  const { 
+    data: groups = [], 
+    isLoading, 
+    isFetching,
+    refetch,
+    error 
+  } = useNearbyHomeGroups(mapBounds);
 
-  // Calcular centro del mapa
-  const mapCenter = useMemo(() => {
-    if (validGroups.length === 0) {
-      // Centro predeterminado (Colombia)
-      return { lat: 4.6097, lng: -74.0817 };
-    }
+  // Detectar si el error es por zoom muy lejano
+  const isZoomTooLarge = error?.message?.toLowerCase().includes('zoom') || 
+                         error?.message?.toLowerCase().includes('large');
 
-    const latSum = validGroups.reduce((sum, g) => sum + g.latitude, 0);
-    const lngSum = validGroups.reduce((sum, g) => sum + g.longitude, 0);
-
-    return {
-      lat: latSum / validGroups.length,
-      lng: lngSum / validGroups.length,
+  // Función para actualizar los bounds
+  const updateBounds = useCallback(() => {
+    if (!mapRef.current) return;
+    
+    const bounds = mapRef.current.getBounds();
+    const newBounds: MapBounds = {
+      southLat: bounds.getSouth(),
+      westLng: bounds.getWest(),
+      northLat: bounds.getNorth(),
+      eastLng: bounds.getEast(),
     };
-  }, [validGroups]);
+    
+    setMapBounds(newBounds);
+  }, []);
+
+  // Debounce para evitar muchas llamadas al mover el mapa
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const debouncedUpdateBounds = useCallback(() => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    debounceRef.current = setTimeout(() => {
+      updateBounds();
+    }, 500); // 500ms de debounce
+  }, [updateBounds]);
 
   // Inicializar mapa
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
     mapRef.current = L.map(mapContainerRef.current, {
-      center: [mapCenter.lat, mapCenter.lng],
-      zoom: 12,
+      center: [DEFAULT_CENTER.lat, DEFAULT_CENTER.lng],
+      zoom: DEFAULT_ZOOM,
       zoomControl: true,
     });
 
@@ -92,13 +115,27 @@ export default function GroupsMap({
         '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(mapRef.current);
 
+    // Capturar bounds iniciales
+    mapRef.current.whenReady(() => {
+      updateBounds();
+    });
+
+    // Actualizar bounds cuando el mapa se mueve o hace zoom
+    mapRef.current.on('moveend', debouncedUpdateBounds);
+    mapRef.current.on('zoomend', debouncedUpdateBounds);
+
     return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
       if (mapRef.current) {
+        mapRef.current.off('moveend', debouncedUpdateBounds);
+        mapRef.current.off('zoomend', debouncedUpdateBounds);
         mapRef.current.remove();
         mapRef.current = null;
       }
     };
-  }, [mapCenter.lat, mapCenter.lng]);
+  }, [debouncedUpdateBounds, updateBounds]);
 
   // Actualizar marcadores cuando cambian los grupos
   useEffect(() => {
@@ -110,8 +147,12 @@ export default function GroupsMap({
     circlesRef.current.forEach((circle) => circle.remove());
     circlesRef.current.clear();
 
+    if (!groups?.length) return;
+
     // Crear nuevos marcadores y círculos
-    validGroups.forEach((group) => {
+    groups.forEach((group) => {
+      if (!group.latitude || !group.longitude) return;
+      
       const isSelected = selectedGroup?.id === group.id;
 
       // Crear círculo de cobertura
@@ -142,15 +183,7 @@ export default function GroupsMap({
 
       markersRef.current.set(group.id, marker);
     });
-
-    // Ajustar vista si hay grupos
-    if (validGroups.length > 0 && !selectedGroup) {
-      const bounds = L.latLngBounds(
-        validGroups.map((g) => [g.latitude, g.longitude] as [number, number])
-      );
-      mapRef.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
-    }
-  }, [validGroups, selectedGroup, onGroupSelect]);
+  }, [groups, selectedGroup?.id, onGroupSelect]);
 
   const handleCloseCard = () => {
     setSelectedGroup(null);
@@ -168,14 +201,40 @@ export default function GroupsMap({
       {/* Contenedor del mapa */}
       <div ref={mapContainerRef} style={{ height: `${height}px`, width: '100%' }} />
 
-      {/* Contador de grupos */}
+      {/* Contador de grupos y estado de carga */}
       <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg px-4 py-2 z-1000">
         <div className="flex items-center gap-2">
-          <FiUsers className="w-5 h-5 text-violet-600" />
-          <span className="text-sm font-medium text-neutral-700">
-            {validGroups.length} grupo{validGroups.length !== 1 ? 's' : ''} en el mapa
+          {isFetching ? (
+            <FiLoader className="w-5 h-5 text-violet-600 animate-spin" />
+          ) : isZoomTooLarge ? (
+            <FiUsers className="w-5 h-5 text-amber-500" />
+          ) : (
+            <FiUsers className="w-5 h-5 text-violet-600" />
+          )}
+          <span className={`text-sm font-medium ${isZoomTooLarge ? 'text-amber-600' : 'text-neutral-700'}`}>
+            {isZoomTooLarge 
+              ? '🔍 Acerca el mapa para ver grupos' 
+              : `${groups?.length || 0} grupo${groups?.length !== 1 ? 's' : ''} en el mapa`
+            }
           </span>
+          {!isZoomTooLarge && (
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="ml-2 p-1 hover:bg-neutral-100 rounded transition-colors disabled:opacity-50"
+              title="Recargar"
+            >
+              <FiRefreshCw className={`w-3.5 h-3.5 text-neutral-500 ${isFetching ? 'animate-spin' : ''}`} />
+            </button>
+          )}
         </div>
+      </div>
+
+      {/* Indicador de zona de búsqueda */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-lg border border-neutral-200 z-1000">
+        <p className="text-xs text-neutral-500">
+          📍 Mueve el mapa para buscar en otras zonas
+        </p>
       </div>
 
       {/* Leyenda */}
@@ -320,17 +379,12 @@ export default function GroupsMap({
         </div>
       )}
 
-      {/* Mensaje si no hay grupos */}
-      {validGroups.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center bg-neutral-100/80 z-1000">
-          <div className="text-center px-6 py-8 bg-white rounded-xl shadow-lg">
-            <FiUsers className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-neutral-700 mb-2">
-              No hay grupos para mostrar
-            </h3>
-            <p className="text-sm text-neutral-500">
-              Crea un grupo con ubicación para verlo en el mapa
-            </p>
+      {/* Indicador de carga pequeño */}
+      {isFetching && (
+        <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg border border-neutral-200 z-1000">
+          <div className="flex items-center gap-2">
+            <FiLoader className="w-4 h-4 text-violet-600 animate-spin" />
+            <span className="text-xs text-neutral-600">Buscando...</span>
           </div>
         </div>
       )}

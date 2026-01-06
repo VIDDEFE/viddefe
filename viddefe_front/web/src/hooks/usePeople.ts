@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { personService, type PeopleSearchParams, type PersonType } from '../services/personService'
 import type { Person } from '../models'
 import type { Pageable } from '../services/api'
@@ -7,6 +7,29 @@ export function usePeople(params?: PeopleSearchParams) {
   return useQuery<Pageable<Person>, Error>({
     queryKey: ['people', params?.page, params?.size, params?.typePersonId, params?.sort?.field, params?.sort?.direction],
     queryFn: () => personService.getAll(params)
+  })
+}
+
+/**
+ * Hook para cargar personas con paginación infinita
+ * Útil para dropdowns y selectores que necesitan cargar datos bajo demanda
+ */
+export function useInfinitePeople(params?: Omit<PeopleSearchParams, 'page'>) {
+  const pageSize = params?.size ?? 20;
+  
+  return useInfiniteQuery({
+    queryKey: ['people', 'infinite', pageSize, params?.typePersonId, params?.sort?.field, params?.sort?.direction],
+    queryFn: ({ pageParam = 0 }) => personService.getAll({ ...params, page: pageParam, size: pageSize }),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) => {
+      // Si la página actual es menor que el total de páginas - 1, hay más páginas
+      const currentPage = lastPage.number;
+      const totalPages = lastPage.totalPages;
+      if (currentPage < totalPages - 1) {
+        return currentPage + 1;
+      }
+      return undefined;
+    },
   })
 }
 

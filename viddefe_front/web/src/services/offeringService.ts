@@ -1,5 +1,5 @@
-import { apiService, type Pageable, type PageableRequest, type SortConfig } from './api';
-import type { Offering, OfferingType, CreateOfferingDto, UpdateOfferingDto } from '../models';
+import { apiService, type PageableRequest, type SortConfig } from './api';
+import type { Offering, OfferingType, CreateOfferingDto, UpdateOfferingDto, OfferingList } from '../models';
 
 // Helper para construir query string de sort para Spring Boot
 const buildSortParam = (sort?: SortConfig): string => {
@@ -17,7 +17,8 @@ export const offeringService = {
     if (params?.size !== undefined) queryParts.push(`size=${params.size}`);
     if (params?.sort) queryParts.push(buildSortParam(params.sort));
     const queryParams = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
-    return apiService.get<Pageable<Offering>>(`/offerings/event/${eventId}${queryParams}`);
+    return apiService.get<OfferingList>(`/offerings/event/${eventId}${queryParams}`);
+    
   },
 
   /**

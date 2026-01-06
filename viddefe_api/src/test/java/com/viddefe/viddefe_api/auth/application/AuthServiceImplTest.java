@@ -414,6 +414,7 @@ class AuthServiceImplTest {
                 eq("John"),
                 eq("Doe"),
                 eq(userId),
+                eq(peopleId),
                 eq(churchId),
                 eq(permissions)
             )).thenReturn(expectedToken);
@@ -429,6 +430,7 @@ class AuthServiceImplTest {
                 "John",
                 "Doe",
                 userId,
+                peopleId,
                 churchId,
                 permissions
             );
@@ -450,7 +452,7 @@ class AuthServiceImplTest {
             List<String> permissions = Collections.emptyList();
 
             when(jwtUtil.generateToken(anyString(), anyString(), anyString(), anyString(),
-                any(UUID.class), any(UUID.class), anyList())).thenReturn("token");
+                any(UUID.class), any(UUID.class),any(UUID.class) ,anyList())).thenReturn("token");
 
             // When
             String result = authService.generateJwt(dto, permissions);
@@ -458,7 +460,7 @@ class AuthServiceImplTest {
             // Then
             assertThat(result).isNotNull();
             verify(jwtUtil).generateToken(anyString(), anyString(), anyString(), anyString(),
-                any(UUID.class), any(UUID.class), eq(Collections.emptyList()));
+                any(UUID.class), any(UUID.class),any(UUID.class), eq(Collections.emptyList()));
         }
     }
 }

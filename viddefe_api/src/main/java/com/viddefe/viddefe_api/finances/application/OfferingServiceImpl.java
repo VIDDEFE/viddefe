@@ -6,6 +6,7 @@ import com.viddefe.viddefe_api.finances.domain.model.OfferingType;
 import com.viddefe.viddefe_api.finances.domain.model.Offerings;
 import com.viddefe.viddefe_api.finances.domain.repositories.OfferingsRepository;
 import com.viddefe.viddefe_api.finances.infrastructure.dto.CreateOfferingDto;
+import com.viddefe.viddefe_api.finances.infrastructure.dto.OfferingAnalityc;
 import com.viddefe.viddefe_api.finances.infrastructure.dto.OfferingDto;
 import com.viddefe.viddefe_api.finances.infrastructure.dto.OfferingDtoPageWithAnalityc;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -51,9 +53,11 @@ public class OfferingServiceImpl implements OfferingService {
     @Override
     public OfferingDtoPageWithAnalityc getAllByEventId(UUID eventId, Pageable pageable) {
         Page<OfferingDto> offeringDtos = offeringsRepository.findAllByEventId(eventId, pageable).map(Offerings::toDto);
-        OfferingDtoPageWithAnalityc offeringdtoWithAnalityc = new OfferingDtoPageWithAnalityc();
-        offeringdtoWithAnalityc.setOfferings(offeringDtos);
-        return offeringdtoWithAnalityc;
+        List<OfferingAnalityc> offeringAnalytics = offeringsRepository.analyticsByEvent(eventId);
+        OfferingDtoPageWithAnalityc profiteeringAnalytic = new OfferingDtoPageWithAnalityc();
+        profiteeringAnalytic.setOfferings(offeringDtos);
+        profiteeringAnalytic.setAnalitycs(offeringAnalytics);
+        return profiteeringAnalytic;
     }
 
     @Override
