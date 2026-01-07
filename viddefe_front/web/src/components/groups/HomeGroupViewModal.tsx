@@ -76,7 +76,7 @@ export default function HomeGroupViewModal({
 
           <div>
             <label className="font-semibold text-primary-900 text-sm">
-              Líder
+              Responsable
             </label>
             <p className="text-neutral-700 mt-1">
               {group.leader ? (
@@ -87,7 +87,7 @@ export default function HomeGroupViewModal({
                   {group.leader.firstName} {group.leader.lastName}
                 </span>
               ) : (
-                <span className="text-neutral-400">Sin líder asignado</span>
+                <span className="text-neutral-400">Sin responsable asignado</span>
               )}
             </p>
           </div>

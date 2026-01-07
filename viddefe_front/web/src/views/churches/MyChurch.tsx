@@ -12,6 +12,7 @@ import { FiMapPin, FiPhone, FiMail, FiUser, FiCalendar, FiMap, FiList, FiUsers, 
 import { ChurchPermission } from '../../services/userService';
 import type { ChurchSummary, PersonSummary } from '../../models';
 import type { SortConfig } from '../../services/api';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
 type ViewMode = 'table' | 'map';
@@ -341,11 +342,7 @@ export default function MyChurch() {
                   <div className="flex items-center gap-2 mt-1">
                     <FiCalendar className="text-neutral-400" size={16} />
                     <span className="text-neutral-700">
-                      {new Date(myChurch.foundationDate).toLocaleDateString('es-CO', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+                      {formatDateForDisplay(myChurch.foundationDate, 'date')}
                     </span>
                   </div>
                 </div>

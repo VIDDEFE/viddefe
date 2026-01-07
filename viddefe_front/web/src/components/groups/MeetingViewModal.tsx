@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { Modal, Button } from '../shared';
 import { FiCalendar, FiClock, FiFileText, FiTag } from 'react-icons/fi';
 import type { Meeting } from '../../models';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 interface MeetingViewModalProps {
   readonly isOpen: boolean;
@@ -22,24 +23,6 @@ function MeetingViewModal({
 }: MeetingViewModalProps) {
   if (!meeting) return null;
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Detalle de Reunión">
       <div className="space-y-6">
@@ -59,7 +42,7 @@ function MeetingViewModal({
             <FiCalendar className="text-primary-600 mt-1" size={18} />
             <div>
               <p className="text-sm font-medium text-neutral-500">Fecha</p>
-              <p className="text-neutral-800">{formatDate(meeting.date)}</p>
+              <p className="text-neutral-800 capitalize">{formatDateForDisplay(meeting.date, 'date')}</p>
             </div>
           </div>
 
@@ -68,7 +51,7 @@ function MeetingViewModal({
             <FiClock className="text-primary-600 mt-1" size={18} />
             <div>
               <p className="text-sm font-medium text-neutral-500">Hora</p>
-              <p className="text-neutral-800">{formatTime(meeting.date)}</p>
+              <p className="text-neutral-800">{formatDateForDisplay(meeting.date, 'time')}</p>
             </div>
           </div>
 

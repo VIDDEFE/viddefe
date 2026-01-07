@@ -31,6 +31,6 @@ public class CreateHomeGroupsDto {
     @NotNull(message = "La estrategia es obligatorio")
     private UUID strategyId;
 
-    @NotNull(message = "El líder es obligatorio")
-    private UUID leaderId;
+    @NotNull(message = "El responsable del grupo es obligatorio")
+    private UUID managerId;
 }

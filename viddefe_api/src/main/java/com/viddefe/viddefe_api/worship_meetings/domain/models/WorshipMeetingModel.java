@@ -7,8 +7,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Table(
@@ -35,9 +35,9 @@ public class WorshipMeetingModel {
     private String description;
 
     @Column(name = "creation_date", nullable = false, updatable = false)
-    private Date creationDate;
+    private Instant creationDate;
     @Column(name = "scheduled_date", nullable = false)
-    private LocalDateTime scheduledDate;
+    private OffsetDateTime scheduledDate;
 
     @ManyToOne
     @JoinColumn(name = "worship_meeting_type_id", nullable = false)
@@ -54,7 +54,6 @@ public class WorshipMeetingModel {
         worshipDto.setDescription(this.description);
         worshipDto.setCreationDate(this.creationDate);
         worshipDto.setScheduledDate(this.scheduledDate
-                .withMinute(0)
                 .withSecond(0)
                 .withNano(0));
         worshipDto.setWorshipType(this.worshipType.toDto());

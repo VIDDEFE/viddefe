@@ -4,5 +4,7 @@ export { default as AttendanceSummary } from './AttendanceSummary';
 export { default as OfferingsSection } from './OfferingsSection';
 export { default as OfferingModal } from './OfferingModal';
 export { default as DeleteOfferingModal } from './DeleteOfferingModal';
+export { default as MinistryFunctionsSection } from './MinistryFunctionsSection';
+export type { MinistryFunctionsSectionProps } from './MinistryFunctionsSection';
 export * from './types';
 export * from './helpers';

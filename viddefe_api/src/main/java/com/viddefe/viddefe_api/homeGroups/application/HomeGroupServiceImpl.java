@@ -37,8 +37,8 @@ public class HomeGroupServiceImpl implements HomeGroupService {
      * @param personId ID de la persona a validar.
      * @throws IllegalArgumentException si la persona ya es líder de otro grupo.
      */
-    private void validateIfPersonIsLeaderInOtherHomeGroup(UUID personId, UUID groupId) {
-        Optional<HomeGroupsModel> homeGroup = homeGroupsRepository.findByLeaderId(personId);
+    private void validateIfPersonIsManagerInOtherHomeGroup(UUID personId, UUID groupId) {
+        Optional<HomeGroupsModel> homeGroup = homeGroupsRepository.findByManagerId(personId);
         if (homeGroup.isPresent() && homeGroup.get().getId() != groupId) {
             throw new IllegalArgumentException("La persona ya es líder de otro grupo");
         }
@@ -46,15 +46,15 @@ public class HomeGroupServiceImpl implements HomeGroupService {
 
     @Override
     public HomeGroupsDTO createHomeGroup(CreateHomeGroupsDto dto, UUID churchId) {
-        validateIfPersonIsLeaderInOtherHomeGroup(dto.getLeaderId(),null);
+        validateIfPersonIsManagerInOtherHomeGroup(dto.getManagerId(),null);
         StrategiesModel strategy = strategyReader.findById(dto.getStrategyId());
         HomeGroupsModel homeGroup = new HomeGroupsModel();
         homeGroup.fromDto(dto);
         homeGroup.setStrategy(strategy);
         ChurchModel church = churchLookup.getChurchById(churchId);
-        PeopleModel leader = peopleReader.getPeopleById(dto.getLeaderId());
+        PeopleModel leader = peopleReader.getPeopleById(dto.getManagerId());
         homeGroup.setChurch(church);
-        homeGroup.setLeader(leader);
+        homeGroup.setManager(leader);
         return homeGroupsRepository.save(homeGroup).toDto();
     }
 
@@ -62,7 +62,7 @@ public class HomeGroupServiceImpl implements HomeGroupService {
     public HomeGroupsDTO updateHomeGroup(CreateHomeGroupsDto dto, UUID id) {
         HomeGroupsModel homeGroup = homeGroupsRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Grupo no encontrado"));
-        validateIfPersonIsLeaderInOtherHomeGroup(dto.getLeaderId(),id);
+        validateIfPersonIsManagerInOtherHomeGroup(dto.getManagerId(),id);
         StrategiesModel strategy = strategyReader.findById(dto.getStrategyId());
 
         homeGroup.fromDto(dto);

@@ -3,6 +3,7 @@ import { Modal, Button, Avatar, Switch, Table } from '../shared';
 import { FiArrowLeft, FiCheck, FiX } from 'react-icons/fi';
 import type { Meeting, MeetingAttendance } from '../../models';
 import type { Pageable } from '../../services/api';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 interface AttendanceTableItem {
   id: string;
@@ -150,13 +151,8 @@ function MeetingAttendanceModal({
         <div className="flex items-center justify-between pb-4 border-b border-neutral-200">
           <div>
             <h3 className="text-lg font-semibold text-neutral-800">{meeting.name}</h3>
-            <p className="text-sm text-neutral-500">
-              {new Date(meeting.date).toLocaleDateString('es-ES', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
+            <p className="text-sm text-neutral-500 capitalize">
+              {formatDateForDisplay(meeting.date, 'date')}
             </p>
           </div>
           <Button variant="secondary" onClick={onClose}>

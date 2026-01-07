@@ -17,17 +17,17 @@ import java.util.UUID;
 
 public interface HomeGroupsRepository extends JpaRepository<HomeGroupsModel, UUID> {
     /**
-     * Busca grupos por iglesia con leader, strategy y church pre-cargados.
+     * Busca grupos por iglesia con manager, strategy y church pre-cargados.
      * Evita N+1 en HomeGroupServiceImpl.getHomeGroups() al llamar toDto()
      */
-    @EntityGraph(attributePaths = {"leader", "leader.state", "leader.typePerson", "strategy", "church"})
+    @EntityGraph(attributePaths = {"manager", "manager.state", "manager.typePerson", "strategy", "church"})
     Page<HomeGroupsModel> findAllByChurchId(UUID churchId, Pageable pageable);
 
     /**
      * Busca grupo por ID con todas las relaciones pre-cargadas.
      * Evita N+1 en HomeGroupServiceImpl.getHomeGroupById()
      */
-    @EntityGraph(attributePaths = {"leader", "leader.state", "leader.typePerson", "strategy", "church"})
+    @EntityGraph(attributePaths = {"manager", "manager.state", "manager.typePerson", "strategy", "church"})
     Optional<HomeGroupsModel> findWithRelationsById(UUID id);
 
     @Query("""
@@ -45,7 +45,7 @@ public interface HomeGroupsRepository extends JpaRepository<HomeGroupsModel, UUI
             @Param("churchId") UUID churchId
     );
 
-    Optional<HomeGroupsModel> findByLeaderId(UUID personId);
+    Optional<HomeGroupsModel> findByManagerId(UUID personId);
 
     @Query(value = """
         SELECT 
@@ -53,7 +53,7 @@ public interface HomeGroupsRepository extends JpaRepository<HomeGroupsModel, UUI
         FROM HomeGroupsModel hg
         JOIN FETCH RolesStrategiesModel rss ON rss.strategy.id = hg.strategy.id
         JOIN FETCH RolPeopleStrategiesModel rps ON rps.role.id = rss.id
-        WHERE hg.leader.id = :personId OR rps.person.id = :personId
+        WHERE hg.manager.id = :personId OR rps.person.id = :personId
     """)
     Optional<HomeGroupsModel> getHomeGroupByIntegrantId(@Param("personId") UUID personId);
 

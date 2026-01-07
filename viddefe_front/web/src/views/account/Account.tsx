@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fi';
 import {IconChurch} from '../../components/icons';
 import { PERMISSION_CATEGORIES } from '../../services/userService';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 export default function Account() {
   const { user, permissions, logout } = useAppContext();
@@ -227,11 +228,7 @@ export default function Account() {
                         <p className="text-xs text-neutral-500">Fecha de nacimiento</p>
                         <p className="font-medium text-neutral-900">
                           {user.person?.birthDate 
-                            ? new Date(user.person.birthDate).toLocaleDateString('es-CO', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                              })
+                            ? formatDateForDisplay(user.person.birthDate, 'date')
                             : 'No registrada'
                           }
                         </p>

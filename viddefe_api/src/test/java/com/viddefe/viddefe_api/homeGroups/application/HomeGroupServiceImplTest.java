@@ -134,7 +134,7 @@ class HomeGroupServiceImplTest {
         model.setLatitude(new BigDecimal("19.432608"));
         model.setLongitude(new BigDecimal("-99.133209"));
         model.setStrategy(strategy);
-        model.setLeader(leader);
+        model.setManager(leader);
         model.setChurch(church);
         return model;
     }
@@ -164,7 +164,7 @@ class HomeGroupServiceImplTest {
 
             HomeGroupsModel captured = homeGroupCaptor.getValue();
             assertEquals(church, captured.getChurch());
-            assertEquals(leader, captured.getLeader());
+            assertEquals(leader, captured.getManager());
             assertEquals(strategy, captured.getStrategy());
         }
 

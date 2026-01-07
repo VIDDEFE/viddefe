@@ -93,7 +93,7 @@ export default function Groups() {
       description: groupDetails.description ?? '',
       latitude: groupDetails.latitude ?? '',
       longitude: groupDetails.longitude ?? '',
-      leaderId: groupDetails.leader?.id ?? '',
+      managerId: groupDetails.manager?.id ?? '',
       strategyId: groupDetails.strategy?.id ?? '',
     });
 
@@ -165,8 +165,8 @@ export default function Groups() {
       errors.strategyId = 'La estrategia es requerida';
     }
 
-    if (!formData.leaderId) {
-      errors.leaderId = 'El líder es requerido';
+    if (!formData.managerId) {
+      errors.managerId = 'El responsable es requerido';
     }
 
     setFormErrors(errors);
@@ -183,7 +183,7 @@ export default function Groups() {
         description: formData.description?.trim() || undefined,
         latitude: formData.latitude as number,
         longitude: formData.longitude as number,
-        leaderId: formData.leaderId,
+        managerId: formData.managerId,
         strategyId: formData.strategyId,
       },
       { onSuccess: closeModal }
@@ -201,7 +201,7 @@ export default function Groups() {
           description: formData.description?.trim() || undefined,
           latitude: formData.latitude as number,
           longitude: formData.longitude as number,
-          leaderId: formData.leaderId,
+          managerId: formData.managerId,
           strategyId: formData.strategyId,
         },
       },
@@ -231,16 +231,16 @@ export default function Groups() {
       ),
     },
     {
-      key: 'leader' as const,
-      label: 'Líder',
+      key: 'manager' as const,
+      label: 'Responsable',
       render: (_: unknown, item: HomeGroup) => (
-        item.leader ? (
+        item.manager ? (
           <span className="inline-flex items-center gap-2">
             <span className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-800 font-medium text-xs">
-              {item.leader.firstName?.[0]}{item.leader.lastName?.[0]}
+              {item.manager.firstName?.[0]}{item.manager.lastName?.[0]}
             </span>
             <span className="text-sm">
-              {item.leader.firstName} {item.leader.lastName}
+              {item.manager.firstName} {item.manager.lastName}
             </span>
           </span>
         ) : (

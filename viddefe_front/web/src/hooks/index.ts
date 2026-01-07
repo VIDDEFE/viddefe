@@ -10,3 +10,4 @@ export * from './useUsers';
 export * from './useWorships';
 export * from './useOfferings';
 export * from './useMeetings';
+export * from './useMinistryFunctions';

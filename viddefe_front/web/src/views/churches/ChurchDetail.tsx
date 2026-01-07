@@ -4,6 +4,7 @@ import { Card, Button, PageHeader } from '../../components/shared';
 import { useChurch } from '../../hooks';
 import { FiArrowLeft, FiUsers, FiCalendar, FiMapPin, FiPhone, FiMail, FiUser, FiHome } from 'react-icons/fi';
 import { MdChurch } from 'react-icons/md';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 interface StatCardProps {
   readonly title: string;
@@ -126,11 +127,7 @@ export default function ChurchDetail() {
                 <div>
                   <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">Fecha de Fundación</span>
                   <p className="text-neutral-800 mt-1">
-                    {new Date(church.foundationDate).toLocaleDateString('es-ES', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                    {formatDateForDisplay(church.foundationDate, 'date')}
                   </p>
                 </div>
               )}

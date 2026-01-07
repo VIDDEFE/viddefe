@@ -106,7 +106,7 @@ export interface Strategy {
   name: string;
 }
 
-// Persona resumida para líder de grupo
+// Persona resumida para responsable de grupo
 export interface PersonSummary {
   id: string;
   cc?: string;
@@ -127,7 +127,7 @@ export interface HomeGroup {
   description?: string;
   latitude: number;
   longitude: number;
-  leader: PersonSummary | null;
+  manager: PersonSummary | null;
   strategy: Strategy | null;
 }
 
@@ -137,7 +137,7 @@ export interface CreateHomeGroupDto {
   description?: string;
   latitude: number;
   longitude: number;
-  leaderId: string;
+  managerId: string;
   strategyId: string;
 }
 
@@ -147,7 +147,7 @@ export interface UpdateHomeGroupDto {
   description?: string;
   latitude?: number;
   longitude?: number;
-  leaderId?: string;
+  managerId?: string;
   strategyId?: string;
 }
 
@@ -194,7 +194,7 @@ export interface Group extends BaseEntity {
   description: string;
   churchId: string;
   type: GroupType;
-  leader: string;
+  manager: string;
   members: string[];
   meetingDay: string;
   meetingTime: string;
@@ -358,4 +358,36 @@ export interface UpdateMeetingDto {
   name?: string;
   description?: string;
   date?: string;
+}
+
+// ============================================================================
+// MINISTRY FUNCTIONS (Funciones Ministeriales)
+// ============================================================================
+
+// Tipo de evento para ministry functions
+export type EventType = 'TEMPLE_WORHSIP' | 'GROUP_MEETING';
+
+// Rol en la función ministerial
+export interface MinistryRole {
+  id: number;
+  name: string;
+}
+
+// Función Ministerial - respuesta del backend
+export interface MinistryFunction {
+  id: string;
+  people: PersonSummary;
+  role: MinistryRole;
+}
+
+// DTO para crear/actualizar una función ministerial
+export interface CreateMinistryFunctionDto {
+  peopleId: string;
+  roleId: number;
+}
+
+// DTO para actualizar (mismo que crear)
+export interface UpdateMinistryFunctionDto {
+  peopleId: string;
+  roleId: number;
 }

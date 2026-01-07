@@ -9,9 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Table(name = "group_meetings")
@@ -35,7 +33,7 @@ public class GroupMeetings {
     private HomeGroupsModel group;
 
     @Column(nullable = false)
-    private LocalDateTime date;
+    private OffsetDateTime date;
 
     public GroupMeetings fromDto(CreateMeetingGroupDto dto) {
         this.name = dto.getName();
