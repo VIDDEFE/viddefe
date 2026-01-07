@@ -106,7 +106,7 @@ export interface Strategy {
   name: string;
 }
 
-// Persona resumida para líder de grupo
+// Persona resumida para responsable de grupo
 export interface PersonSummary {
   id: string;
   cc?: string;
@@ -127,7 +127,7 @@ export interface HomeGroup {
   description?: string;
   latitude: number;
   longitude: number;
-  leader: PersonSummary | null;
+  manager: PersonSummary | null;
   strategy: Strategy | null;
 }
 
@@ -137,7 +137,7 @@ export interface CreateHomeGroupDto {
   description?: string;
   latitude: number;
   longitude: number;
-  leaderId: string;
+  managerId: string;
   strategyId: string;
 }
 
@@ -147,7 +147,7 @@ export interface UpdateHomeGroupDto {
   description?: string;
   latitude?: number;
   longitude?: number;
-  leaderId?: string;
+  managerId?: string;
   strategyId?: string;
 }
 
@@ -194,7 +194,7 @@ export interface Group extends BaseEntity {
   description: string;
   churchId: string;
   type: GroupType;
-  leader: string;
+  manager: string;
   members: string[];
   meetingDay: string;
   meetingTime: string;

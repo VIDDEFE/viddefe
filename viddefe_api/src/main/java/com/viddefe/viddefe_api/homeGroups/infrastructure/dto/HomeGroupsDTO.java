@@ -12,6 +12,6 @@ public class HomeGroupsDTO {
     private UUID id;
     private String name, description;
     private BigDecimal latitude, longitude;
-    private PeopleResDto leader;
+    private PeopleResDto manager;
     private StrategyDto strategy;
 }

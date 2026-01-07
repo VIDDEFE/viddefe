@@ -54,7 +54,6 @@ public class WorshipMeetingModel {
         worshipDto.setDescription(this.description);
         worshipDto.setCreationDate(this.creationDate);
         worshipDto.setScheduledDate(this.scheduledDate
-                .withMinute(0)
                 .withSecond(0)
                 .withNano(0));
         worshipDto.setWorshipType(this.worshipType.toDto());
