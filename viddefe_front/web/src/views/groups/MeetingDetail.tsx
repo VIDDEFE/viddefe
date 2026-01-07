@@ -21,25 +21,7 @@ import {
   type OfferingTableItem,
   type OfferingFormData,
 } from '../worships/components';
-
-// Helpers de formato
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-CO', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-
-function formatTime(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('es-CO', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+import { formatDateForDisplay } from '../../utils/helpers';
 
 interface AttendanceTableItem {
   id: string;
@@ -349,11 +331,11 @@ export default function MeetingDetail() {
                   Fecha Programada
                 </span>
                 <p className="text-neutral-800 mt-1 capitalize">
-                  {formatDate(meeting.date)}
+                  {formatDateForDisplay(meeting.date, 'date')}
                 </p>
                 <div className="flex items-center gap-2 mt-1 text-neutral-600">
                   <FiClock size={14} />
-                  <span className="text-sm">{formatTime(meeting.date)}</span>
+                  <span className="text-sm">{formatDateForDisplay(meeting.date, 'time')}</span>
                 </div>
               </div>
             </div>

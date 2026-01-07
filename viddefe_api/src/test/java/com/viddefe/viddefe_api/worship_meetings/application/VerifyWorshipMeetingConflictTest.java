@@ -12,7 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,13 +32,13 @@ class VerifyWorshipMeetingConflictTest {
     private UUID churchId;
     private UUID worshipId;
     private CreateWorshipDto createDto;
-    private LocalDateTime scheduledDate;
+    private OffsetDateTime scheduledDate;
 
     @BeforeEach
     void setUp() {
         churchId = UUID.randomUUID();
         worshipId = UUID.randomUUID();
-        scheduledDate = LocalDateTime.now().plusDays(1);
+        scheduledDate = OffsetDateTime.now(ZoneOffset.UTC).plusDays(1);
 
         createDto = new CreateWorshipDto();
         createDto.setName("Servicio Dominical");
@@ -220,7 +221,7 @@ class VerifyWorshipMeetingConflictTest {
         @DisplayName("Debe verificar con la fecha programada correcta")
         void verifyHourOfWorshipMeeting_ShouldUseCorrectScheduledDate() {
             // Arrange
-            LocalDateTime specificDate = LocalDateTime.of(2026, 6, 15, 10, 0);
+            OffsetDateTime specificDate = OffsetDateTime.of(2026, 6, 15, 10, 0, 0, 0, ZoneOffset.UTC);
             createDto.setScheduledDate(specificDate);
             when(worshipRepository.existsByChurchIdAndWorshipTypeIdAndScheduledDate(
                     any(), any(), eq(specificDate)))

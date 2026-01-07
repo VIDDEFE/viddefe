@@ -19,7 +19,7 @@ import {
 import { useAppContext } from '../../context/AppContext';
 import { WorshipPermission } from '../../services/userService';
 import type { SortConfig } from '../../services/api';
-import { toLocalDateTime, toDatetimeLocal } from '../../utils/helpers';
+import { toUTCISOString, toDatetimeLocal, formatDateForDisplay } from '../../utils/helpers';
 
 type ModalMode = 'create' | 'edit' | 'delete' | null;
 
@@ -27,15 +27,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 // Helper para formatear fecha para mostrar en tabla
 function formatDateTime(isoDate: string): string {
-  try {
-    const date = new Date(isoDate);
-    return date.toLocaleString('es-ES', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
-  } catch {
-    return isoDate;
-  }
+  return formatDateForDisplay(isoDate, 'short');
 }
 
 export default function Worships() {
@@ -169,7 +161,7 @@ export default function Worships() {
       {
         name: formData.name.trim(),
         description: formData.description?.trim() || undefined,
-        scheduledDate: toLocalDateTime(formData.scheduledDate),
+        scheduledDate: toUTCISOString(formData.scheduledDate),
         worshipTypeId: formData.worshipTypeId as number,
       },
       { onSuccess: closeModal }
@@ -185,7 +177,7 @@ export default function Worships() {
         data: {
           name: formData.name.trim(),
           description: formData.description?.trim() || undefined,
-          scheduledDate: toLocalDateTime(formData.scheduledDate),
+          scheduledDate: toUTCISOString(formData.scheduledDate),
           worshipTypeId: formData.worshipTypeId as number,
         },
       },

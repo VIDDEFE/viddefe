@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter @Setter
 public class CreateMeetingGroupDto {
@@ -16,5 +16,5 @@ public class CreateMeetingGroupDto {
 
     @NotNull(message = "Meeting date is required")
     @FutureOrPresent(message = "Meeting date cannot be in the past")
-    private LocalDateTime date;
+    private OffsetDateTime date;
 }

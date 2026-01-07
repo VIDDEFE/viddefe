@@ -21,6 +21,7 @@ import MeetingDeleteModal from '../../components/groups/MeetingDeleteModal';
 import MeetingAttendanceModal from '../../components/groups/MeetingAttendanceModal';
 import { FiMapPin, FiUser, FiGrid, FiUsers, FiPlus, FiCalendar, FiEye, FiEdit2, FiTrash2, FiUserCheck } from 'react-icons/fi';
 import type { RoleStrategyNode, Meeting, CreateMeetingDto, UpdateMeetingDto } from '../../models';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 export default function MyGroup() {
   const navigate = useNavigate();
@@ -211,15 +212,8 @@ export default function MyGroup() {
       id: meeting.id,
       name: meeting.name,
       type: meeting.type?.name || '-',
-      date: new Date(meeting.date).toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }),
-      time: new Date(meeting.date).toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      date: formatDateForDisplay(meeting.date, 'date'),
+      time: formatDateForDisplay(meeting.date, 'time'),
       description: meeting.description || '-',
       original: meeting,
     })),

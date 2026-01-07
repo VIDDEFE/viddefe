@@ -1,33 +1,19 @@
+import { formatDateForDisplay } from '../../../utils/helpers';
+
 /**
  * Formatea una fecha ISO a formato legible en español
+ * @deprecated Usar formatDateForDisplay de utils/helpers directamente
  */
 export function formatDate(isoDate: string): string {
-  try {
-    const date = new Date(isoDate);
-    return date.toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  } catch {
-    return isoDate;
-  }
+  return formatDateForDisplay(isoDate, 'date');
 }
 
 /**
  * Formatea una fecha ISO para mostrar solo la hora
+ * @deprecated Usar formatDateForDisplay de utils/helpers directamente
  */
 export function formatTime(isoDate: string): string {
-  try {
-    const date = new Date(isoDate);
-    return date.toLocaleTimeString('es-ES', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch {
-    return isoDate;
-  }
+  return formatDateForDisplay(isoDate, 'time');
 }
 
 /**

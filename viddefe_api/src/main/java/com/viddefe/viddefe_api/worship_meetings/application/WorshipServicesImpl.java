@@ -10,7 +10,6 @@ import com.viddefe.viddefe_api.worship_meetings.contracts.WorshipService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingModel;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.WorshipRepository;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDetailedDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDto;
@@ -21,8 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -46,7 +44,7 @@ public class WorshipServicesImpl implements WorshipService {
         ChurchModel church = churchLookup.getChurchById(churchId);
 
         WorshipMeetingModel worshipModel = new WorshipMeetingModel().fromDto(dto);
-        worshipModel.setCreationDate(new Date());
+        worshipModel.setCreationDate(Instant.now());
         worshipModel.setWorshipType(worshipMeetingTypes);
         worshipModel.setChurch(church);
 
