@@ -13,3 +13,5 @@ export { default as MeetingFormModal } from './MeetingFormModal';
 export { default as MeetingViewModal } from './MeetingViewModal';
 export { default as MeetingDeleteModal } from './MeetingDeleteModal';
 export { default as MeetingAttendanceModal } from './MeetingAttendanceModal';
+// Ministry Functions
+export { default as MinistryFunctionsModal } from './MinistryFunctionsModal';

@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.worship_meetings.contracts;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMinistryFunctionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionTypeDto;
 
 import java.util.List;
 import java.util.UUID;
@@ -33,4 +34,10 @@ public interface MinistryFunctionService {
      * @param id UUID of the ministry function to be deleted
      */
     void delete(UUID id);
+
+    /**
+     * Get all Ministry Function Types
+     * @return List of MinistryFunctionTypeDto representing all ministry function types
+     */
+    List<MinistryFunctionTypeDto> getAllMinistryFunctionTypes();
 }

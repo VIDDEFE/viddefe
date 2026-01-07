@@ -5,6 +5,7 @@ import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventTyp
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionService;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMinistryFunctionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionTypeDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

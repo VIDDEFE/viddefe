@@ -2,9 +2,11 @@ package com.viddefe.viddefe_api.worship_meetings.infrastructure.web;
 
 import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.WorshipService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingTypeDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionTypeDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +21,7 @@ import java.util.List;
 public class MeetingsTypesController {
 
     private final MeetingTypesService meetingTypesService;
+    private final MinistryFunctionService ministryFunctionService;
 
     @GetMapping("/worship/types")
     public ResponseEntity<ApiResponse<List<MeetingTypeDto>>> getWorshipMeetingTypes() {
@@ -31,4 +34,13 @@ public class MeetingsTypesController {
         List<MeetingTypeDto> response = meetingTypesService.getAllGroupMeetingTypes();
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
+
+    @GetMapping("/ministry-functions/roles")
+    public ResponseEntity<ApiResponse<List<MinistryFunctionTypeDto>>> getAvailableRoles() {
+        List<MinistryFunctionTypeDto> response =
+                ministryFunctionService.getAllMinistryFunctionTypes();
+
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
 }

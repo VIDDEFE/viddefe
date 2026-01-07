@@ -359,3 +359,35 @@ export interface UpdateMeetingDto {
   description?: string;
   date?: string;
 }
+
+// ============================================================================
+// MINISTRY FUNCTIONS (Funciones Ministeriales)
+// ============================================================================
+
+// Tipo de evento para ministry functions
+export type EventType = 'TEMPLE_WORHSIP' | 'GROUP_MEETING';
+
+// Rol en la función ministerial
+export interface MinistryRole {
+  id: number;
+  name: string;
+}
+
+// Función Ministerial - respuesta del backend
+export interface MinistryFunction {
+  id: string;
+  people: PersonSummary;
+  role: MinistryRole;
+}
+
+// DTO para crear/actualizar una función ministerial
+export interface CreateMinistryFunctionDto {
+  peopleId: string;
+  roleId: number;
+}
+
+// DTO para actualizar (mismo que crear)
+export interface UpdateMinistryFunctionDto {
+  peopleId: string;
+  roleId: number;
+}

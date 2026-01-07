@@ -25,7 +25,7 @@ public class MinistryFunction {
     @JoinColumn(name = "people_id", nullable = false)
     private PeopleModel people;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = false)
     private UUID eventId;
 
     @Enumerated(EnumType.STRING)

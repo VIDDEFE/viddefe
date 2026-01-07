@@ -10,7 +10,8 @@ import {
   useOfferingTypes,
   useCreateOffering,
   useUpdateOffering,
-  useDeleteOffering
+  useDeleteOffering,
+  useMinistryFunctions
 } from '../../hooks';
 import type { MeetingAttendance, Offering, CreateOfferingDto, UpdateOfferingDto } from '../../models';
 import { FiArrowLeft, FiCheck, FiX, FiFileText, FiCalendar, FiClock, FiUsers } from 'react-icons/fi';
@@ -18,9 +19,11 @@ import {
   OfferingsSection,
   OfferingModal,
   DeleteOfferingModal,
+  MinistryFunctionsSection,
   type OfferingTableItem,
   type OfferingFormData,
 } from '../worships/components';
+import { MinistryFunctionsModal } from '../../components/groups';
 import { formatDateForDisplay } from '../../utils/helpers';
 
 interface AttendanceTableItem {
@@ -72,6 +75,12 @@ export default function MeetingDetail() {
   const updateOffering = useUpdateOffering(meetingId);
   const deleteOffering = useDeleteOffering(meetingId);
 
+  // Funciones ministeriales
+  const { data: ministryFunctions = [], isLoading: loadingMinistryFunctions } = useMinistryFunctions(
+    meetingId,
+    'GROUP_MEETING'
+  );
+
   // Modal de ofrendas
   const [offeringModalOpen, setOfferingModalOpen] = useState(false);
   const [editingOffering, setEditingOffering] = useState<OfferingTableItem | null>(null);
@@ -83,6 +92,9 @@ export default function MeetingDetail() {
 
   // Modal de eliminación
   const [deletingOfferingId, setDeletingOfferingId] = useState<string | null>(null);
+
+  // Modal de funciones ministeriales
+  const [ministryFunctionsModalOpen, setMinistryFunctionsModalOpen] = useState(false);
 
   const attendanceTableData: AttendanceTableItem[] = useMemo(() =>
     (attendanceData?.content ?? []).map((record: MeetingAttendance) => ({
@@ -389,6 +401,15 @@ export default function MeetingDetail() {
         </div>
       </div>
 
+      {/* ========== SECCIÓN DE FUNCIONES MINISTERIALES ========== */}
+      <div className="mt-6 animate-fadeIn">
+        <MinistryFunctionsSection
+          ministryFunctions={ministryFunctions}
+          isLoading={loadingMinistryFunctions}
+          onManage={() => setMinistryFunctionsModalOpen(true)}
+        />
+      </div>
+
       {/* ========== SECCIÓN DE OFRENDAS ========== */}
       <div className="mt-6 animate-fadeIn">
         <OfferingsSection
@@ -428,6 +449,16 @@ export default function MeetingDetail() {
         onConfirm={handleConfirmDeleteOffering}
         isDeleting={deleteOffering.isPending}
       />
+
+      {meetingId && (
+        <MinistryFunctionsModal
+          isOpen={ministryFunctionsModalOpen}
+          meetingId={meetingId}
+          eventType="GROUP_MEETING"
+          hierarchy={myGroup?.hierarchy ?? []}
+          onClose={() => setMinistryFunctionsModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

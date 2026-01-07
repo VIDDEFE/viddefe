@@ -10,3 +10,4 @@ export * from './userService';
 export * from './worshipService';
 export * from './offeringService';
 export * from './meetingService';
+export * from './ministryFunctionService';

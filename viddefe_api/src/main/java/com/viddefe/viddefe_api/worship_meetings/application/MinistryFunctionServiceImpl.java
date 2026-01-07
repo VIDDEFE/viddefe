@@ -10,6 +10,7 @@ import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunctionTy
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MinistryFunctionRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMinistryFunctionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionTypeDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
         ministryFunction.setEventId(eventId);
         ministryFunction.setPeople(people);
         ministryFunction.setMinistryFunctionType(type);
+        ministryFunction.setEventType(eventType);
         return ministryFunctionRepository.save(ministryFunction).toDto();
     }
 
@@ -44,6 +46,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
         PeopleModel people = peopleReader.getPeopleById(dto.getPeopleId());
         ministryFunction.setPeople(people);
         ministryFunction.setMinistryFunctionType(type);
+        ministryFunction.setEventType(eventType);
         return ministryFunctionRepository.save(ministryFunction).toDto();
     }
 
@@ -58,5 +61,10 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
             throw new EntityNotFoundException("Funcion ministerial no encontrada");
         }
         ministryFunctionRepository.deleteById(id);
+    }
+
+    @Override
+    public List<MinistryFunctionTypeDto> getAllMinistryFunctionTypes() {
+        return ministryFunctionTypeReader.findAll().stream().map(MinistryFunctionTypes::toDto).toList();
     }
 }
