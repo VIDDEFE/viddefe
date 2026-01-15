@@ -1,5 +1,5 @@
 import { apiService, type PageableRequest } from './api';
-import { meetingService, MeetingType, type PageableParams } from './meetingService';
+import { MeetingType } from './meetingService';
 import type { 
   Worship, 
   WorshipDetail, 
@@ -19,18 +19,25 @@ export interface RegisterAttendanceDto {
   eventId: string;
 }
 
-// Helper para convertir PageableRequest a PageableParams
-function toPageableParams(params?: PageableRequest): PageableParams | undefined {
-  if (!params) return undefined;
-  return {
-    page: params.page,
-    size: params.size,
-    sort: params.sort ? `${params.sort.field},${params.sort.direction}` : undefined,
-  };
+// Payload para crear/actualizar cultos según contrato del backend
+interface CreateWorshipPayload {
+  meetingType: 'WORSHIP';
+  name: string;
+  description?: string;
+  scheduledDate: string; // ISO-8601 con offset obligatorio
+  worshipTypeId: number;
+}
+
+interface UpdateWorshipPayload {
+  meetingType: 'WORSHIP';
+  name?: string;
+  description?: string;
+  scheduledDate?: string;
+  worshipTypeId?: number;
 }
 
 // ============================================================================
-// WORSHIP SERVICE - Usa el nuevo meetingService internamente
+// WORSHIP SERVICE
 // ============================================================================
 
 export const worshipService = {
@@ -39,12 +46,11 @@ export const worshipService = {
    * GET /meetings?type=TEMPLE_WORHSIP
    */
   getAll: async (params?: PageableRequest): Promise<Pageable<Worship>> => {
-    const pageableParams = toPageableParams(params);
     const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
     
-    if (pageableParams?.page !== undefined) query.append('page', String(pageableParams.page));
-    if (pageableParams?.size !== undefined) query.append('size', String(pageableParams.size));
-    if (pageableParams?.sort) query.append('sort', pageableParams.sort);
+    if (params?.page !== undefined) query.append('page', String(params.page));
+    if (params?.size !== undefined) query.append('size', String(params.size));
+    if (params?.sort) query.append('sort', `${params.sort.field},${params.sort.direction}`);
     
     const response = await apiService.get<Pageable<Worship>>(`/meetings?${query.toString()}`);
     return response;
@@ -63,15 +69,21 @@ export const worshipService = {
   /**
    * Crea un nuevo culto
    * POST /meetings?type=TEMPLE_WORHSIP
+   * 
+   * IMPORTANTE: meetingType debe ser "WORSHIP" (string constante, NO un ID)
    */
   create: async (data: CreateWorshipDto): Promise<Worship> => {
     const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
-    const payload = {
+    
+    // Construir payload según contrato del backend
+    const payload: CreateWorshipPayload = {
+      meetingType: 'WORSHIP', // Constante del enum, NO un ID
       name: data.name,
       description: data.description,
-      scheduledDate: data.scheduledDate,
-      meetingType: String(data.worshipTypeId),
+      scheduledDate: data.scheduledDate, // Debe incluir offset de timezone
+      worshipTypeId: data.worshipTypeId as number,
     };
+    
     const response = await apiService.post<Worship>(`/meetings?${query.toString()}`, payload);
     return response;
   },
@@ -82,12 +94,15 @@ export const worshipService = {
    */
   update: async (id: string, data: UpdateWorshipDto): Promise<Worship> => {
     const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
-    const payload = {
+    
+    const payload: UpdateWorshipPayload = {
+      meetingType: 'WORSHIP',
       name: data.name,
       description: data.description,
       scheduledDate: data.scheduledDate,
-      meetingType: data.worshipTypeId ? String(data.worshipTypeId) : undefined,
+      worshipTypeId: data.worshipTypeId,
     };
+    
     const response = await apiService.put<Worship>(`/meetings/${id}?${query.toString()}`, payload);
     return response;
   },

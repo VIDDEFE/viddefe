@@ -1,15 +1,27 @@
 import { apiService } from "./api";
 
 // ============================================================================
-// ENUMS
+// ENUMS - Query Parameter Values (para el parámetro ?type= en la URL)
 // ============================================================================
 
 export const MeetingType = {
-  TEMPLE_WORSHIP: 'TEMPLE_WORHSIP',
-  GROUP_MEETING: 'GROUP_MEETING',
+  TEMPLE_WORSHIP: 'TEMPLE_WORHSIP',  // Valor para query param
+  GROUP_MEETING: 'GROUP_MEETING',     // Valor para query param
 } as const;
 
 export type MeetingType = typeof MeetingType[keyof typeof MeetingType];
+
+// ============================================================================
+// ENUMS - Payload meetingType Values (para el body del request)
+// Estos son los valores que el backend usa para deserialización polimórfica
+// ============================================================================
+
+export const MeetingTypePayload = {
+  WORSHIP: 'WORSHIP',           // Para crear/actualizar cultos
+  GROUP_MEETING: 'GROUP_MEETING', // Para crear/actualizar reuniones de grupo
+} as const;
+
+export type MeetingTypePayload = typeof MeetingTypePayload[keyof typeof MeetingTypePayload];
 
 // ============================================================================
 // TYPES - Common
@@ -79,15 +91,6 @@ export interface ApiResponse<T> {
 // ============================================================================
 // TYPES - Meeting Request/Response
 // ============================================================================
-
-export interface CreateMeetingRequest {
-  name: string;
-  description?: string;
-  scheduledDate: string; // Must include timezone offset (ISO 8601)
-  meetingType: string;
-  groupMeetingTypeId?: number;
-  date?: string;
-}
 
 export interface MeetingResponse {
   id: string;
@@ -167,12 +170,16 @@ function buildAttendanceQueryParams(
   return params.toString();
 }
 
+/**
+ * Convierte una fecha local a ISO-8601 con offset de timezone
+ * El backend REQUIERE el offset, no acepta fechas sin él
+ */
 function formatDateWithOffset(date: Date): string {
   return date.toISOString();
 }
 
 // ============================================================================
-// WORSHIP (TEMPLE_WORSHIP) API
+// WORSHIP (TEMPLE_WORSHIP) API - Low level (usar worshipService en su lugar)
 // ============================================================================
 
 export const worshipApi = {
@@ -186,23 +193,6 @@ export const worshipApi = {
     const query = buildQueryParams(MeetingType.TEMPLE_WORSHIP);
     const response = await apiService.get<ApiResponse<MeetingResponse>>(`/meetings/${id}?${query}`);
     return response.data;
-  },
-
-  create: async (data: CreateMeetingRequest): Promise<MeetingResponse> => {
-    const query = buildQueryParams(MeetingType.TEMPLE_WORSHIP);
-    const response = await apiService.post<ApiResponse<MeetingResponse>>(`/meetings?${query}`, data);
-    return response.data;
-  },
-
-  update: async (id: string, data: Partial<CreateMeetingRequest>): Promise<MeetingResponse> => {
-    const query = buildQueryParams(MeetingType.TEMPLE_WORSHIP);
-    const response = await apiService.put<ApiResponse<MeetingResponse>>(`/meetings/${id}?${query}`, data);
-    return response.data;
-  },
-
-  delete: async (id: string): Promise<void> => {
-    const query = buildQueryParams(MeetingType.TEMPLE_WORSHIP);
-    await apiService.delete<ApiResponse<void>>(`/meetings/${id}?${query}`);
   },
 
   getAttendance: async (id: string, pageable?: PageableParams): Promise<PaginatedAttendanceResponse> => {
@@ -219,7 +209,7 @@ export const worshipApi = {
 };
 
 // ============================================================================
-// GROUP MEETING API
+// GROUP MEETING API - Low level (usar groupMeetingService en su lugar)
 // ============================================================================
 
 export const groupMeetingApi = {
@@ -233,23 +223,6 @@ export const groupMeetingApi = {
     const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId);
     const response = await apiService.get<ApiResponse<MeetingResponse>>(`/meetings/${id}?${query}`);
     return response.data;
-  },
-
-  create: async (groupId: string, data: CreateMeetingRequest): Promise<MeetingResponse> => {
-    const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId);
-    const response = await apiService.post<ApiResponse<MeetingResponse>>(`/meetings?${query}`, data);
-    return response.data;
-  },
-
-  update: async (id: string, groupId: string, data: Partial<CreateMeetingRequest>): Promise<MeetingResponse> => {
-    const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId);
-    const response = await apiService.put<ApiResponse<MeetingResponse>>(`/meetings/${id}?${query}`, data);
-    return response.data;
-  },
-
-  delete: async (id: string, groupId: string): Promise<void> => {
-    const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId);
-    await apiService.delete<ApiResponse<void>>(`/meetings/${id}?${query}`);
   },
 
   getAttendance: async (id: string, pageable?: PageableParams): Promise<PaginatedAttendanceResponse> => {

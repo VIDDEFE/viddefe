@@ -17,6 +17,23 @@ export interface RegisterMeetingAttendanceDto {
   eventId: string;
 }
 
+// Payload para crear/actualizar reuniones de grupo según contrato del backend
+interface CreateGroupMeetingPayload {
+  meetingType: 'GROUP_MEETING';
+  name: string;
+  description?: string;
+  scheduledDate: string; // ISO-8601 con offset obligatorio
+  groupMeetingTypeId: number;
+}
+
+interface UpdateGroupMeetingPayload {
+  meetingType: 'GROUP_MEETING';
+  name?: string;
+  description?: string;
+  scheduledDate?: string;
+  groupMeetingTypeId?: number;
+}
+
 // ============================================================================
 // GROUP MEETING SERVICE
 // ============================================================================
@@ -56,20 +73,24 @@ export const groupMeetingService = {
   /**
    * Crea una nueva reunión de grupo
    * POST /meetings?type=GROUP_MEETING&contextId={groupId}
+   * 
+   * IMPORTANTE: meetingType debe ser "GROUP_MEETING" (string constante, NO un ID)
    */
   create: async (groupId: string, data: CreateMeetingDto): Promise<Meeting> => {
     const query = new URLSearchParams({ 
       type: MeetingType.GROUP_MEETING,
       contextId: groupId,
     });
-    const payload = {
+    
+    // Construir payload según contrato del backend
+    const payload: CreateGroupMeetingPayload = {
+      meetingType: 'GROUP_MEETING', // Constante del enum, NO un ID
       name: data.name,
       description: data.description,
-      scheduledDate: data.date,
-      meetingType: String(data.groupMeetingTypeId),
+      scheduledDate: data.date, // Debe incluir offset de timezone
       groupMeetingTypeId: data.groupMeetingTypeId,
-      date: data.date,
     };
+    
     const response = await apiService.post<Meeting>(`/meetings?${query.toString()}`, payload);
     return response;
   },
@@ -83,14 +104,15 @@ export const groupMeetingService = {
       type: MeetingType.GROUP_MEETING,
       contextId: groupId,
     });
-    const payload = {
+    
+    const payload: UpdateGroupMeetingPayload = {
+      meetingType: 'GROUP_MEETING',
       name: data.name,
       description: data.description,
       scheduledDate: data.date,
-      meetingType: data.groupMeetingTypeId ? String(data.groupMeetingTypeId) : undefined,
       groupMeetingTypeId: data.groupMeetingTypeId,
-      date: data.date,
     };
+    
     const response = await apiService.put<Meeting>(`/meetings/${id}?${query.toString()}`, payload);
     return response;
   },
