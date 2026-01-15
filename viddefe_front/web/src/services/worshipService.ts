@@ -1,78 +1,137 @@
-import { apiService, type Pageable, type PageableRequest, type SortConfig } from './api';
-import type { Worship, WorshipDetail, WorshipType, WorshipAttendance, CreateWorshipDto, UpdateWorshipDto } from '../models';
+import { apiService, type PageableRequest } from './api';
+import { meetingService, MeetingType, type PageableParams } from './meetingService';
+import type { 
+  Worship, 
+  WorshipDetail, 
+  WorshipType, 
+  CreateWorshipDto, 
+  UpdateWorshipDto,
+  WorshipAttendance 
+} from '../models';
+import type { Pageable } from './api';
 
-// DTO para registrar asistencia
+// ============================================================================
+// TYPES
+// ============================================================================
+
 export interface RegisterAttendanceDto {
   peopleId: string;
   eventId: string;
 }
 
-// Helper para construir query string de sort para Spring Boot
-const buildSortParam = (sort?: SortConfig): string => {
-  if (!sort) return '';
-  return `sort=${sort.field},${sort.direction}`;
-};
+// Helper para convertir PageableRequest a PageableParams
+function toPageableParams(params?: PageableRequest): PageableParams | undefined {
+  if (!params) return undefined;
+  return {
+    page: params.page,
+    size: params.size,
+    sort: params.sort ? `${params.sort.field},${params.sort.direction}` : undefined,
+  };
+}
+
+// ============================================================================
+// WORSHIP SERVICE - Usa el nuevo meetingService internamente
+// ============================================================================
 
 export const worshipService = {
   /**
    * Obtiene todos los cultos paginados
+   * GET /meetings?type=TEMPLE_WORHSIP
    */
-  getAll: (params?: PageableRequest) => {
-    const queryParts: string[] = [];
-    if (params?.page !== undefined) queryParts.push(`page=${params.page}`);
-    if (params?.size !== undefined) queryParts.push(`size=${params.size}`);
-    if (params?.sort) queryParts.push(buildSortParam(params.sort));
-    const queryParams = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
-    return apiService.get<Pageable<Worship>>(`/worship/meeting${queryParams}`);
+  getAll: async (params?: PageableRequest): Promise<Pageable<Worship>> => {
+    const pageableParams = toPageableParams(params);
+    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    
+    if (pageableParams?.page !== undefined) query.append('page', String(pageableParams.page));
+    if (pageableParams?.size !== undefined) query.append('size', String(pageableParams.size));
+    if (pageableParams?.sort) query.append('sort', pageableParams.sort);
+    
+    const response = await apiService.get<Pageable<Worship>>(`/meetings?${query.toString()}`);
+    return response;
   },
 
   /**
-   * Obtiene un culto por ID con detalle de asistencia
+   * Obtiene un culto por ID con detalle
+   * GET /meetings/{id}?type=TEMPLE_WORHSIP
    */
-  getById: (id: string) => apiService.get<WorshipDetail>(`/worship/meeting/${id}`),
+  getById: async (id: string): Promise<WorshipDetail> => {
+    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const response = await apiService.get<WorshipDetail>(`/meetings/${id}?${query.toString()}`);
+    return response;
+  },
 
   /**
    * Crea un nuevo culto
+   * POST /meetings?type=TEMPLE_WORHSIP
    */
-  create: (worship: CreateWorshipDto) =>
-    apiService.post<Worship>('/worship/meeting', worship),
-
-  /**
-   * Actualiza un culto existente
-   */
-  update: (id: string, worship: UpdateWorshipDto) =>
-    apiService.put<Worship>(`/worship/meeting/${id}`, worship),
-
-  /**
-   * Elimina un culto
-   */
-  delete: (id: string) => apiService.delete(`/worship/meeting/${id}`),
-
-  /**
-   * Obtiene todos los tipos de culto disponibles
-   * GET /meetings/worship/types
-   */
-  getTypes: () => apiService.get<WorshipType[]>('/meetings/worship/types'),
-
-  /**
-   * Obtiene la asistencia de un culto paginada
-   * Devuelve TODAS las personas relacionadas con el meeting
-   * Si una persona no tiene registro de asistencia, su status es "ABSENT"
-   */
-  getAttendance: (id: string, params?: PageableRequest) => {
-    const queryParts: string[] = [];
-    if (params?.page !== undefined) queryParts.push(`page=${params.page}`);
-    if (params?.size !== undefined) queryParts.push(`size=${params.size}`);
-    if (params?.sort) queryParts.push(buildSortParam(params.sort));
-    const queryParams = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
-    return apiService.get<Pageable<WorshipAttendance>>(`/worship/meeting/${id}/attendance${queryParams}`);
+  create: async (data: CreateWorshipDto): Promise<Worship> => {
+    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const payload = {
+      name: data.name,
+      description: data.description,
+      scheduledDate: data.scheduledDate,
+      meetingType: String(data.worshipTypeId),
+    };
+    const response = await apiService.post<Worship>(`/meetings?${query.toString()}`, payload);
+    return response;
   },
 
   /**
-   * Registra o cambia la asistencia de una persona a un culto
-   * Si no existe registro → crea con PRESENT
-   * Si existe → alterna el estado (PRESENT ↔ ABSENT)
+   * Actualiza un culto existente
+   * PUT /meetings/{id}?type=TEMPLE_WORHSIP
    */
-  registerAttendance: (data: RegisterAttendanceDto) =>
-    apiService.put<WorshipAttendance>('/worship/meeting/attendance', data),
+  update: async (id: string, data: UpdateWorshipDto): Promise<Worship> => {
+    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const payload = {
+      name: data.name,
+      description: data.description,
+      scheduledDate: data.scheduledDate,
+      meetingType: data.worshipTypeId ? String(data.worshipTypeId) : undefined,
+    };
+    const response = await apiService.put<Worship>(`/meetings/${id}?${query.toString()}`, payload);
+    return response;
+  },
+
+  /**
+   * Elimina un culto
+   * DELETE /meetings/{id}?type=TEMPLE_WORHSIP
+   */
+  delete: async (id: string): Promise<void> => {
+    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    await apiService.delete(`/meetings/${id}?${query.toString()}`);
+  },
+
+  /**
+   * Obtiene los tipos de culto disponibles
+   * GET /meetings/worship/types
+   */
+  getTypes: async (): Promise<WorshipType[]> => {
+    const response = await apiService.get<WorshipType[]>('/meetings/worship/types');
+    return response;
+  },
+
+  /**
+   * Obtiene la asistencia de un culto paginada
+   * GET /meetings/{id}/attendance?type=TEMPLE_WORHSIP
+   */
+  getAttendance: async (id: string, params?: PageableRequest): Promise<Pageable<WorshipAttendance>> => {
+    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    
+    if (params?.page !== undefined) query.append('page', String(params.page));
+    if (params?.size !== undefined) query.append('size', String(params.size));
+    if (params?.sort) query.append('sort', `${params.sort.field},${params.sort.direction}`);
+    
+    const response = await apiService.get<Pageable<WorshipAttendance>>(`/meetings/${id}/attendance?${query.toString()}`);
+    return response;
+  },
+
+  /**
+   * Registra o cambia asistencia de una persona
+   * PUT /meetings/attendance?type=TEMPLE_WORHSIP
+   */
+  registerAttendance: async (data: RegisterAttendanceDto): Promise<WorshipAttendance> => {
+    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const response = await apiService.put<WorshipAttendance>(`/meetings/attendance?${query.toString()}`, data);
+    return response;
+  },
 };

@@ -7,10 +7,15 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
+/**
+ * Entidad para cultos/servicios de adoración.
+ * Extiende de Meeting para heredar campos comunes (id, name, description, scheduledDate, creationDate).
+ *
+ * Reglas de timezone:
+ * - scheduledDate viene del DTO con offset (ej: -05:00 o Z)
+ * - Se almacena en BD como timestamptz
+ * - NO hacer conversiones de zona en fromDto()/toDto()
+ */
 @Table(
         name = "worship_services",
         uniqueConstraints = {
@@ -26,18 +31,7 @@ import java.util.UUID;
 )
 @Entity
 @Getter @Setter
-public class WorshipMeetingModel {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    private String name;
-    private String description;
-
-    @Column(name = "creation_date", nullable = false, updatable = false)
-    private Instant creationDate;
-    @Column(name = "scheduled_date", nullable = false)
-    private OffsetDateTime scheduledDate;
+public class WorshipMeetingModel extends Meeting {
 
     @ManyToOne
     @JoinColumn(name = "worship_meeting_type_id", nullable = false)
@@ -47,23 +41,47 @@ public class WorshipMeetingModel {
     @JoinColumn(name = "church_id", nullable = false)
     private ChurchModel church;
 
+    /**
+     * Convierte la entidad a DTO de respuesta.
+     * Preserva el scheduledDate sin conversiones de zona.
+     *
+     * @return WorshipDto con los datos del culto
+     */
     public WorshipDto toDto() {
         WorshipDto worshipDto = new WorshipDto();
-        worshipDto.setId(this.id);
-        worshipDto.setName(this.name);
-        worshipDto.setDescription(this.description);
-        worshipDto.setCreationDate(this.creationDate);
-        worshipDto.setScheduledDate(this.scheduledDate
+        worshipDto.setId(getId());
+        worshipDto.setName(getName());
+        worshipDto.setDescription(getDescription());
+        worshipDto.setCreationDate(getCreationDate());
+        // Preservar offset, solo limpiar segundos/nanos para consistencia
+        worshipDto.setScheduledDate(getScheduledDate()
                 .withSecond(0)
                 .withNano(0));
         worshipDto.setWorshipType(this.worshipType.toDto());
         return worshipDto;
     }
 
+    /**
+     * Inicializa la entidad desde un DTO de creación.
+     * NO realiza conversiones de zona - asigna scheduledDate directamente.
+     *
+     * @param dto DTO con los datos del culto a crear
+     * @return this (para encadenamiento)
+     */
     public WorshipMeetingModel fromDto(CreateWorshipDto dto) {
-        this.name = dto.getName();
-        this.description = dto.getDescription();
-        this.scheduledDate = dto.getScheduledDate();
+        // Usa el método heredado para campos comunes
+        initFromDto(dto.getName(), dto.getDescription(), dto.getScheduledDate());
+        return this;
+    }
+
+    /**
+     * Actualiza la entidad desde un DTO (no modifica creationDate).
+     *
+     * @param dto DTO con los datos actualizados
+     * @return this (para encadenamiento)
+     */
+    public WorshipMeetingModel updateFrom(CreateWorshipDto dto) {
+        updateFromDto(dto.getName(), dto.getDescription(), dto.getScheduledDate());
         return this;
     }
 }

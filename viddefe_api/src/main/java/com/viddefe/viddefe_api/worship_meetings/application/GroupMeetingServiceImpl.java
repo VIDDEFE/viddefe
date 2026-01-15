@@ -38,7 +38,6 @@ public class GroupMeetingServiceImpl implements GroupMeetingService {
         GroupMeetingTypes type = groupMeetingTypeReader.getGroupMeetingTypeById(dto.getGroupMeetingTypeId());
         groupMeeting.setGroup(homeGroupsModel);
         groupMeeting.setGroupMeetingType(type);
-        System.out.println("Creating group meeting for group ID ss: " + homeGroupsModel.getId());
         return groupMeetingRepository.save(groupMeeting).toDto();
     }
 
@@ -48,7 +47,8 @@ public class GroupMeetingServiceImpl implements GroupMeetingService {
                 () -> new EntityNotFoundException("No se encontró la reunión de grupo")
         );
         validateGroupOwnership(groupId, groupMeeting);
-        groupMeeting.fromDto(dto);
+        // Usar updateFrom para no modificar creationDate
+        groupMeeting.updateFrom(dto);
         GroupMeetingTypes type = groupMeetingTypeReader.getGroupMeetingTypeById(dto.getGroupMeetingTypeId());
         groupMeeting.setGroupMeetingType(type);
         return groupMeetingRepository.save(groupMeeting).toDto();

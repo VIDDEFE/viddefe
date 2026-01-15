@@ -19,8 +19,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -43,8 +41,8 @@ public class WorshipServicesImpl implements WorshipService {
 
         ChurchModel church = churchLookup.getChurchById(churchId);
 
+        // fromDto ya inicializa creationDate con Instant.now() internamente
         WorshipMeetingModel worshipModel = new WorshipMeetingModel().fromDto(dto);
-        worshipModel.setCreationDate(Instant.now());
         worshipModel.setWorshipType(worshipMeetingTypes);
         worshipModel.setChurch(church);
 
@@ -100,8 +98,8 @@ public class WorshipServicesImpl implements WorshipService {
                         new EntityNotFoundException("Worship service not found with id: " + id)
                 );
 
-        // solo actualizamos lo que realmente puede cambiar
-        worship.fromDto(dto);
+        // Usar updateFrom para no modificar creationDate
+        worship.updateFrom(dto);
 
         if (dto.getWorshipTypeId() != null) {
             WorshipMeetingTypes type =

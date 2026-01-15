@@ -3,16 +3,11 @@ package com.viddefe.viddefe_api.worship_meetings.infrastructure.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.UUID;
-
+/**
+ * DTO de respuesta para cultos/servicios de adoración.
+ * Extiende de MeetingDto para heredar campos comunes (id, name, description, scheduledDate, creationDate).
+ */
 @Getter @Setter
-public class WorshipDto {
-    protected UUID id;
-    protected String name;
-    protected String description;
-    protected Instant creationDate;
-    protected OffsetDateTime scheduledDate;
+public class WorshipDto extends MeetingDto {
     protected MeetingTypeDto worshipType;
 }
