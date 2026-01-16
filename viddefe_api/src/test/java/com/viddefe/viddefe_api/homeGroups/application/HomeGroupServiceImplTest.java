@@ -109,14 +109,14 @@ class HomeGroupServiceImplTest {
     }
 
     private CreateHomeGroupsDto createHomeGroupsDto(String name, String description,
-            BigDecimal latitude, BigDecimal longitude, UUID strategyId, UUID leaderId) throws Exception {
+            BigDecimal latitude, BigDecimal longitude, UUID strategyId, UUID managerId) throws Exception {
         CreateHomeGroupsDto dto = new CreateHomeGroupsDto();
         setField(dto, "name", name);
         setField(dto, "description", description);
         setField(dto, "latitude", latitude);
         setField(dto, "longitude", longitude);
         setField(dto, "strategyId", strategyId);
-        setField(dto, "leaderId", leaderId);
+        setField(dto, "managerId", managerId);
         return dto;
     }
 
