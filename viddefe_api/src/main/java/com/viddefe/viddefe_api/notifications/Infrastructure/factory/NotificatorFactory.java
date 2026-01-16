@@ -23,6 +23,12 @@ public class NotificatorFactory {
                 ));
     }
 
+    /**
+     * Get the notificator for the given channel
+     * @param channel The channel to get the notificator for
+     * @return The notificator for the given channel
+     * @throws IllegalArgumentException if the channel is not supported
+     */
     public Notificator get(Channels channel) {
         return Optional.ofNullable(notificators.get(channel))
                 .orElseThrow(() -> new IllegalArgumentException(

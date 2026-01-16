@@ -9,6 +9,7 @@ import type {
   WorshipAttendance 
 } from '../models';
 import type { Pageable } from './api';
+import { validateDatePayload } from '../utils/helpers';
 
 // ============================================================================
 // TYPES
@@ -24,7 +25,7 @@ interface CreateWorshipPayload {
   meetingType: 'WORSHIP';
   name: string;
   description?: string;
-  scheduledDate: string; // ISO-8601 con offset obligatorio
+  scheduledDate: string; // ISO-8601 con offset obligatorio (ej: "2026-01-15T10:00:00-05:00")
   worshipTypeId: number;
 }
 
@@ -32,7 +33,7 @@ interface UpdateWorshipPayload {
   meetingType: 'WORSHIP';
   name?: string;
   description?: string;
-  scheduledDate?: string;
+  scheduledDate?: string; // ISO-8601 con offset obligatorio
   worshipTypeId?: number;
 }
 
@@ -71,9 +72,13 @@ export const worshipService = {
    * POST /meetings?type=TEMPLE_WORHSIP
    * 
    * IMPORTANTE: meetingType debe ser "WORSHIP" (string constante, NO un ID)
+   * IMPORTANTE: scheduledDate DEBE incluir timezone (ej: "2026-01-15T10:00:00-05:00")
    */
   create: async (data: CreateWorshipDto): Promise<Worship> => {
     const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    
+    // Validar que scheduledDate tenga timezone (requerido por el backend)
+    validateDatePayload(data.scheduledDate, 'scheduledDate');
     
     // Construir payload según contrato del backend
     const payload: CreateWorshipPayload = {
@@ -91,9 +96,16 @@ export const worshipService = {
   /**
    * Actualiza un culto existente
    * PUT /meetings/{id}?type=TEMPLE_WORHSIP
+   * 
+   * IMPORTANTE: scheduledDate DEBE incluir timezone si se provee
    */
   update: async (id: string, data: UpdateWorshipDto): Promise<Worship> => {
     const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    
+    // Validar que scheduledDate tenga timezone si se proporciona
+    if (data.scheduledDate) {
+      validateDatePayload(data.scheduledDate, 'scheduledDate');
+    }
     
     const payload: UpdateWorshipPayload = {
       meetingType: 'WORSHIP',

@@ -2,7 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Modal, Button, DropDown } from '../shared';
 import type { Meeting, MeetingType, CreateMeetingDto, UpdateMeetingDto } from '../../models';
-import { toDatetimeLocal, toUTCISOString } from '../../utils/helpers';
+import { toDatetimeLocal, toISOStringWithOffset } from '../../utils/helpers';
 
 interface MeetingFormModalProps {
   readonly isOpen: boolean;
@@ -115,11 +115,12 @@ function MeetingFormModal({
       return;
     }
     
-    // Convertir a UTC ISO-8601 para el backend
+    // Convertir a ISO-8601 con offset de timezone para el backend
+    // El backend REQUIERE el offset (ej: "2026-01-15T10:00:00-05:00")
     const data: CreateMeetingDto | UpdateMeetingDto = {
       name: formData.name.trim(),
       description: formData.description.trim() || undefined,
-      date: toUTCISOString(formData.datetime), // Siempre enviamos UTC con 'Z'
+      date: toISOStringWithOffset(formData.datetime), // Con offset de timezone
       groupMeetingTypeId: Number.parseInt(formData.groupMeetingTypeId, 10),
     };
 

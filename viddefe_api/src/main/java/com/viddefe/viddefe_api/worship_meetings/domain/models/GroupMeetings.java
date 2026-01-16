@@ -9,42 +9,45 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
 
 /**
- * Entidad para reuniones de grupos pequeños/hogares.
- * Extiende de Meeting para heredar campos comunes (id, name, description, scheduledDate, creationDate).
+ * Entidad específica para reuniones de grupos pequeños/hogares.
+ * Extiende Meeting con discriminador GROUP_MEETING.
  *
- * Nota: Esta entidad usa 'date' como nombre de columna para scheduledDate por compatibilidad
- * con el esquema existente. El campo heredado scheduledDate se mapea a la columna 'date'.
+ * Tabla: meetings (compartida con WorshipMeetingModel)
+ * Discriminador: meeting_type = 'GROUP_MEETING'
  *
  * Reglas de timezone:
  * - scheduledDate viene del DTO con offset (ej: -05:00 o Z)
  * - Se almacena en BD como timestamptz
  * - NO hacer conversiones de zona en fromDto()/toDto()
  */
-@Table(name = "group_meetings")
 @Entity
+@DiscriminatorValue("GROUP_MEETING")
 @Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
-@AttributeOverrides({
-    @AttributeOverride(name = "scheduledDate", column = @Column(name = "date", nullable = false, columnDefinition = "timestamptz"))
-})
 public class GroupMeetings extends Meeting {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_meeting_type_id", nullable = false)
+    @JoinColumn(name = "group_meeting_type_id", insertable = false, updatable = false)
     private GroupMeetingTypes groupMeetingType;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "home_groups_id", nullable = false)
+    @JoinColumn(name = "context_id", insertable = false, updatable = false)
     private HomeGroupsModel group;
 
     /**
-     * Inicializa la entidad desde un DTO de creación.
-     * NO realiza conversiones de zona - asigna la fecha directamente.
-     *
-     * @param dto DTO con los datos del meeting a crear
-     * @return this (para encadenamiento)
+     * Constructor para inicialización rápida
+     */
+    public GroupMeetings(UUID contextId, Long typeId) {
+        this.setContextId(contextId);
+        this.setTypeId(typeId);
+    }
+
+    /**
+     * Inicializa desde DTO de creación.
+     * NO realiza conversiones de zona.
      */
     public GroupMeetings fromDto(CreateMeetingGroupDto dto) {
         initFromDto(dto.getName(), dto.getDescription(), dto.getDate());
@@ -52,10 +55,7 @@ public class GroupMeetings extends Meeting {
     }
 
     /**
-     * Actualiza la entidad desde un DTO (no modifica creationDate).
-     *
-     * @param dto DTO con los datos actualizados
-     * @return this (para encadenamiento)
+     * Actualiza desde DTO (no modifica creationDate).
      */
     public GroupMeetings updateFrom(CreateMeetingGroupDto dto) {
         updateFromDto(dto.getName(), dto.getDescription(), dto.getDate());
@@ -63,19 +63,18 @@ public class GroupMeetings extends Meeting {
     }
 
     /**
-     * Convierte la entidad a DTO de respuesta.
-     * Preserva el scheduledDate sin conversiones de zona.
-     *
-     * @return GroupMeetingDto con los datos del meeting
+     * Convierte a DTO preservando offset sin conversiones.
      */
     public GroupMeetingDto toDto() {
-        GroupMeetingDto groupMeetingDto = new GroupMeetingDto();
-        groupMeetingDto.setId(getId());
-        groupMeetingDto.setType(this.groupMeetingType.toDto());
-        groupMeetingDto.setName(getName());
-        groupMeetingDto.setDate(getScheduledDate());
-        groupMeetingDto.setDescription(getDescription());
-        return groupMeetingDto;
+        GroupMeetingDto dto = new GroupMeetingDto();
+        dto.setId(getId());
+        dto.setName(getName());
+        dto.setDate(getScheduledDate());
+        dto.setDescription(getDescription());
+        if (this.groupMeetingType != null) {
+            dto.setType(this.groupMeetingType.toDto());
+        }
+        return dto;
     }
 
 }

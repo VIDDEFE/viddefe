@@ -7,7 +7,7 @@ import lombok.Setter;
 /**
  * DTO para creación de cultos/servicios de adoración.
  * Extiende de CreateMeetingDto para heredar campos comunes (name, description, scheduledDate).
- *
+ * 
  * Ejemplo de JSON válido:
  * {
  *   "name": "Culto dominical",
@@ -18,7 +18,7 @@ import lombok.Setter;
  */
 @Getter @Setter
 public class CreateWorshipDto extends CreateMeetingDto {
-
+    
     @NotNull(message = "El tipo de culto es obligatorio")
     private Long worshipTypeId;
 }

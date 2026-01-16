@@ -39,6 +39,12 @@ public class AccountServiceImpl implements AccountService {
     private final RolesUserService rolesUserService;
     private final PermissionService permissionService;
 
+    private static final String TEMPLATE_INVITATION_MESSAGE = "" +
+            "Hello {{name}}, welcome to VidDefe! Your credentials are:\n" +
+            "Username: {{username}}\n" +
+            "Password: {{password}}\n" +
+            "Please change your password after logging in.";
+
     @Override
     public void invite(InvitationDto dtp) {
         // Implementation goes here
@@ -102,6 +108,7 @@ public class AccountServiceImpl implements AccountService {
                         "loginUrl", "https://app.viddefe.com/login"
                 )
         );
+        notificationDto.setSubject("Invitacion a VidDefe");
         notificationDto.setTemplate("emails/invitation-email.html");
         notificationDto.setCreatedAt(Instant.now());
         notificator.send(notificationDto);
@@ -141,5 +148,13 @@ public class AccountServiceImpl implements AccountService {
             userPermissions.setPermissionModel(permissionModel);
             return userPermissions;
         }).toList();
+    }
+
+    private String buildMessage(Map<String, String> variables) {
+        String message = TEMPLATE_INVITATION_MESSAGE;
+        for (Map.Entry<String, String> entry : variables.entrySet()) {
+            message = message.replace("{{" + entry.getKey() + "}}", entry.getValue());
+        }
+        return message;
     }
 }

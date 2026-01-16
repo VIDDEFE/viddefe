@@ -7,6 +7,7 @@ import type {
   UpdateMeetingDto,
   MeetingAttendance 
 } from '../models';
+import { validateDatePayload } from '../utils/helpers';
 
 // ============================================================================
 // TYPES
@@ -22,7 +23,7 @@ interface CreateGroupMeetingPayload {
   meetingType: 'GROUP_MEETING';
   name: string;
   description?: string;
-  scheduledDate: string; // ISO-8601 con offset obligatorio
+  scheduledDate: string; // ISO-8601 con offset obligatorio (ej: "2026-01-15T10:00:00-05:00")
   groupMeetingTypeId: number;
 }
 
@@ -30,7 +31,7 @@ interface UpdateGroupMeetingPayload {
   meetingType: 'GROUP_MEETING';
   name?: string;
   description?: string;
-  scheduledDate?: string;
+  scheduledDate?: string; // ISO-8601 con offset obligatorio
   groupMeetingTypeId?: number;
 }
 
@@ -75,12 +76,16 @@ export const groupMeetingService = {
    * POST /meetings?type=GROUP_MEETING&contextId={groupId}
    * 
    * IMPORTANTE: meetingType debe ser "GROUP_MEETING" (string constante, NO un ID)
+   * IMPORTANTE: scheduledDate DEBE incluir timezone (ej: "2026-01-15T10:00:00-05:00")
    */
   create: async (groupId: string, data: CreateMeetingDto): Promise<Meeting> => {
     const query = new URLSearchParams({ 
       type: MeetingType.GROUP_MEETING,
       contextId: groupId,
     });
+    
+    // Validar que date tenga timezone (requerido por el backend)
+    validateDatePayload(data.date, 'scheduledDate');
     
     // Construir payload según contrato del backend
     const payload: CreateGroupMeetingPayload = {
@@ -98,12 +103,19 @@ export const groupMeetingService = {
   /**
    * Actualiza una reunión existente
    * PUT /meetings/{id}?type=GROUP_MEETING&contextId={groupId}
+   * 
+   * IMPORTANTE: scheduledDate DEBE incluir timezone si se provee
    */
   update: async (groupId: string, id: string, data: UpdateMeetingDto): Promise<Meeting> => {
     const query = new URLSearchParams({ 
       type: MeetingType.GROUP_MEETING,
       contextId: groupId,
     });
+    
+    // Validar que date tenga timezone si se proporciona
+    if (data.date) {
+      validateDatePayload(data.date, 'scheduledDate');
+    }
     
     const payload: UpdateGroupMeetingPayload = {
       meetingType: 'GROUP_MEETING',

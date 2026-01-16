@@ -1,9 +1,11 @@
 package com.viddefe.viddefe_api.worship_meetings.infrastructure.dto;
 
+
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 /**
  * DTO de respuesta para reuniones de grupo.
