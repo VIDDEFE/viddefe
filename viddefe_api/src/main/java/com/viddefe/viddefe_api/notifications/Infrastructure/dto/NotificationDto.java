@@ -20,6 +20,8 @@ public class NotificationDto{
     @NotBlank
     private String template;
 
+    private String subject;
+
     @NotNull
     private Map<String, Object> variables;
 

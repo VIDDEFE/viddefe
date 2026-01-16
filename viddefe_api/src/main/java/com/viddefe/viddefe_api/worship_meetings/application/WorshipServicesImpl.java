@@ -7,8 +7,10 @@ import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.TypesWorshipMeetingReader;
 import com.viddefe.viddefe_api.worship_meetings.contracts.WorshipService;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingModel;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingTypeEnum;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.WorshipRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDetailedDto;
@@ -19,8 +21,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -28,10 +28,12 @@ import java.util.UUID;
 public class WorshipServicesImpl implements WorshipService {
 
     private final WorshipRepository worshipRepository;
+    private final MeetingService meetingService;
     private final VerifyWorshipMeetingConflict verifyWorshipMeetingConflict;
     private final TypesWorshipMeetingReader typesWorshipMeetingReader;
     private final ChurchLookup churchLookup;
     private final AttendanceService attendanceService;
+
 
     @Override
     public WorshipDto createWorship(CreateWorshipDto dto, @NotNull UUID churchId) {
@@ -43,18 +45,23 @@ public class WorshipServicesImpl implements WorshipService {
 
         ChurchModel church = churchLookup.getChurchById(churchId);
 
-        WorshipMeetingModel worshipModel = new WorshipMeetingModel().fromDto(dto);
-        worshipModel.setCreationDate(Instant.now());
+        // Crear entidad con inicialización normalizada
+        WorshipMeetingModel worshipModel = new WorshipMeetingModel();
+        worshipModel.fromDto(dto);
+        worshipModel.setContextId(churchId);
+        worshipModel.setTypeId(worshipMeetingTypes.getId());
         worshipModel.setWorshipType(worshipMeetingTypes);
         worshipModel.setChurch(church);
 
-        return worshipRepository.save(worshipModel).toDto();
+        // Usar MeetingService para persistir
+        WorshipMeetingModel saved = (WorshipMeetingModel) meetingService.create(worshipModel);
+        return saved.toDto();
     }
 
     @Override
     public WorshipDetailedDto getWorshipById(UUID id) {
-        // Usa findWithRelationsById para evitar N+1 al acceder a worshipType
-        WorshipMeetingModel worship = worshipRepository.findWithRelationsById(id)
+        // Usa MeetingService para obtener con relaciones (evita N+1)
+        WorshipMeetingModel worship = (WorshipMeetingModel) meetingService.findByIdWithRelations(id)
                 .orElseThrow(() ->
                         new EntityNotFoundException(
                                 "Worship service not found with id: " + id
@@ -85,9 +92,9 @@ public class WorshipServicesImpl implements WorshipService {
     @Override
     public Page<WorshipDto> getAllWorships(Pageable pageable, @NotNull UUID churchId) {
 
-        // asumimos que el repo ya filtra por church
-        return worshipRepository.findAllByChurchId(churchId, pageable)
-                .map(WorshipMeetingModel::toDto);
+        // Usar MeetingService para obtener reuniones normalizadas de tipo WORSHIP
+        return worshipRepository.findByContextId(churchId, pageable)
+                .map(meeting -> ((WorshipMeetingModel) meeting).toDto());
     }
 
     @Override
@@ -95,31 +102,33 @@ public class WorshipServicesImpl implements WorshipService {
 
         verifyWorshipMeetingConflict.verifyHourOfWorshipMeeting(dto, churchId, id);
 
-        WorshipMeetingModel worship = worshipRepository.findById(id)
+        WorshipMeetingModel worship = (WorshipMeetingModel) meetingService.findById(id)
                 .orElseThrow(() ->
                         new EntityNotFoundException("Worship service not found with id: " + id)
                 );
 
-        // solo actualizamos lo que realmente puede cambiar
-        worship.fromDto(dto);
+        // Usar updateFrom para no modificar creationDate
+        worship.updateFrom(dto);
 
         if (dto.getWorshipTypeId() != null) {
             WorshipMeetingTypes type =
                     typesWorshipMeetingReader.getWorshipMeetingTypesById(dto.getWorshipTypeId());
             worship.setWorshipType(type);
+            worship.setTypeId(type.getId());
         }
 
-        return worshipRepository.save(worship).toDto();
+        WorshipMeetingModel updated = (WorshipMeetingModel) meetingService.update(worship);
+        return updated.toDto();
     }
 
     @Override
     public void deleteWorship(UUID id) {
-
-        WorshipMeetingModel worship = worshipRepository.findById(id)
+        // Verificar que existe antes de eliminar
+        meetingService.findById(id)
                 .orElseThrow(() ->
                         new EntityNotFoundException("Worship service not found with id: " + id)
                 );
 
-        worshipRepository.delete(worship);
+        meetingService.delete(id);
     }
 }

@@ -1,13 +1,11 @@
 package com.viddefe.viddefe_api.worship_meetings.contracts;
 
-import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDetailedDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 /**

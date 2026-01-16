@@ -19,7 +19,7 @@ import {
 import { useAppContext } from '../../context/AppContext';
 import { WorshipPermission } from '../../services/userService';
 import type { SortConfig } from '../../services/api';
-import { toUTCISOString, toDatetimeLocal, formatDateForDisplay } from '../../utils/helpers';
+import { toISOStringWithOffset, toDatetimeLocal, formatDateForDisplay } from '../../utils/helpers';
 
 type ModalMode = 'create' | 'edit' | 'delete' | null;
 
@@ -157,11 +157,13 @@ export default function Worships() {
   const handleCreate = () => {
     if (!validateForm()) return;
 
+    // Convertir a ISO-8601 con offset de timezone para el backend
+    // El backend REQUIERE el offset (ej: "2026-01-15T10:00:00-05:00")
     createWorship.mutate(
       {
         name: formData.name.trim(),
         description: formData.description?.trim() || undefined,
-        scheduledDate: toUTCISOString(formData.scheduledDate),
+        scheduledDate: toISOStringWithOffset(formData.scheduledDate),
         worshipTypeId: formData.worshipTypeId as number,
       },
       { onSuccess: closeModal }
@@ -171,13 +173,14 @@ export default function Worships() {
   const handleUpdate = () => {
     if (!selectedWorship?.id || !validateForm()) return;
 
+    // Convertir a ISO-8601 con offset de timezone para el backend
     updateWorship.mutate(
       {
         id: selectedWorship.id,
         data: {
           name: formData.name.trim(),
           description: formData.description?.trim() || undefined,
-          scheduledDate: toUTCISOString(formData.scheduledDate),
+          scheduledDate: toISOStringWithOffset(formData.scheduledDate),
           worshipTypeId: formData.worshipTypeId as number,
         },
       },

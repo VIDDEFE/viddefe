@@ -1,5 +1,7 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.repository;
 
+import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingTypeEnum;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingModel;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +28,8 @@ public interface WorshipRepository extends JpaRepository<WorshipMeetingModel, UU
      */
     @EntityGraph(attributePaths = {"worshipType", "church"})
     Optional<WorshipMeetingModel> findWithRelationsById(UUID id);
+
+    Page<WorshipMeetingModel> findByContextId(UUID contextId, Pageable pageable);
 
     boolean existsByChurchIdAndWorshipTypeIdAndScheduledDate(UUID churchId, @NotNull(message = "Worship type ID is required") Long worshipTypeId, @NotNull(message = "Scheduled date is required") @FutureOrPresent(message = "Scheduled date cannot be in the past") OffsetDateTime scheduledDate);
 

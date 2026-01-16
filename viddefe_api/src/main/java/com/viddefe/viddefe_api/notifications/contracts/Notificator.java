@@ -20,8 +20,4 @@ public interface Notificator {
      */
         void send(@Valid NotificationDto notificationDto);
 
-        void sendWithAttachment(
-               NotificationDto notificationDto,
-                Path attachment
-        );
 }

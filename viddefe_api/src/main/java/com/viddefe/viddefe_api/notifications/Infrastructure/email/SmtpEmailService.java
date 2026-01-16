@@ -21,6 +21,7 @@ import java.nio.file.Path;
 @Service
 @RequiredArgsConstructor
 public class SmtpEmailService implements Notificator {
+
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine templateEngine;
 
@@ -31,60 +32,25 @@ public class SmtpEmailService implements Notificator {
 
     @Override
     @Async
-    public void send(@Valid NotificationDto notificationDto) {
-        sendInternal(notificationDto, null);
-    }
-
-    @Override
-    public void sendWithAttachment(@Valid NotificationDto dto,@NotNull Path attachment) {
-
-        if (attachment == null || attachment.toString().isBlank()) {
-            throw new IllegalArgumentException("Attachment path must not be null");
-        }
-
-        sendInternal(dto, attachment);
-    }
-
-    private void sendInternal(NotificationDto dto, Path attachment) {
+    public void send(@Valid NotificationDto dto) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper =
-                    new MimeMessageHelper(message, attachment != null, "UTF-8");
+                    new MimeMessageHelper(message, true, "UTF-8");
 
-            // Render HTML
             Context context = new Context();
             context.setVariables(dto.getVariables());
+
             String html = templateEngine.process(dto.getTemplate(), context);
 
             helper.setTo(dto.getTo());
-            helper.setSubject(resolveSubject(dto.getTemplate()));
+            helper.setSubject(dto.getSubject());
             helper.setText(html, true);
-
-            if (attachment != null) {
-                helper.addAttachment(
-                        attachment.getFileName().toString(),
-                        new FileSystemResource(attachment)
-                );
-            }
 
             mailSender.send(message);
 
         } catch (MessagingException e) {
             throw new IllegalStateException("Failed to send email", e);
         }
-    }
-
-    /**
-     * Simple subject resolver.
-     * Later this can move to a SubjectResolver or enum-based strategy.
-     */
-    private String resolveSubject(String template) {
-        if (template.contains("invitation")) {
-            return "You're invited to Viddefe";
-        }
-        if (template.contains("reset")) {
-            return "Reset your password";
-        }
-        return "Viddefe Notification";
     }
 }

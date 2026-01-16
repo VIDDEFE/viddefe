@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Table(name = "ministry_functions")
@@ -31,6 +32,8 @@ public class MinistryFunction {
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false)
     private AttendanceEventType eventType;
+
+    private Instant reminderSentAt;
 
     public MinistryFunctionDto toDto() {
         MinistryFunctionDto dto = new MinistryFunctionDto();

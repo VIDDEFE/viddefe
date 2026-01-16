@@ -38,7 +38,7 @@ export const ministryFunctionService = {
 
   /**
    * Obtiene los roles disponibles para funciones ministeriales
-   * TODO: Confirmar endpoint real cuando esté disponible
+   * GET /meetings/ministry-functions/roles
    */
   getRoles: () =>
     apiService.get<MinistryRole[]>('/meetings/ministry-functions/roles'),
