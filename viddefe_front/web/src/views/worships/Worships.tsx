@@ -19,7 +19,7 @@ import {
 import { useAppContext } from '../../context/AppContext';
 import { WorshipPermission } from '../../services/userService';
 import type { SortConfig } from '../../services/api';
-import { toLocalDateTime, toDatetimeLocal } from '../../utils/helpers';
+import { toISOStringWithOffset, toDatetimeLocal, formatDateForDisplay } from '../../utils/helpers';
 
 type ModalMode = 'create' | 'edit' | 'delete' | null;
 
@@ -27,15 +27,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 // Helper para formatear fecha para mostrar en tabla
 function formatDateTime(isoDate: string): string {
-  try {
-    const date = new Date(isoDate);
-    return date.toLocaleString('es-ES', {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    });
-  } catch {
-    return isoDate;
-  }
+  return formatDateForDisplay(isoDate, 'short');
 }
 
 export default function Worships() {
@@ -165,11 +157,13 @@ export default function Worships() {
   const handleCreate = () => {
     if (!validateForm()) return;
 
+    // Convertir a ISO-8601 con offset de timezone para el backend
+    // El backend REQUIERE el offset (ej: "2026-01-15T10:00:00-05:00")
     createWorship.mutate(
       {
         name: formData.name.trim(),
         description: formData.description?.trim() || undefined,
-        scheduledDate: toLocalDateTime(formData.scheduledDate),
+        scheduledDate: toISOStringWithOffset(formData.scheduledDate),
         worshipTypeId: formData.worshipTypeId as number,
       },
       { onSuccess: closeModal }
@@ -179,13 +173,14 @@ export default function Worships() {
   const handleUpdate = () => {
     if (!selectedWorship?.id || !validateForm()) return;
 
+    // Convertir a ISO-8601 con offset de timezone para el backend
     updateWorship.mutate(
       {
         id: selectedWorship.id,
         data: {
           name: formData.name.trim(),
           description: formData.description?.trim() || undefined,
-          scheduledDate: toLocalDateTime(formData.scheduledDate),
+          scheduledDate: toISOStringWithOffset(formData.scheduledDate),
           worshipTypeId: formData.worshipTypeId as number,
         },
       },

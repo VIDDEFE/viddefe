@@ -106,7 +106,7 @@ export interface Strategy {
   name: string;
 }
 
-// Persona resumida para líder de grupo
+// Persona resumida para responsable de grupo
 export interface PersonSummary {
   id: string;
   cc?: string;
@@ -127,7 +127,7 @@ export interface HomeGroup {
   description?: string;
   latitude: number;
   longitude: number;
-  leader: PersonSummary | null;
+  manager: PersonSummary | null;
   strategy: Strategy | null;
 }
 
@@ -137,7 +137,7 @@ export interface CreateHomeGroupDto {
   description?: string;
   latitude: number;
   longitude: number;
-  leaderId: string;
+  managerId: string;
   strategyId: string;
 }
 
@@ -147,7 +147,7 @@ export interface UpdateHomeGroupDto {
   description?: string;
   latitude?: number;
   longitude?: number;
-  leaderId?: string;
+  managerId?: string;
   strategyId?: string;
 }
 
@@ -194,7 +194,7 @@ export interface Group extends BaseEntity {
   description: string;
   churchId: string;
   type: GroupType;
-  leader: string;
+  manager: string;
   members: string[];
   meetingDay: string;
   meetingTime: string;
@@ -253,18 +253,21 @@ export interface WorshipDetail extends Worship {
 }
 
 // DTO para crear un culto
+// IMPORTANTE: scheduledDate debe incluir timezone offset (ISO-8601)
+// Ejemplo: "2026-01-15T10:00:00-05:00"
 export interface CreateWorshipDto {
   name: string;
   description?: string;
-  scheduledDate: string;
+  scheduledDate: string; // ISO-8601 con offset obligatorio
   worshipTypeId: number;
 }
 
 // DTO para actualizar un culto
+// IMPORTANTE: scheduledDate debe incluir timezone offset si se provee
 export interface UpdateWorshipDto {
   name?: string;
   description?: string;
-  scheduledDate?: string;
+  scheduledDate?: string; // ISO-8601 con offset obligatorio si se incluye
   worshipTypeId?: number;
 }
 
@@ -345,17 +348,52 @@ export interface MeetingAttendance {
 }
 
 // DTO para crear una reunión
+// IMPORTANTE: date debe incluir timezone offset (ISO-8601)
+// Ejemplo: "2026-01-15T10:00:00-05:00"
 export interface CreateMeetingDto {
   groupMeetingTypeId: number;
   name: string;
   description?: string;
-  date: string;
+  date: string; // ISO-8601 con offset obligatorio
 }
 
 // DTO para actualizar una reunión
+// IMPORTANTE: date debe incluir timezone offset si se provee
 export interface UpdateMeetingDto {
   groupMeetingTypeId?: number;
   name?: string;
   description?: string;
-  date?: string;
+  date?: string; // ISO-8601 con offset obligatorio si se incluye
+}
+
+// ============================================================================
+// MINISTRY FUNCTIONS (Funciones Ministeriales)
+// ============================================================================
+
+// Tipo de evento para ministry functions
+export type EventType = 'TEMPLE_WORHSIP' | 'GROUP_MEETING';
+
+// Rol en la función ministerial
+export interface MinistryRole {
+  id: number;
+  name: string;
+}
+
+// Función Ministerial - respuesta del backend
+export interface MinistryFunction {
+  id: string;
+  people: PersonSummary;
+  role: MinistryRole;
+}
+
+// DTO para crear/actualizar una función ministerial
+export interface CreateMinistryFunctionDto {
+  peopleId: string;
+  roleId: number;
+}
+
+// DTO para actualizar (mismo que crear)
+export interface UpdateMinistryFunctionDto {
+  peopleId: string;
+  roleId: number;
 }

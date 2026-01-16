@@ -2,6 +2,7 @@ import { memo, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Modal, Button, DropDown } from '../shared';
 import type { Meeting, MeetingType, CreateMeetingDto, UpdateMeetingDto } from '../../models';
+import { toDatetimeLocal, toISOStringWithOffset } from '../../utils/helpers';
 
 interface MeetingFormModalProps {
   readonly isOpen: boolean;
@@ -15,16 +16,14 @@ interface MeetingFormModalProps {
 interface FormData {
   name: string;
   description: string;
-  date: string;
-  time: string;
+  datetime: string; // datetime-local format: "YYYY-MM-DDTHH:mm"
   groupMeetingTypeId: string;
 }
 
 const initialFormData: FormData = {
   name: '',
   description: '',
-  date: '',
-  time: '',
+  datetime: '',
   groupMeetingTypeId: '',
 };
 
@@ -45,12 +44,11 @@ function MeetingFormModal({
   useEffect(() => {
     if (isOpen) {
       if (meeting) {
-        const date = new Date(meeting.date);
+        // Convertir UTC del backend a datetime-local (hora local)
         setFormData({
           name: meeting.name,
           description: meeting.description || '',
-          date: date.toISOString().split('T')[0],
-          time: date.toTimeString().slice(0, 5),
+          datetime: toDatetimeLocal(meeting.date),
           groupMeetingTypeId: meeting.type?.id.toString() || '',
         });
       } else {
@@ -86,11 +84,8 @@ function MeetingFormModal({
     if (!formData.name.trim()) {
       newErrors.name = 'El nombre es requerido';
     }
-    if (!formData.date) {
-      newErrors.date = 'La fecha es requerida';
-    }
-    if (!formData.time) {
-      newErrors.time = 'La hora es requerida';
+    if (!formData.datetime) {
+      newErrors.datetime = 'La fecha y hora son requeridas';
     }
     if (!formData.groupMeetingTypeId) {
       newErrors.groupMeetingTypeId = 'El tipo es requerido';
@@ -104,24 +99,28 @@ function MeetingFormModal({
     e.preventDefault();
     if (!validate()) return;
 
-    // Combinar fecha y hora
-    const dateTime = new Date(`${formData.date}T${formData.time}`);
+    // Validar la fecha
+    const localDate = new Date(formData.datetime);
     const now = new Date();
-    if (Number.isNaN(dateTime.getTime())) {
-      setErrors((prev) => ({ ...prev, date: 'Fecha u hora inválidas' }));
+    
+    if (Number.isNaN(localDate.getTime())) {
+      setErrors((prev) => ({ ...prev, datetime: 'Fecha u hora inválidas' }));
       toast.error('Fecha u hora inválidas');
       return;
     }
-    if (dateTime.getTime() <= now.getTime()) {
-      setErrors((prev) => ({ ...prev, date: 'La fecha debe ser futura' }));
-      toast.error('Meeting date cannot be in the past');
+    
+    if (!isEditing && localDate.getTime() <= now.getTime()) {
+      setErrors((prev) => ({ ...prev, datetime: 'La fecha debe ser futura' }));
+      toast.error('La fecha de la reunión no puede ser en el pasado');
       return;
     }
     
+    // Convertir a ISO-8601 con offset de timezone para el backend
+    // El backend REQUIERE el offset (ej: "2026-01-15T10:00:00-05:00")
     const data: CreateMeetingDto | UpdateMeetingDto = {
       name: formData.name.trim(),
       description: formData.description.trim() || undefined,
-      date: dateTime.toISOString(),
+      date: toISOStringWithOffset(formData.datetime), // Con offset de timezone
       groupMeetingTypeId: Number.parseInt(formData.groupMeetingTypeId, 10),
     };
 
@@ -174,39 +173,21 @@ function MeetingFormModal({
         </div>
 
         {/* Fecha y Hora */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="date" className="block text-sm font-medium text-neutral-700 mb-1">
-              Fecha *
-            </label>
-            <input
-              type="date"
-              id="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                errors.date ? 'border-red-500' : 'border-neutral-300'
-              }`}
-            />
-            {errors.date && <p className="mt-1 text-sm text-red-500">{errors.date}</p>}
-          </div>
-          <div>
-            <label htmlFor="time" className="block text-sm font-medium text-neutral-700 mb-1">
-              Hora *
-            </label>
-            <input
-              type="time"
-              id="time"
-              name="time"
-              value={formData.time}
-              onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                errors.time ? 'border-red-500' : 'border-neutral-300'
-              }`}
-            />
-            {errors.time && <p className="mt-1 text-sm text-red-500">{errors.time}</p>}
-          </div>
+        <div>
+          <label htmlFor="datetime" className="block text-sm font-medium text-neutral-700 mb-1">
+            Fecha y Hora *
+          </label>
+          <input
+            type="datetime-local"
+            id="datetime"
+            name="datetime"
+            value={formData.datetime}
+            onChange={handleChange}
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+              errors.datetime ? 'border-red-500' : 'border-neutral-300'
+            }`}
+          />
+          {errors.datetime && <p className="mt-1 text-sm text-red-500">{errors.datetime}</p>}
         </div>
 
         {/* Descripción */}

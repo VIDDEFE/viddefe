@@ -109,14 +109,14 @@ class HomeGroupServiceImplTest {
     }
 
     private CreateHomeGroupsDto createHomeGroupsDto(String name, String description,
-            BigDecimal latitude, BigDecimal longitude, UUID strategyId, UUID leaderId) throws Exception {
+            BigDecimal latitude, BigDecimal longitude, UUID strategyId, UUID managerId) throws Exception {
         CreateHomeGroupsDto dto = new CreateHomeGroupsDto();
         setField(dto, "name", name);
         setField(dto, "description", description);
         setField(dto, "latitude", latitude);
         setField(dto, "longitude", longitude);
         setField(dto, "strategyId", strategyId);
-        setField(dto, "leaderId", leaderId);
+        setField(dto, "managerId", managerId);
         return dto;
     }
 
@@ -134,7 +134,7 @@ class HomeGroupServiceImplTest {
         model.setLatitude(new BigDecimal("19.432608"));
         model.setLongitude(new BigDecimal("-99.133209"));
         model.setStrategy(strategy);
-        model.setLeader(leader);
+        model.setManager(leader);
         model.setChurch(church);
         return model;
     }
@@ -164,7 +164,7 @@ class HomeGroupServiceImplTest {
 
             HomeGroupsModel captured = homeGroupCaptor.getValue();
             assertEquals(church, captured.getChurch());
-            assertEquals(leader, captured.getLeader());
+            assertEquals(leader, captured.getManager());
             assertEquals(strategy, captured.getStrategy());
         }
 

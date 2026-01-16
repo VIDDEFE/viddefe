@@ -310,11 +310,11 @@ export default function GroupsMap({
               </div>
             )}
 
-            {/* Líder */}
+            {/* Responsable */}
             {selectedGroup.leader && (
               <div>
                 <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                  Líder
+                  Responsable
                 </span>
                 <p className="text-sm text-neutral-800 mt-1 flex items-center gap-2">
                   <span className="w-6 h-6 bg-violet-100 rounded-full flex items-center justify-center text-xs font-semibold text-violet-700">

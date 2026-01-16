@@ -21,6 +21,7 @@ import MeetingDeleteModal from '../../components/groups/MeetingDeleteModal';
 import MeetingAttendanceModal from '../../components/groups/MeetingAttendanceModal';
 import { FiMapPin, FiUser, FiGrid, FiUsers, FiPlus, FiCalendar, FiEye, FiEdit2, FiTrash2, FiUserCheck } from 'react-icons/fi';
 import type { RoleStrategyNode, Meeting, CreateMeetingDto, UpdateMeetingDto } from '../../models';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 export default function MyGroup() {
   const navigate = useNavigate();
@@ -211,15 +212,8 @@ export default function MyGroup() {
       id: meeting.id,
       name: meeting.name,
       type: meeting.type?.name || '-',
-      date: new Date(meeting.date).toLocaleDateString('es-ES', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }),
-      time: new Date(meeting.date).toLocaleTimeString('es-ES', {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+      date: formatDateForDisplay(meeting.date, 'date'),
+      time: formatDateForDisplay(meeting.date, 'time'),
       description: meeting.description || '-',
       original: meeting,
     })),
@@ -409,32 +403,32 @@ export default function MyGroup() {
               Líder del Grupo
             </h3>
 
-            {homeGroup.leader ? (
+            {homeGroup.manager ? (
               <div className="flex items-center gap-3">
-                {homeGroup.leader.avatar ? (
+                {homeGroup.manager.avatar ? (
                   <img
-                    src={homeGroup.leader.avatar}
-                    alt={`${homeGroup.leader.firstName} ${homeGroup.leader.lastName}`}
+                    src={homeGroup.manager.avatar}
+                    alt={`${homeGroup.manager.firstName} ${homeGroup.manager.lastName}`}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (
                   <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-lg">
-                    {homeGroup.leader.firstName?.[0]}
-                    {homeGroup.leader.lastName?.[0]}
+                    {homeGroup.manager.firstName?.[0]}
+                    {homeGroup.manager.lastName?.[0]}
                   </div>
                 )}
                 <div>
                   <p className="font-medium text-neutral-800">
-                    {homeGroup.leader.firstName} {homeGroup.leader.lastName}
+                    {homeGroup.manager.firstName} {homeGroup.manager.lastName}
                   </p>
-                  {homeGroup.leader.phone && (
-                    <p className="text-sm text-neutral-500">{homeGroup.leader.phone}</p>
+                  {homeGroup.manager.phone && (
+                    <p className="text-sm text-neutral-500">{homeGroup.manager.phone}</p>
                   )}
                 </div>
               </div>
             ) : (
               <p className="text-neutral-500 text-center py-4">
-                Sin líder asignado
+                Sin responsable asignado
               </p>
             )}
           </Card>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Event } from '../../models';
 import { Button, PageHeader, Table, Modal, Form, Input, DropDown } from '../../components/shared';
 import { useEvents, useCreateEvent } from '../../hooks';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 const eventStatusOptions = [
   { value: 'planned', label: 'Planeado' },
@@ -47,7 +48,7 @@ export default function Events() {
     { 
       key: 'date' as const, 
       label: 'Fecha',
-      render: (date: any) => new Date(date).toLocaleDateString('es-ES')
+      render: (date: any) => formatDateForDisplay(date, 'short')
     },
     { key: 'location' as const, label: 'Ubicación' },
     { key: 'status' as const, label: 'Estado' },

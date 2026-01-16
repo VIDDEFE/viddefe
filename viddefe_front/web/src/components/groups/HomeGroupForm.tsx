@@ -8,7 +8,7 @@ export interface HomeGroupFormData {
   description: string;
   latitude: number | '';
   longitude: number | '';
-  leaderId: string;
+  managerId: string;
   strategyId: string;
 }
 
@@ -17,7 +17,7 @@ export const initialHomeGroupFormData: HomeGroupFormData = {
   description: '',
   latitude: '',
   longitude: '',
-  leaderId: '',
+  managerId: '',
   strategyId: '',
 };
 
@@ -92,11 +92,11 @@ export default function HomeGroupForm({
       />
 
       <PersonSelector
-        label="Líder"
-        value={value.leaderId}
-        onChangeValue={(val) => onChange({ leaderId: val })}
-        placeholder="Seleccionar líder..."
-        error={errors.leaderId}
+        label="Responsable"
+        value={value.managerId}
+        onChangeValue={(val) => onChange({ managerId: val })}
+        placeholder="Seleccionar responsable..."
+        error={errors.managerId}
       />
 
       {/* MapPicker para ubicación */}

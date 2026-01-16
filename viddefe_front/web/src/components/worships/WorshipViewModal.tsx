@@ -1,6 +1,7 @@
 import { Modal, Button } from '../shared';
 import type { WorshipDetail } from '../../models';
 import { FiUsers } from 'react-icons/fi';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 interface WorshipViewModalProps {
   isOpen: boolean;
@@ -8,19 +9,6 @@ interface WorshipViewModalProps {
   isLoading?: boolean;
   onEdit?: () => void;
   onClose: () => void;
-}
-
-// Helper para formatear fecha
-function formatDateTime(isoDate: string): string {
-  try {
-    const date = new Date(isoDate);
-    return date.toLocaleString('es-ES', {
-      dateStyle: 'long',
-      timeStyle: 'short',
-    });
-  } catch {
-    return isoDate;
-  }
 }
 
 export default function WorshipViewModal({
@@ -90,7 +78,7 @@ export default function WorshipViewModal({
                 Fecha Programada
               </label>
               <p className="text-neutral-700 mt-1">
-                {formatDateTime(worship.scheduledDate)}
+                {formatDateForDisplay(worship.scheduledDate, 'full')}
               </p>
             </div>
 
@@ -99,7 +87,7 @@ export default function WorshipViewModal({
                 Fecha de Creación
               </label>
               <p className="text-neutral-700 mt-1">
-                {formatDateTime(worship.creationDate)}
+                {formatDateForDisplay(worship.creationDate, 'full')}
               </p>
             </div>
           </div>

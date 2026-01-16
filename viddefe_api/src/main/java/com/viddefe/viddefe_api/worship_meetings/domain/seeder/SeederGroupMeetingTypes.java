@@ -22,7 +22,7 @@ public class SeederGroupMeetingTypes {
                 .map(com.viddefe.viddefe_api.worship_meetings.domain.models.GroupMeetingTypes::getName)
                 .toList();
         List<GroupMeetingTypes> typesToSeed = Arrays.stream(GroupMeetingTypesEnum.values())
-                .filter(groupMeetingTypesEnum -> !existingTypes.contains(groupMeetingTypesEnum.name()))
+                .filter(groupMeetingTypesEnum -> !existingTypes.contains(groupMeetingTypesEnum.getLabel()))
                 .map(gt -> new GroupMeetingTypes(null, gt.getLabel()))
                 .toList();
         groupMeetingTypeRepository.saveAll(typesToSeed);

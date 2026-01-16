@@ -1,9 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.contracts;
 
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingGroupDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.GroupMeetingDetailedDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.GroupMeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

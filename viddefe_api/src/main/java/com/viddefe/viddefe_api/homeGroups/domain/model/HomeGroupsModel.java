@@ -46,7 +46,7 @@ public class HomeGroupsModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "leader_id", nullable = false)
-    private PeopleModel leader;
+    private PeopleModel manager;
 
     @ManyToOne
     @JoinColumn(name = "church_id", nullable = false)
@@ -67,7 +67,7 @@ public class HomeGroupsModel {
         dto.setDescription(this.description);
         dto.setLatitude(this.latitude);
         dto.setLongitude(this.longitude);
-        dto.setLeader(this.leader.toDto());
+        dto.setManager(this.manager.toDto());
         dto.setStrategy(this.strategy.toDto());
         return dto;
     }

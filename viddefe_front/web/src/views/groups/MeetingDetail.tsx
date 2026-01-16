@@ -10,17 +10,21 @@ import {
   useOfferingTypes,
   useCreateOffering,
   useUpdateOffering,
-  useDeleteOffering
+  useDeleteOffering,
+  useMinistryFunctions
 } from '../../hooks';
 import type { MeetingAttendance, Offering, CreateOfferingDto, UpdateOfferingDto } from '../../models';
-import { FiArrowLeft, FiCheck, FiX } from 'react-icons/fi';
+import { FiArrowLeft, FiCheck, FiX, FiFileText, FiCalendar, FiClock, FiUsers } from 'react-icons/fi';
 import {
   OfferingsSection,
   OfferingModal,
   DeleteOfferingModal,
+  MinistryFunctionsSection,
   type OfferingTableItem,
   type OfferingFormData,
 } from '../worships/components';
+import { MinistryFunctionsModal } from '../../components/groups';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 interface AttendanceTableItem {
   id: string;
@@ -71,6 +75,12 @@ export default function MeetingDetail() {
   const updateOffering = useUpdateOffering(meetingId);
   const deleteOffering = useDeleteOffering(meetingId);
 
+  // Funciones ministeriales
+  const { data: ministryFunctions = [], isLoading: loadingMinistryFunctions } = useMinistryFunctions(
+    meetingId,
+    'GROUP_MEETING'
+  );
+
   // Modal de ofrendas
   const [offeringModalOpen, setOfferingModalOpen] = useState(false);
   const [editingOffering, setEditingOffering] = useState<OfferingTableItem | null>(null);
@@ -82,6 +92,9 @@ export default function MeetingDetail() {
 
   // Modal de eliminación
   const [deletingOfferingId, setDeletingOfferingId] = useState<string | null>(null);
+
+  // Modal de funciones ministeriales
+  const [ministryFunctionsModalOpen, setMinistryFunctionsModalOpen] = useState(false);
 
   const attendanceTableData: AttendanceTableItem[] = useMemo(() =>
     (attendanceData?.content ?? []).map((record: MeetingAttendance) => ({
@@ -282,10 +295,70 @@ export default function MeetingDetail() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
-        {/* Columna izquierda: resumen */}
+        {/* Columna izquierda: información y resumen */}
         <div className="space-y-6">
+          {/* Información General */}
           <Card>
-            <h3 className="text-lg font-semibold text-neutral-800 mb-4">Resumen de Asistencia</h3>
+            <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+              <FiFileText className="text-primary-600" />
+              Información General
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  Nombre
+                </span>
+                <p className="text-neutral-800 font-medium mt-1">{meeting.name}</p>
+              </div>
+              {meeting.description && (
+                <div>
+                  <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                    Descripción
+                  </span>
+                  <p className="text-neutral-700 mt-1 whitespace-pre-wrap">{meeting.description}</p>
+                </div>
+              )}
+              <div>
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  Tipo de Reunión
+                </span>
+                <p className="mt-1">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-violet-100 text-violet-800">
+                    {meeting.type?.name ?? '-'}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Fecha y Hora */}
+          <Card>
+            <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+              <FiCalendar className="text-primary-600" />
+              Fecha y Hora
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                  Fecha Programada
+                </span>
+                <p className="text-neutral-800 mt-1 capitalize">
+                  {formatDateForDisplay(meeting.date, 'date')}
+                </p>
+                <div className="flex items-center gap-2 mt-1 text-neutral-600">
+                  <FiClock size={14} />
+                  <span className="text-sm">{formatDateForDisplay(meeting.date, 'time')}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Resumen de Asistencia */}
+          <Card>
+            <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+              <FiUsers className="text-primary-600" />
+              Resumen de Asistencia
+            </h3>
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-neutral-600">Asistencia</span>
@@ -328,6 +401,15 @@ export default function MeetingDetail() {
         </div>
       </div>
 
+      {/* ========== SECCIÓN DE FUNCIONES MINISTERIALES ========== */}
+      <div className="mt-6 animate-fadeIn">
+        <MinistryFunctionsSection
+          ministryFunctions={ministryFunctions}
+          isLoading={loadingMinistryFunctions}
+          onManage={() => setMinistryFunctionsModalOpen(true)}
+        />
+      </div>
+
       {/* ========== SECCIÓN DE OFRENDAS ========== */}
       <div className="mt-6 animate-fadeIn">
         <OfferingsSection
@@ -367,6 +449,16 @@ export default function MeetingDetail() {
         onConfirm={handleConfirmDeleteOffering}
         isDeleting={deleteOffering.isPending}
       />
+
+      {meetingId && (
+        <MinistryFunctionsModal
+          isOpen={ministryFunctionsModalOpen}
+          meetingId={meetingId}
+          eventType="GROUP_MEETING"
+          hierarchy={myGroup?.hierarchy ?? []}
+          onClose={() => setMinistryFunctionsModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

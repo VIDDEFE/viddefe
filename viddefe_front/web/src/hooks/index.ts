@@ -10,3 +10,16 @@ export * from './useUsers';
 export * from './useWorships';
 export * from './useOfferings';
 export * from './useMeetings';
+export * from './useMinistryFunctions';
+
+// Meetings (Group)
+export {
+  useMeetings,
+  useMeeting,
+  useMeetingTypes,
+  useCreateMeeting,
+  useUpdateMeeting,
+  useDeleteMeeting,
+  useMeetingAttendance,
+  useRegisterMeetingAttendance,
+} from './useMeetings';

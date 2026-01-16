@@ -8,9 +8,11 @@ import {
   useOfferingTypes,
   useCreateOffering,
   useUpdateOffering,
-  useDeleteOffering
+  useDeleteOffering,
+  useMinistryFunctions
 } from '../../hooks';
 import { Card, Button, PageHeader, Avatar, Switch, Table } from '../../components/shared';
+import { MinistryFunctionsModal } from '../../components/groups';
 import { FiArrowLeft, FiCheck, FiX } from 'react-icons/fi';
 import type { WorshipAttendance, Offering, CreateOfferingDto, UpdateOfferingDto } from '../../models';
 import {
@@ -20,6 +22,7 @@ import {
   OfferingsSection,
   OfferingModal,
   DeleteOfferingModal,
+  MinistryFunctionsSection,
   type AttendanceTableItem,
   type OfferingTableItem,
   type OfferingFormData,
@@ -115,11 +118,20 @@ export default function WorshipDetail() {
   const updateOffering = useUpdateOffering(id);
   const deleteOffering = useDeleteOffering(id);
 
+  // Funciones ministeriales
+  const { data: ministryFunctions = [], isLoading: loadingMinistryFunctions } = useMinistryFunctions(
+    id,
+    'TEMPLE_WORHSIP'
+  );
+
   // Modal de ofrendas
   const offeringModal = useOfferingModal(offeringTypes);
   
   // Modal de eliminación
   const [deletingOfferingId, setDeletingOfferingId] = useState<string | null>(null);
+
+  // Modal de funciones ministeriales
+  const [ministryFunctionsModalOpen, setMinistryFunctionsModalOpen] = useState(false);
 
   // View modes
   const [attendanceViewMode, setAttendanceViewMode] = useState<'table' | 'cards'>('table');
@@ -337,6 +349,15 @@ export default function WorshipDetail() {
           </Card>
         </div>
       </div>
+
+      {/* Sección de Funciones Ministeriales */}
+      <div className="mt-6 animate-fadeIn">
+        <MinistryFunctionsSection
+          ministryFunctions={ministryFunctions}
+          isLoading={loadingMinistryFunctions}
+          onManage={() => setMinistryFunctionsModalOpen(true)}
+        />
+      </div>
       
       {/* Sección de Ofrendas */}
       <div className="mt-6 animate-fadeIn">
@@ -377,6 +398,15 @@ export default function WorshipDetail() {
         onConfirm={confirmDeleteOffering}
         isDeleting={deleteOffering.isPending}
       />
+
+      {id && (
+        <MinistryFunctionsModal
+          isOpen={ministryFunctionsModalOpen}
+          meetingId={id}
+          eventType="TEMPLE_WORHSIP"
+          onClose={() => setMinistryFunctionsModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

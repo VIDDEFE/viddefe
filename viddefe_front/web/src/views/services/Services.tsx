@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Service } from '../../models';
 import { Button, PageHeader, Table, Modal, Form, Input, DropDown } from '../../components/shared';
 import { useServices, useCreateService } from '../../hooks';
+import { formatDateForDisplay } from '../../utils/helpers';
 
 const serviceTypeOptions = [
   { value: 'sunday_service', label: 'Servicio Dominical' },
@@ -49,7 +50,7 @@ export default function Services() {
     { 
       key: 'date' as const, 
       label: 'Fecha',
-      render: (date: any) => new Date(date).toLocaleDateString('es-ES')
+      render: (date: any) => formatDateForDisplay(date, 'short')
     },
     { key: 'location' as const, label: 'Ubicación' },
   ];

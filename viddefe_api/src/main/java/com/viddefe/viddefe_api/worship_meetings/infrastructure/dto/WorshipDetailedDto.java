@@ -3,14 +3,14 @@ package com.viddefe.viddefe_api.worship_meetings.infrastructure.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter @Setter
 public class WorshipDetailedDto extends WorshipDto{
     private Long totalAttendance;
     private Long presentCount;
     private Long absentCount;
-    private LocalDateTime date;
+    private OffsetDateTime date;
 
     public WorshipDetailedDto fromWorshipDto(WorshipDto worshipDto) {
         this.setId(worshipDto.getId());
