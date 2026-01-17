@@ -3,12 +3,10 @@ package com.viddefe.viddefe_api.worship_meetings.application;
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
-import com.viddefe.viddefe_api.worship_meetings.contracts.TypesWorshipMeetingReader;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingTypeEnum;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingModel;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
+import com.viddefe.viddefe_api.worship_meetings.configuration.MeetingTypeEnum;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -38,7 +36,7 @@ class WorshipServicesImplTest {
     private VerifyWorshipMeetingConflict verifyConflict;
 
     @Mock
-    private TypesWorshipMeetingReader typesReader;
+    private MeetingTypesService ;
 
     @Mock
     private ChurchLookup churchLookup;
@@ -103,7 +101,7 @@ class WorshipServicesImplTest {
             when(meetingService.create(any(WorshipMeetingModel.class))).thenReturn(worshipMeeting);
 
             // Execute
-            WorshipDto result = worshipService.createWorship(createDto, churchId);
+            MeetingDto result = worshipService.createWorship(createDto, churchId);
 
             // Assert
             assertNotNull(result);

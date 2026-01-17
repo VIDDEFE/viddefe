@@ -2,7 +2,7 @@ package com.viddefe.viddefe_api.worship_meetings.application;
 
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
@@ -24,7 +24,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final PeopleReader peopleReader;
 
     @Override
-    public AttendanceDto updateAttendance(CreateAttendanceDto dto, AttendanceEventType type) {
+    public AttendanceDto updateAttendance(CreateAttendanceDto dto, TopologyEventType type) {
         PeopleModel person = peopleReader.getPeopleById(dto.getPeopleId());
         AttendanceModel attendanceModel = attendanceRepository.findByPeopleIdAndEventId
                 (dto.getPeopleId(), dto.getEventId())
@@ -49,19 +49,19 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable, AttendanceEventType type) {
+    public Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable, TopologyEventType type) {
         return attendanceRepository
                 .findAttendanceByEventWithDefaults(eventId, type ,pageable)
                 .map(AttendanceProjectionDto::toDto);
     }
 
     @Override
-    public long countTotalByEventId(UUID eventId, AttendanceEventType eventType) {
+    public long countTotalByEventId(UUID eventId, TopologyEventType eventType) {
         return attendanceRepository.countTotalByEventId(eventId);
     }
 
     @Override
-    public long countByEventIdWithDefaults(UUID eventId, AttendanceEventType eventType, AttendanceStatus status) {
+    public long countByEventIdWithDefaults(UUID eventId, TopologyEventType eventType, AttendanceStatus status) {
         return attendanceRepository.countByEventIdWithDefaults(eventId, eventType, status);
     }
 

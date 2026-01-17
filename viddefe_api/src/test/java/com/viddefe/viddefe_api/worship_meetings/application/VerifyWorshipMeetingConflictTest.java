@@ -71,7 +71,7 @@ class VerifyWorshipMeetingConflictTest {
 
             // Act & Assert
             assertDoesNotThrow(() ->
-                verifyConflict.verifyHourOfWorshipMeeting(createDto, churchId, null)
+                verifyConflict.verifyHourOfWorshipMeeting(createDto, churchId, null,null)
             );
         }
 

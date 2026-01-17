@@ -1,9 +1,8 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.repository;
 
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceProjectionDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,7 +35,7 @@ public interface AttendanceRepository extends JpaRepository<AttendanceModel, UUI
     """)
     Page<AttendanceProjectionDto> findAttendanceByEventWithDefaults(
             @Param("eventId") UUID eventId,
-            @Param("eventType") AttendanceEventType eventType,
+            @Param("eventType") TopologyEventType eventType,
             Pageable pageable
     );
 
@@ -54,7 +53,7 @@ public interface AttendanceRepository extends JpaRepository<AttendanceModel, UUI
     """)
     long countByEventIdWithDefaults(
             @Param("eventId") UUID eventId,
-            @Param("eventType") AttendanceEventType eventType,
+            @Param("eventType") TopologyEventType eventType,
             @Param("status") AttendanceStatus status
     );
 

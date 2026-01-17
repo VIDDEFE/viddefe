@@ -1,7 +1,5 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
-import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
-import com.viddefe.viddefe_api.worship_meetings.domain.repository.WorshipTypesRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

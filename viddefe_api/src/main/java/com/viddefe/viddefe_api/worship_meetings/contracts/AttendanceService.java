@@ -1,6 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.contracts;
 
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
@@ -21,7 +21,7 @@ public interface AttendanceService {
      * @param type The type of attendance event (e.g., TEMPLE_WORHSIP, GROUP_MEETING).
      * @return Updated AttendanceDto object.
      */
-    AttendanceDto updateAttendance(CreateAttendanceDto dto, AttendanceEventType type);
+    AttendanceDto updateAttendance(CreateAttendanceDto dto, TopologyEventType type);
 
     /**
      * Retrieves the attendance records for a specific event.
@@ -30,7 +30,7 @@ public interface AttendanceService {
      * @param pageable Pagination information.
      * @return A list of AttendanceDto objects representing the attendance records.
      */
-    Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable, AttendanceEventType type);
+    Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable, TopologyEventType type);
 
     /**
      * Counts the total number of people available for attendance.
@@ -38,7 +38,7 @@ public interface AttendanceService {
      * @param eventType
      * @return
      */
-    long countTotalByEventId(UUID eventId, AttendanceEventType eventType);
+    long countTotalByEventId(UUID eventId, TopologyEventType eventType);
 
     /**
      * Counts the number of attendance records for a specific event with default status handling.
@@ -48,5 +48,5 @@ public interface AttendanceService {
      * @param status The attendance status to count.
      * @return The count of attendance records matching the criteria.
      */
-    long countByEventIdWithDefaults(UUID eventId, AttendanceEventType eventType, AttendanceStatus status);
+    long countByEventIdWithDefaults(UUID eventId, TopologyEventType eventType, AttendanceStatus status);
 }

@@ -1,13 +1,11 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.models;
 
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingTypeConfigDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingTypeDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.UUID;
 
 /**
  * Tabla de configuración para tipos de reuniones base.
@@ -25,35 +23,23 @@ import java.util.UUID;
 @Table(name = "meeting_type_configs")
 @Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
-public class MeetingTypeConfig {
+public class MeetingType {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "meeting_type_enum", nullable = false)
-    private MeetingTypeEnum meetingTypeEnum;
-
-    /**
-     * Referencia al tipo específico (WorshipMeetingTypes.id o GroupMeetingTypes.id)
-     */
-    @Column(name = "subtype_id", nullable = false)
-    private Long subtypeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "topology_metting_id", nullable = false)
+    private TopologyMeetingModel topologyMeeting;
 
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description")
-    private String description;
-
-    public MeetingTypeConfigDto toDto() {
-        MeetingTypeConfigDto dto = new MeetingTypeConfigDto();
+    public MeetingTypeDto toDto() {
+        MeetingTypeDto dto = new MeetingTypeDto();
         dto.setId(this.id);
-        dto.setMeetingTypeEnum(this.meetingTypeEnum);
-        dto.setSubtypeId(this.subtypeId);
         dto.setName(this.name);
-        dto.setDescription(this.description);
         return dto;
     }
 }

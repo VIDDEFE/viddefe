@@ -78,4 +78,7 @@ public abstract class CreateMeetingDto {
     @NotNull(message = "La fecha programada es obligatoria")
     @FutureOrPresent(message = "La fecha programada no puede ser en el pasado")
     private OffsetDateTime scheduledDate;
+
+    @NotNull(message = "El ID del tipo de reunión es obligatorio")
+    private Long meetingTypeId;
 }
