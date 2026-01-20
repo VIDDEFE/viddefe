@@ -343,11 +343,11 @@ export default function MeetingDetail() {
                   Fecha Programada
                 </span>
                 <p className="text-neutral-800 mt-1 capitalize">
-                  {formatDateForDisplay(meeting.date, 'date')}
+                  {formatDateForDisplay(meeting.scheduledDate, 'date')}
                 </p>
                 <div className="flex items-center gap-2 mt-1 text-neutral-600">
                   <FiClock size={14} />
-                  <span className="text-sm">{formatDateForDisplay(meeting.date, 'time')}</span>
+                  <span className="text-sm">{formatDateForDisplay(meeting.scheduledDate, 'time')}</span>
                 </div>
               </div>
             </div>

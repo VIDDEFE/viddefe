@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -58,13 +59,12 @@ public class MeetingsController {
     public ResponseEntity<ApiResponse<MeetingDto>> createMeeting(
             @RequestParam TopologyEventType type,
             @RequestParam(required = false) UUID contextId,
-            @RequestBody @Valid CreateMeetingDto dto,
+            @RequestBody @Validated(OnCreate.class) CreateMeetingDto dto,
             @CookieValue("access_token") String accessToken
     ) {
+        UUID churchId = jwtUtil.getChurchId(accessToken);
         UUID resolvedContextId = resolveContextId(type, contextId, accessToken);
-        validateDtoForType(dto, type);
-
-        MeetingDto response = meetingFacade.createMeeting(dto, resolvedContextId, type);
+        MeetingDto response = meetingFacade.createMeeting(dto, resolvedContextId, type, churchId);
         return new ResponseEntity<>(ApiResponse.created(response), HttpStatus.CREATED);
     }
 
@@ -80,14 +80,14 @@ public class MeetingsController {
      * @return Página de reuniones
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<? extends MeetingDto>>> getAllMeetings(
+    public ResponseEntity<ApiResponse<Page<MeetingDto>>> getAllMeetings(
             @RequestParam TopologyEventType type,
             @RequestParam(required = false) UUID contextId,
             Pageable pageable,
             @CookieValue("access_token") String accessToken
     ) {
         UUID resolvedContextId = resolveContextId(type, contextId, accessToken);
-        Page<? extends MeetingDto> response = meetingFacade.getAllMeetings(resolvedContextId, type, pageable);
+        Page<MeetingDto> response = meetingFacade.getAllMeetings(resolvedContextId, type, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
@@ -129,12 +129,10 @@ public class MeetingsController {
             @PathVariable UUID id,
             @RequestParam TopologyEventType type,
             @RequestParam(required = false) UUID contextId,
-            @RequestBody @Valid CreateMeetingDto dto,
+            @RequestBody @Validated(OnUpdate.class) CreateMeetingDto dto,
             @CookieValue("access_token") String accessToken
     ) {
         UUID resolvedContextId = resolveContextId(type, contextId, accessToken);
-        validateDtoForType(dto, type);
-
         MeetingDto response = meetingFacade.updateMeeting(dto, resolvedContextId, id, type);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -198,8 +196,6 @@ public class MeetingsController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    // ==================== PRIVATE HELPERS ====================
-
     /**
      * Resuelve el contextId según el tipo de evento.
      * Para TEMPLE_WORHSIP: usa churchId del JWT.
@@ -217,26 +213,6 @@ public class MeetingsController {
                 yield contextId;
             }
         };
-    }
-
-    /**
-     * Valida que el DTO sea del tipo correcto según el tipo de evento.
-     */
-    private void validateDtoForType(CreateMeetingDto dto, TopologyEventType type) {
-        boolean isValid = switch (type) {
-            case TEMPLE_WORHSIP -> dto instanceof CreateWorshipDto;
-            case GROUP_MEETING -> dto instanceof CreateMeetingGroupDto;
-        };
-
-        if (!isValid) {
-            String expectedType = switch (type) {
-                case TEMPLE_WORHSIP -> "CreateWorshipDto";
-                case GROUP_MEETING -> "CreateMeetingGroupDto";
-            };
-            throw new IllegalArgumentException(
-                    String.format("DTO inválido para tipo %s. Se esperaba %s", type.name(), expectedType)
-            );
-        }
     }
 }
 

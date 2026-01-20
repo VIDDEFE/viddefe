@@ -10,7 +10,7 @@ import com.viddefe.viddefe_api.worship_meetings.contracts.WorshipService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDetailedDto;
 import jakarta.persistence.EntityNotFoundException;
@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -34,18 +36,19 @@ public class WorshipServicesImpl implements WorshipService {
 
 
     @Override
-    public MeetingDto createWorship(CreateWorshipDto dto, @NotNull UUID churchId) {
+    public MeetingDto createWorship(CreateMeetingDto dto, @NotNull UUID churchId) {
 
         verifyWorshipMeetingConflict.verifyHourOfMeeting(dto, churchId, null, null);
 
         MeetingType worshipMeetingTypes =
-                meetingTypesService.getMeetingTypesById(dto.getWorshipTypeId());
+                meetingTypesService.getMeetingTypesById(dto.getMeetingTypeId());
 
         ChurchModel church = churchLookup.getChurchById(churchId);
 
         // Crear entidad con inicialización normalizada
         Meeting worshipModel = new Meeting();
         worshipModel.fromDto(dto);
+        worshipModel.setCreationDate(Instant.now());
         worshipModel.setChurch(church);
         worshipModel.setMeetingType(worshipMeetingTypes);
 
@@ -93,7 +96,7 @@ public class WorshipServicesImpl implements WorshipService {
     }
 
     @Override
-    public MeetingDto updateWorship(UUID id, CreateWorshipDto dto, @NotNull UUID churchId) {
+    public MeetingDto updateWorship(UUID id, CreateMeetingDto dto, @NotNull UUID churchId) {
 
         verifyWorshipMeetingConflict.verifyHourOfMeeting(dto, churchId, null,id);
 
@@ -102,9 +105,9 @@ public class WorshipServicesImpl implements WorshipService {
         // Usar updateFrom para no modificar creationDate
         worship.fromDto(dto);
 
-        if (dto.getWorshipTypeId() != null) {
+        if (dto.getMeetingTypeId() != null) {
             MeetingType type =
-                    meetingTypesService.getMeetingTypesById(dto.getWorshipTypeId());
+                    meetingTypesService.getMeetingTypesById(dto.getMeetingTypeId());
             worship.setMeetingType(type);
         }
 

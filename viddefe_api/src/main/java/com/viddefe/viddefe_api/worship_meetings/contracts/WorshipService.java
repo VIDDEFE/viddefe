@@ -1,6 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.contracts;
 
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDetailedDto;
 import org.springframework.data.domain.Page;
@@ -19,7 +19,7 @@ public interface WorshipService {
      * @param churchId The ID of the church associated with the worship service.
      * @return The created Worship Meeting, {{@link MeetingDto}}.
      */
-    MeetingDto createWorship(CreateWorshipDto dto, UUID churchId);
+    MeetingDto createWorship(CreateMeetingDto dto, UUID churchId);
     /**
      * Retrieves a worship service by its ID.
      *
@@ -43,7 +43,7 @@ public interface WorshipService {
      * @param churchId The ID of the church associated with the worship service.
      * @return The updated Worship Service, {{@link MeetingDto}}.
      */
-    MeetingDto updateWorship(UUID id, CreateWorshipDto dto, UUID churchId);
+    MeetingDto updateWorship(UUID id, CreateMeetingDto dto, UUID churchId);
 
     /**
      * Deletes a worship service by its ID.

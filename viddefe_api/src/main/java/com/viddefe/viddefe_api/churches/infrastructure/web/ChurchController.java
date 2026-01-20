@@ -31,11 +31,21 @@ public class ChurchController {
         return new ResponseEntity<>(ApiResponse.created(response), HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/mine")
+    public ResponseEntity<ApiResponse<ChurchDetailedResDto>> getMyChurches(
+            @CookieValue("access_token") String jwt
+    ) {
+        UUID churchId = jwtUtil.getChurchId(jwt);
+        ChurchDetailedResDto response = churchService.getChurchById(churchId);
+        return new ResponseEntity<>(ApiResponse.ok(response), HttpStatus.OK);
+    }
+
+    @GetMapping("/id/{id}")
     public ResponseEntity<ApiResponse<ChurchDetailedResDto>> getChurchById(@PathVariable UUID id){
         ChurchDetailedResDto church = churchService.getChurchById(id);
         return new ResponseEntity<>(ApiResponse.ok(church), HttpStatus.OK);
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ChurchResDto>> updateChurch(@PathVariable UUID id,
@@ -80,5 +90,5 @@ public class ChurchController {
         UUID creatorPastorId = jwtUtil.getUserId(jwt);
         ChurchResDto response = churchService.addChildChurch(churchId, dto, creatorPastorId);
         return new ResponseEntity<>(ApiResponse.created(response), HttpStatus.CREATED);
-        }
+    }
 }

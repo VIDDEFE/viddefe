@@ -43,9 +43,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, UUID> {
      * Obtiene reunión con sus relaciones cargadas (evita N+1).
      */
     @EntityGraph(attributePaths = {
-            "worshipType",
             "church",
-            "groupMeetingType",
             "group"
     })
     Optional<Meeting> findWithRelationsById(UUID id);

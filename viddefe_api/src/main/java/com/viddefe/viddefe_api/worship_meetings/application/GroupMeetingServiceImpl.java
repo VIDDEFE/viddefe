@@ -1,5 +1,7 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
+import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
+import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
@@ -17,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -26,14 +29,17 @@ public class GroupMeetingServiceImpl implements GroupMeetingService {
     private final HomeGroupReader homeGroupReader;
     private final MeetingTypesService meetingTypesService;
     private final AttendanceService attendanceService;
+    private final ChurchLookup churchLookup;
 
     @Override
-    public MeetingDto createGroupMeeting(CreateMeetingGroupDto dto, @NotNull UUID groupId) {
+    public MeetingDto createGroupMeeting(CreateMeetingDto dto, @NotNull UUID groupId, @NotNull UUID churchId) {
         Meeting groupMeeting = new Meeting();
         groupMeeting.fromDto(dto);
-
+        groupMeeting.setCreationDate(Instant.now());
+        ChurchModel church = churchLookup.getChurchById(churchId);
+        groupMeeting.setChurch(church);
         HomeGroupsModel homeGroupsModel = homeGroupReader.findById(groupId);
-        MeetingType type = meetingTypesService.getMeetingTypesById(dto.getGroupMeetingTypeId());
+        MeetingType type = meetingTypesService.getMeetingTypesById(dto.getMeetingTypeId());
 
         // Establecer campos normalizados
         groupMeeting.setGroup(homeGroupsModel);
@@ -45,14 +51,14 @@ public class GroupMeetingServiceImpl implements GroupMeetingService {
     }
 
     @Override
-    public MeetingDto updateGroupMeeting(CreateMeetingGroupDto dto, UUID groupId, UUID meetingId) {
+    public MeetingDto updateGroupMeeting(CreateMeetingDto dto, UUID groupId, UUID meetingId) {
         Meeting groupMeeting = meetingService.findById(meetingId);
         validateGroupOwnership(groupId, groupMeeting);
 
         // Usar updateFrom para no modificar creationDate
         groupMeeting.fromDto(dto);
 
-        MeetingType type = meetingTypesService.getMeetingTypesById(dto.getGroupMeetingTypeId());
+        MeetingType type = meetingTypesService.getMeetingTypesById(dto.getMeetingTypeId());
         groupMeeting.setMeetingType(type);
 
         Meeting updated = meetingService.update(groupMeeting);

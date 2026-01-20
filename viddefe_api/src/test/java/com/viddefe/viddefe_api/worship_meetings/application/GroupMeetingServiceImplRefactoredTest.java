@@ -3,7 +3,11 @@ package com.viddefe.viddefe_api.worship_meetings.application;
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingGroupDto;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,6 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -24,7 +29,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("GroupMeetingServiceImpl - Servicio de Reuniones de Grupo Refactorizado")
-class GroupMeetingServiceImplTest {
+class GroupMeetingServiceImplRefactoredTest {
 
     @Mock
     private MeetingService meetingService;
@@ -33,7 +38,7 @@ class GroupMeetingServiceImplTest {
     private HomeGroupReader homeGroupReader;
 
     @Mock
-    private GroupMeetingTypeReader groupMeetingTypeReader;
+    private MeetingTypesService meetingTypesService;
 
     @Mock
     private AttendanceService attendanceService;
@@ -42,36 +47,30 @@ class GroupMeetingServiceImplTest {
     private GroupMeetingServiceImpl groupMeetingService;
 
     private UUID groupId;
+    private UUID churchId;
     private UUID meetingId;
-    private CreateMeetingGroupDto createDto;
-    private GroupMeetings groupMeeting;
-    private GroupMeetingTypes meetingType;
+    private CreateMeetingDto createDto;
+    private Meeting groupMeeting;
+    private MeetingType meetingType;
     private HomeGroupsModel homeGroup;
     private OffsetDateTime testScheduledDate;
 
     @BeforeEach
     void setUp() {
         groupId = UUID.randomUUID();
+        churchId = UUID.randomUUID();
         meetingId = UUID.randomUUID();
         testScheduledDate = OffsetDateTime.of(2026, 1, 15, 19, 0, 0, 0, ZoneOffset.of("-05:00"));
 
         // DTO
-        createDto = new CreateMeetingGroupDto();
+        createDto = new CreateMeetingDto();
         createDto.setName("Estudio Bíblico");
         createDto.setDescription("Reunión semanal");
-        createDto.setDate(testScheduledDate);
-        createDto.setGroupMeetingTypeId(2L);
-
-        // Entity
-        groupMeeting = new GroupMeetings();
-        groupMeeting.setId(meetingId);
-        groupMeeting.setName("Estudio Bíblico");
-        groupMeeting.setContextId(groupId);
-        groupMeeting.setTypeId(2L);
-        groupMeeting.setScheduledDate(testScheduledDate);
+        createDto.setScheduledDate(testScheduledDate);
+        createDto.setMeetingTypeId(2L);
 
         // Type
-        meetingType = new GroupMeetingTypes();
+        meetingType = new MeetingType();
         meetingType.setId(2L);
         meetingType.setName("Estudio Bíblico");
 
@@ -79,6 +78,15 @@ class GroupMeetingServiceImplTest {
         homeGroup = new HomeGroupsModel();
         homeGroup.setId(groupId);
         homeGroup.setName("Grupo Test");
+
+        // Entity
+        groupMeeting = new Meeting();
+        groupMeeting.setId(meetingId);
+        groupMeeting.setName("Estudio Bíblico");
+        groupMeeting.setGroup(homeGroup);
+        groupMeeting.setMeetingType(meetingType);
+        groupMeeting.setScheduledDate(testScheduledDate);
+        groupMeeting.setCreationDate(Instant.now());
     }
 
     @Nested
@@ -89,65 +97,65 @@ class GroupMeetingServiceImplTest {
         @DisplayName("createGroupMeeting() debe crear sin conversión de zona")
         void testCreateGroupMeetingNoConversion() {
             when(homeGroupReader.findById(groupId)).thenReturn(homeGroup);
-            when(groupMeetingTypeReader.getGroupMeetingTypeById(2L)).thenReturn(meetingType);
-            when(meetingService.create(any(GroupMeetings.class))).thenReturn(groupMeeting);
+            when(meetingTypesService.getMeetingTypesById(2L)).thenReturn(meetingType);
+            when(meetingService.create(any(Meeting.class))).thenReturn(groupMeeting);
 
-            GroupMeetingDto result = groupMeetingService.createGroupMeeting(createDto, groupId);
+            MeetingDto result = groupMeetingService.createGroupMeeting(createDto, groupId, churchId);
 
             assertNotNull(result);
             assertEquals("Estudio Bíblico", result.getName());
             assertEquals(testScheduledDate.getOffset(), ZoneOffset.of("-05:00"));
 
-            verify(meetingService, times(1)).create(any(GroupMeetings.class));
+            verify(meetingService, times(1)).create(any(Meeting.class));
         }
 
         @Test
-        @DisplayName("createGroupMeeting() debe asignar contextId = groupId")
+        @DisplayName("createGroupMeeting() debe asignar group correctamente")
         void testCreateGroupMeetingAssignsContext() {
             when(homeGroupReader.findById(groupId)).thenReturn(homeGroup);
-            when(groupMeetingTypeReader.getGroupMeetingTypeById(2L)).thenReturn(meetingType);
-            when(meetingService.create(any(GroupMeetings.class))).thenAnswer(invocation -> {
-                GroupMeetings meeting = invocation.getArgument(0);
-                assertEquals(groupId, meeting.getContextId());
-                return meeting;
+            when(meetingTypesService.getMeetingTypesById(2L)).thenReturn(meetingType);
+            when(meetingService.create(any(Meeting.class))).thenAnswer(invocation -> {
+                Meeting meeting = invocation.getArgument(0);
+                assertEquals(groupId, meeting.getGroup().getId());
+                return groupMeeting;
             });
 
-            groupMeetingService.createGroupMeeting(createDto, groupId);
+            groupMeetingService.createGroupMeeting(createDto, groupId, churchId);
 
-            verify(meetingService, times(1)).create(any(GroupMeetings.class));
+            verify(meetingService, times(1)).create(any(Meeting.class));
         }
 
         @Test
-        @DisplayName("createGroupMeeting() debe asignar typeId = groupMeetingTypeId")
+        @DisplayName("createGroupMeeting() debe asignar meetingType correctamente")
         void testCreateGroupMeetingAssignsTypeId() {
             when(homeGroupReader.findById(groupId)).thenReturn(homeGroup);
-            when(groupMeetingTypeReader.getGroupMeetingTypeById(2L)).thenReturn(meetingType);
-            when(meetingService.create(any(GroupMeetings.class))).thenAnswer(invocation -> {
-                GroupMeetings meeting = invocation.getArgument(0);
-                assertEquals(2L, meeting.getTypeId());
-                return meeting;
+            when(meetingTypesService.getMeetingTypesById(2L)).thenReturn(meetingType);
+            when(meetingService.create(any(Meeting.class))).thenAnswer(invocation -> {
+                Meeting meeting = invocation.getArgument(0);
+                assertEquals(2L, meeting.getMeetingType().getId());
+                return groupMeeting;
             });
 
-            groupMeetingService.createGroupMeeting(createDto, groupId);
+            groupMeetingService.createGroupMeeting(createDto, groupId, churchId);
 
-            verify(meetingService, times(1)).create(any(GroupMeetings.class));
+            verify(meetingService, times(1)).create(any(Meeting.class));
         }
 
         @Test
         @DisplayName("createGroupMeeting() debe preservar OffsetDateTime")
         void testCreateGroupMeetingPreservesOffsetDateTime() {
             when(homeGroupReader.findById(groupId)).thenReturn(homeGroup);
-            when(groupMeetingTypeReader.getGroupMeetingTypeById(2L)).thenReturn(meetingType);
-            when(meetingService.create(any(GroupMeetings.class))).thenAnswer(invocation -> {
-                GroupMeetings meeting = invocation.getArgument(0);
+            when(meetingTypesService.getMeetingTypesById(2L)).thenReturn(meetingType);
+            when(meetingService.create(any(Meeting.class))).thenAnswer(invocation -> {
+                Meeting meeting = invocation.getArgument(0);
                 assertEquals(testScheduledDate, meeting.getScheduledDate());
                 assertEquals(ZoneOffset.of("-05:00"), meeting.getScheduledDate().getOffset());
-                return meeting;
+                return groupMeeting;
             });
 
-            groupMeetingService.createGroupMeeting(createDto, groupId);
+            groupMeetingService.createGroupMeeting(createDto, groupId, churchId);
 
-            verify(meetingService, times(1)).create(any(GroupMeetings.class));
+            verify(meetingService, times(1)).create(any(Meeting.class));
         }
     }
 
@@ -159,19 +167,19 @@ class GroupMeetingServiceImplTest {
         @DisplayName("updateGroupMeeting() debe actualizar sin conversión de zona")
         void testUpdateGroupMeetingNoConversion() {
             OffsetDateTime newSchedule = OffsetDateTime.of(2026, 1, 22, 19, 0, 0, 0, ZoneOffset.of("-05:00"));
-            CreateMeetingGroupDto updateDto = new CreateMeetingGroupDto();
+            CreateMeetingDto updateDto = new CreateMeetingDto();
             updateDto.setName("Estudio Actualizado");
-            updateDto.setDate(newSchedule);
-            updateDto.setGroupMeetingTypeId(2L);
+            updateDto.setScheduledDate(newSchedule);
+            updateDto.setMeetingTypeId(2L);
 
-            when(meetingService.findById(meetingId)).thenReturn(Optional.of(groupMeeting));
-            when(groupMeetingTypeReader.getGroupMeetingTypeById(2L)).thenReturn(meetingType);
-            when(meetingService.update(any(GroupMeetings.class))).thenReturn(groupMeeting);
+            when(meetingService.findById(meetingId)).thenReturn(groupMeeting);
+            when(meetingTypesService.getMeetingTypesById(2L)).thenReturn(meetingType);
+            when(meetingService.update(any(Meeting.class))).thenReturn(groupMeeting);
 
-            GroupMeetingDto result = groupMeetingService.updateGroupMeeting(updateDto, groupId, meetingId);
+            MeetingDto result = groupMeetingService.updateGroupMeeting(updateDto, groupId, meetingId);
 
             assertNotNull(result);
-            verify(meetingService, times(1)).update(any(GroupMeetings.class));
+            verify(meetingService, times(1)).update(any(Meeting.class));
         }
 
         @Test
@@ -180,21 +188,22 @@ class GroupMeetingServiceImplTest {
             var createDate = groupMeeting.getCreationDate();
             OffsetDateTime newSchedule = OffsetDateTime.of(2026, 1, 22, 19, 0, 0, 0, ZoneOffset.of("-05:00"));
 
-            CreateMeetingGroupDto updateDto = new CreateMeetingGroupDto();
-            updateDto.setDate(newSchedule);
-            updateDto.setGroupMeetingTypeId(2L);
+            CreateMeetingDto updateDto = new CreateMeetingDto();
+            updateDto.setName("Estudio Actualizado");
+            updateDto.setScheduledDate(newSchedule);
+            updateDto.setMeetingTypeId(2L);
 
-            when(meetingService.findById(meetingId)).thenReturn(Optional.of(groupMeeting));
-            when(groupMeetingTypeReader.getGroupMeetingTypeById(2L)).thenReturn(meetingType);
-            when(meetingService.update(any(GroupMeetings.class))).thenAnswer(invocation -> {
-                GroupMeetings meeting = invocation.getArgument(0);
+            when(meetingService.findById(meetingId)).thenReturn(groupMeeting);
+            when(meetingTypesService.getMeetingTypesById(2L)).thenReturn(meetingType);
+            when(meetingService.update(any(Meeting.class))).thenAnswer(invocation -> {
+                Meeting meeting = invocation.getArgument(0);
                 assertEquals(createDate, meeting.getCreationDate());
                 return meeting;
             });
 
             groupMeetingService.updateGroupMeeting(updateDto, groupId, meetingId);
 
-            verify(meetingService, times(1)).update(any(GroupMeetings.class));
+            verify(meetingService, times(1)).update(any(Meeting.class));
         }
     }
 
@@ -205,7 +214,7 @@ class GroupMeetingServiceImplTest {
         @Test
         @DisplayName("deleteGroupMeeting() debe validar que pertenece al grupo")
         void testDeleteGroupMeetingValidatesOwnership() {
-            when(meetingService.findById(meetingId)).thenReturn(Optional.of(groupMeeting));
+            when(meetingService.findById(meetingId)).thenReturn(groupMeeting);
             doNothing().when(meetingService).delete(meetingId);
 
             groupMeetingService.deleteGroupMeeting(groupId, meetingId);
@@ -217,7 +226,7 @@ class GroupMeetingServiceImplTest {
         @DisplayName("deleteGroupMeeting() debe fallar si no pertenece al grupo")
         void testDeleteGroupMeetingOwnershipCheck() {
             UUID differentGroupId = UUID.randomUUID();
-            when(meetingService.findById(meetingId)).thenReturn(Optional.of(groupMeeting));
+            when(meetingService.findById(meetingId)).thenReturn(groupMeeting);
 
             assertThrows(IllegalArgumentException.class, () ->
                 groupMeetingService.deleteGroupMeeting(differentGroupId, meetingId)
@@ -227,10 +236,11 @@ class GroupMeetingServiceImplTest {
         @Test
         @DisplayName("deleteGroupMeeting() debe fallar si no existe")
         void testDeleteGroupMeetingNotFound() {
-            when(meetingService.findById(UUID.randomUUID())).thenReturn(Optional.empty());
+            UUID randomId = UUID.randomUUID();
+            when(meetingService.findById(randomId)).thenThrow(new jakarta.persistence.EntityNotFoundException("Meeting not found"));
 
             assertThrows(Exception.class, () ->
-                groupMeetingService.deleteGroupMeeting(groupId, UUID.randomUUID())
+                groupMeetingService.deleteGroupMeeting(groupId, randomId)
             );
         }
     }
@@ -242,7 +252,6 @@ class GroupMeetingServiceImplTest {
         @Test
         @DisplayName("getGroupMeetingById() debe retornar reunión con relaciones")
         void testGetGroupMeetingByIdWithRelations() {
-            groupMeeting.setGroupMeetingType(meetingType);
             when(meetingService.findByIdWithRelations(meetingId)).thenReturn(Optional.of(groupMeeting));
             when(attendanceService.countByEventIdWithDefaults(any(), any(), any())).thenReturn(5L);
 
@@ -256,58 +265,10 @@ class GroupMeetingServiceImplTest {
         @Test
         @DisplayName("getGroupMeetingById() debe fallar si no existe")
         void testGetGroupMeetingByIdNotFound() {
-            when(meetingService.findByIdWithRelations(UUID.randomUUID())).thenReturn(Optional.empty());
+            UUID randomId = UUID.randomUUID();
+            when(meetingService.findByIdWithRelations(randomId)).thenReturn(Optional.empty());
 
-            assertThrows(Exception.class, () ->
-                groupMeetingService.getGroupMeetingById(groupId, UUID.randomUUID())
-            );
-        }
-    }
-
-    @Nested
-    @DisplayName("Validación - Pertenencia al Grupo")
-    class ValidationTests {
-
-        @Test
-        @DisplayName("validateGroupOwnership() debe permitir si contextId coincide")
-        void testValidateGroupOwnershipSucceeds() {
-            // La validación usa contextId, no group.id
-            assertEquals(groupId, groupMeeting.getContextId());
-        }
-
-        @Test
-        @DisplayName("validateGroupOwnership() debe fallar si contextId no coincide")
-        void testValidateGroupOwnershipFails() {
-            UUID differentGroupId = UUID.randomUUID();
-            assertNotEquals(differentGroupId, groupMeeting.getContextId());
-        }
-    }
-
-    @Nested
-    @DisplayName("Integración - MeetingService")
-    class IntegrationTests {
-
-        @Test
-        @DisplayName("Debe usar MeetingService en lugar de GroupMeetingRepository")
-        void testUsesMeetingService() {
-            when(homeGroupReader.findById(groupId)).thenReturn(homeGroup);
-            when(groupMeetingTypeReader.getGroupMeetingTypeById(2L)).thenReturn(meetingType);
-            when(meetingService.create(any(GroupMeetings.class))).thenReturn(groupMeeting);
-
-            groupMeetingService.createGroupMeeting(createDto, groupId);
-
-            verify(meetingService, times(1)).create(any(GroupMeetings.class));
-        }
-
-        @Test
-        @DisplayName("Debe usar contextId en lugar de group.id para validación")
-        void testUsesContextIdForValidation() {
-            // Al validar, usa contextId que es genérico
-            GroupMeetings meeting = new GroupMeetings();
-            meeting.setContextId(groupId);
-
-            assertEquals(groupId, meeting.getContextId());
+            assertThrows(Exception.class, () -> groupMeetingService.getGroupMeetingById(groupId, randomId));
         }
     }
 }
-

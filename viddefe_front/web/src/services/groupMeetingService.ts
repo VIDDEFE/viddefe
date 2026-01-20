@@ -18,21 +18,21 @@ export interface RegisterMeetingAttendanceDto {
   eventId: string;
 }
 
-// Payload para crear/actualizar reuniones de grupo según contrato del backend
-interface CreateGroupMeetingPayload {
-  meetingType: 'GROUP_MEETING';
+// Payload para crear/actualizar reuniones según contrato unificado del backend
+interface CreateMeetingPayload {
+  meetingType: 'GROUP_MEETING' | 'WORSHIP';
   name: string;
   description?: string;
   scheduledDate: string; // ISO-8601 con offset obligatorio (ej: "2026-01-15T10:00:00-05:00")
-  groupMeetingTypeId: number;
+  meetingTypeId: number;
 }
 
-interface UpdateGroupMeetingPayload {
-  meetingType: 'GROUP_MEETING';
+interface UpdateMeetingPayload {
+  meetingType: 'GROUP_MEETING' | 'WORSHIP';
   name?: string;
   description?: string;
   scheduledDate?: string; // ISO-8601 con offset obligatorio
-  groupMeetingTypeId?: number;
+  meetingTypeId?: number;
 }
 
 // ============================================================================
@@ -84,16 +84,22 @@ export const groupMeetingService = {
       contextId: groupId,
     });
     
-    // Validar que date tenga timezone (requerido por el backend)
-    validateDatePayload(data.date, 'scheduledDate');
+    // Usar scheduledDate (campo principal del nuevo contrato)
+    const dateValue = data.scheduledDate;
+    if (!dateValue) {
+      throw new Error('scheduledDate es requerido');
+    }
     
-    // Construir payload según contrato del backend
-    const payload: CreateGroupMeetingPayload = {
-      meetingType: 'GROUP_MEETING', // Constante del enum, NO un ID
+    // Validar que scheduledDate tenga timezone (requerido por el backend)
+    validateDatePayload(dateValue, 'scheduledDate');
+    
+    // Construir payload según contrato unificado del backend
+    const payload: CreateMeetingPayload = {
+      meetingType: 'GROUP_MEETING', // Constante del enum
       name: data.name,
       description: data.description,
-      scheduledDate: data.date, // Debe incluir offset de timezone
-      groupMeetingTypeId: data.groupMeetingTypeId,
+      scheduledDate: dateValue, // Debe incluir offset de timezone
+      meetingTypeId: data.meetingTypeId,
     };
     
     const response = await apiService.post<Meeting>(`/meetings?${query.toString()}`, payload);
@@ -112,17 +118,20 @@ export const groupMeetingService = {
       contextId: groupId,
     });
     
-    // Validar que date tenga timezone si se proporciona
-    if (data.date) {
-      validateDatePayload(data.date, 'scheduledDate');
+    // Usar scheduledDate (campo principal del nuevo contrato)
+    const dateValue = data.scheduledDate;
+    
+    // Validar que scheduledDate tenga timezone si se proporciona
+    if (dateValue) {
+      validateDatePayload(dateValue, 'scheduledDate');
     }
     
-    const payload: UpdateGroupMeetingPayload = {
+    const payload: UpdateMeetingPayload = {
       meetingType: 'GROUP_MEETING',
       name: data.name,
       description: data.description,
-      scheduledDate: data.date,
-      groupMeetingTypeId: data.groupMeetingTypeId,
+      scheduledDate: dateValue,
+      meetingTypeId: data.meetingTypeId,
     };
     
     const response = await apiService.put<Meeting>(`/meetings/${id}?${query.toString()}`, payload);

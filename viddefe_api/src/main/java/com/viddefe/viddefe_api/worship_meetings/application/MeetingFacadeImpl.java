@@ -38,16 +38,13 @@ public class MeetingFacadeImpl implements MeetingFacade {
     // ==================== CREATE ====================
 
     @Override
-    public MeetingDto createMeeting(CreateMeetingDto dto, UUID contextId, TopologyEventType eventType) {
+    public MeetingDto createMeeting(CreateMeetingDto dto, UUID contextId, TopologyEventType eventType, UUID churchId) {
         return switch (eventType) {
-            case TEMPLE_WORHSIP -> {
-                validateDtoType(dto, CreateWorshipDto.class, eventType);
-                yield worshipService.createWorship((CreateWorshipDto) dto, contextId);
-            }
-            case GROUP_MEETING -> {
-                validateDtoType(dto, CreateMeetingGroupDto.class, eventType);
-                yield groupMeetingService.createGroupMeeting((CreateMeetingGroupDto) dto, contextId);
-            }
+            case TEMPLE_WORHSIP ->
+                 worshipService.createWorship( dto, contextId);
+            case GROUP_MEETING ->
+                groupMeetingService.createGroupMeeting(dto, contextId, churchId);
+
         };
     }
 
@@ -64,7 +61,7 @@ public class MeetingFacadeImpl implements MeetingFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<? extends MeetingDto> getAllMeetings(UUID contextId, TopologyEventType eventType, Pageable pageable) {
+    public Page<MeetingDto> getAllMeetings(UUID contextId, TopologyEventType eventType, Pageable pageable) {
         return switch (eventType) {
             case TEMPLE_WORHSIP -> worshipService.getAllWorships(pageable, contextId);
             case GROUP_MEETING -> groupMeetingService.getGroupMeetingByGroupId(contextId, pageable);
@@ -76,14 +73,10 @@ public class MeetingFacadeImpl implements MeetingFacade {
     @Override
     public MeetingDto updateMeeting(CreateMeetingDto dto, UUID contextId, UUID meetingId, TopologyEventType eventType) {
         return switch (eventType) {
-            case TEMPLE_WORHSIP -> {
-                validateDtoType(dto, CreateWorshipDto.class, eventType);
-                yield worshipService.updateWorship(meetingId, (CreateWorshipDto) dto, contextId);
-            }
-            case GROUP_MEETING -> {
-                validateDtoType(dto, CreateMeetingGroupDto.class, eventType);
-                yield groupMeetingService.updateGroupMeeting((CreateMeetingGroupDto) dto, contextId, meetingId);
-            }
+            case TEMPLE_WORHSIP ->
+                    worshipService.updateWorship(meetingId, dto, contextId);
+            case GROUP_MEETING ->
+                groupMeetingService.updateGroupMeeting(dto, contextId, meetingId);
         };
     }
 
@@ -108,27 +101,6 @@ public class MeetingFacadeImpl implements MeetingFacade {
     @Transactional(readOnly = true)
     public Page<AttendanceDto> getAttendance(UUID meetingId, TopologyEventType eventType, Pageable pageable) {
         return attendanceService.getAttendanceByEventId(meetingId, pageable, eventType);
-    }
-
-    // ==================== PRIVATE HELPERS ====================
-
-    /**
-     * Valida que el DTO sea del tipo esperado según el tipo de evento.
-     *
-     * @param dto DTO a validar
-     * @param expectedType clase esperada
-     * @param eventType tipo de evento para mensaje de error
-     * @throws IllegalArgumentException si el DTO no es del tipo esperado
-     */
-    private void validateDtoType(CreateMeetingDto dto, Class<? extends CreateMeetingDto> expectedType, TopologyEventType eventType) {
-        if (!expectedType.isInstance(dto)) {
-            throw new IllegalArgumentException(
-                    String.format("DTO inválido para %s. Se esperaba %s pero se recibió %s",
-                            eventType.name(),
-                            expectedType.getSimpleName(),
-                            dto.getClass().getSimpleName())
-            );
-        }
     }
 
 }

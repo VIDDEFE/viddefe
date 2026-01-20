@@ -30,9 +30,10 @@ public interface MeetingFacade {
      * @param dto DTO con datos de la reunión (debe ser del tipo correcto según eventType)
      * @param contextId churchId para cultos, groupId para reuniones de grupo
      * @param eventType tipo de evento que determina qué servicio usar
+     * @param churchId ID de la iglesia
      * @return MeetingDto con los datos de la reunión creada
      */
-    MeetingDto createMeeting(CreateMeetingDto dto, UUID contextId, TopologyEventType eventType);
+    MeetingDto createMeeting(CreateMeetingDto dto, UUID contextId, TopologyEventType eventType, UUID churchId);
 
     // ==================== READ ====================
 
@@ -54,7 +55,7 @@ public interface MeetingFacade {
      * @param pageable información de paginación
      * @return Page de MeetingDto
      */
-    Page<? extends MeetingDto> getAllMeetings(UUID contextId, TopologyEventType eventType, Pageable pageable);
+    Page<MeetingDto> getAllMeetings(UUID contextId, TopologyEventType eventType, Pageable pageable);
 
     // ==================== UPDATE ====================
 
