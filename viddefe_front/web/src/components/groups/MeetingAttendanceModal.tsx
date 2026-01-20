@@ -152,7 +152,7 @@ function MeetingAttendanceModal({
           <div>
             <h3 className="text-lg font-semibold text-neutral-800">{meeting.name}</h3>
             <p className="text-sm text-neutral-500 capitalize">
-              {formatDateForDisplay(meeting.date, 'date')}
+              {formatDateForDisplay(meeting.scheduledDate, 'date')}
             </p>
           </div>
           <Button variant="secondary" onClick={onClose}>

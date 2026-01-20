@@ -84,7 +84,7 @@ export default function Worships() {
       name: worshipDetails.name ?? '',
       description: worshipDetails.description ?? '',  
       scheduledDate: toDatetimeLocal(worshipDetails.scheduledDate),
-      worshipTypeId: worshipDetails.worshipType?.id ?? '',
+      meetingTypeId: worshipDetails.type?.id ?? '',
     });
 
     setFormPopulated(true);
@@ -145,8 +145,8 @@ export default function Worships() {
       errors.scheduledDate = 'La fecha programada es requerida';
     }
 
-    if (!formData.worshipTypeId) {
-      errors.worshipTypeId = 'El tipo de culto es requerido';
+    if (!formData.meetingTypeId) {
+      errors.meetingTypeId = 'El tipo de culto es requerido';
     }
 
     setFormErrors(errors);
@@ -164,7 +164,7 @@ export default function Worships() {
         name: formData.name.trim(),
         description: formData.description?.trim() || undefined,
         scheduledDate: toISOStringWithOffset(formData.scheduledDate),
-        worshipTypeId: formData.worshipTypeId as number,
+        meetingTypeId: formData.meetingTypeId as number,
       },
       { onSuccess: closeModal }
     );
@@ -181,7 +181,7 @@ export default function Worships() {
           name: formData.name.trim(),
           description: formData.description?.trim() || undefined,
           scheduledDate: toISOStringWithOffset(formData.scheduledDate),
-          worshipTypeId: formData.worshipTypeId as number,
+          meetingTypeId: formData.meetingTypeId as number,
         },
       },
       { onSuccess: closeModal }
@@ -197,11 +197,13 @@ export default function Worships() {
   const columns = [
     { key: 'name' as const, label: 'Nombre', sortable: true },
     {
-      key: 'worshipType' as const,
+      key: 'type' as const,
       label: 'Tipo',
+      sortable: true,
+      sortKey: 'meetingType',
       render: (_: unknown, item: Worship) => (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-          {item.worshipType?.name || '-'}
+          {item.type?.name || '-'}
         </span>
       ),
     },

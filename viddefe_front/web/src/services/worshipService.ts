@@ -1,14 +1,12 @@
-import { apiService, type PageableRequest } from './api';
+import { apiService, type PageableRequest, type Pageable } from './api';
 import { MeetingType } from './meetingService';
 import type { 
   Worship, 
   WorshipDetail, 
-  WorshipType, 
   CreateWorshipDto, 
   UpdateWorshipDto,
   WorshipAttendance 
 } from '../models';
-import type { Pageable } from './api';
 import { validateDatePayload } from '../utils/helpers';
 
 // ============================================================================
@@ -26,7 +24,7 @@ interface CreateWorshipPayload {
   name: string;
   description?: string;
   scheduledDate: string; // ISO-8601 con offset obligatorio (ej: "2026-01-15T10:00:00-05:00")
-  worshipTypeId: number;
+  meetingTypeId: number;
 }
 
 interface UpdateWorshipPayload {
@@ -34,7 +32,7 @@ interface UpdateWorshipPayload {
   name?: string;
   description?: string;
   scheduledDate?: string; // ISO-8601 con offset obligatorio
-  worshipTypeId?: number;
+  meetingTypeId?: number;
 }
 
 // ============================================================================
@@ -86,7 +84,7 @@ export const worshipService = {
       name: data.name,
       description: data.description,
       scheduledDate: data.scheduledDate, // Debe incluir offset de timezone
-      worshipTypeId: data.worshipTypeId as number,
+      meetingTypeId: data.meetingTypeId,
     };
     
     const response = await apiService.post<Worship>(`/meetings?${query.toString()}`, payload);
@@ -112,7 +110,7 @@ export const worshipService = {
       name: data.name,
       description: data.description,
       scheduledDate: data.scheduledDate,
-      worshipTypeId: data.worshipTypeId,
+      meetingTypeId: data.meetingTypeId,
     };
     
     const response = await apiService.put<Worship>(`/meetings/${id}?${query.toString()}`, payload);
@@ -132,8 +130,8 @@ export const worshipService = {
    * Obtiene los tipos de culto disponibles
    * GET /meetings/worship/types
    */
-  getTypes: async (): Promise<WorshipType[]> => {
-    const response = await apiService.get<WorshipType[]>('/meetings/worship/types');
+  getTypes: async (): Promise<MeetingType[]> => {
+    const response = await apiService.get<MeetingType[]>('/meetings/worship/types');
     return response;
   },
 

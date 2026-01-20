@@ -17,14 +17,14 @@ interface FormData {
   name: string;
   description: string;
   datetime: string; // datetime-local format: "YYYY-MM-DDTHH:mm"
-  groupMeetingTypeId: string;
+  meetingTypeId: string;
 }
 
 const initialFormData: FormData = {
   name: '',
   description: '',
   datetime: '',
-  groupMeetingTypeId: '',
+  meetingTypeId: '',
 };
 
 function MeetingFormModal({
@@ -48,13 +48,13 @@ function MeetingFormModal({
         setFormData({
           name: meeting.name,
           description: meeting.description || '',
-          datetime: toDatetimeLocal(meeting.date),
-          groupMeetingTypeId: meeting.type?.id.toString() || '',
+          datetime: toDatetimeLocal(meeting.scheduledDate),
+          meetingTypeId: meeting.type?.id.toString() || '',
         });
       } else {
         setFormData({
           ...initialFormData,
-          groupMeetingTypeId: meetingTypes[0]?.id.toString() || '',
+          meetingTypeId: meetingTypes[0]?.id.toString() || '',
         });
       }
       setErrors({});
@@ -87,8 +87,8 @@ function MeetingFormModal({
     if (!formData.datetime) {
       newErrors.datetime = 'La fecha y hora son requeridas';
     }
-    if (!formData.groupMeetingTypeId) {
-      newErrors.groupMeetingTypeId = 'El tipo es requerido';
+    if (!formData.meetingTypeId) {
+      newErrors.meetingTypeId = 'El tipo es requerido';
     }
 
     setErrors(newErrors);
@@ -120,8 +120,9 @@ function MeetingFormModal({
     const data: CreateMeetingDto | UpdateMeetingDto = {
       name: formData.name.trim(),
       description: formData.description.trim() || undefined,
-      date: toISOStringWithOffset(formData.datetime), // Con offset de timezone
-      groupMeetingTypeId: Number.parseInt(formData.groupMeetingTypeId, 10),
+      scheduledDate: toISOStringWithOffset(formData.datetime), // Con offset de timezone
+      meetingTypeId: Number.parseInt(formData.meetingTypeId, 10),
+      meetingType: 'GROUP_MEETING',
     };
 
     onSave(data);
@@ -164,9 +165,9 @@ function MeetingFormModal({
               id: type.id,
               name: type.name,
             }))}
-            value={formData.groupMeetingTypeId}
-            onChangeValue={(value) => handleDropdownChange('groupMeetingTypeId', value)}
-            error={errors.groupMeetingTypeId}
+            value={formData.meetingTypeId}
+            onChangeValue={(value) => handleDropdownChange('meetingTypeId', value)}
+            error={errors.meetingTypeId}
             labelKey="label"
             valueKey="value"
           />

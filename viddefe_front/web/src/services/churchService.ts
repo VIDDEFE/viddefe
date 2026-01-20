@@ -24,7 +24,7 @@ export const churchService = {
     const queryParams = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
     return apiService.get<Pageable<ChurchSummary>>(`/churches${queryParams}`);
   },
-  getById: (id: string) => apiService.get<ChurchDetail>(`/churches/${id}`),
+  getById: (id: string) => apiService.get<ChurchDetail>(`/churches/id/${id}`),
   /**
    * Obtiene la iglesia del usuario actual
    */

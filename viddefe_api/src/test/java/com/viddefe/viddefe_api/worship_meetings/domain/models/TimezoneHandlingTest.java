@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
@@ -16,13 +15,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Timezone Handling - Validación de Reglas UTC")
 class TimezoneHandlingTest {
 
-    private WorshipMeetingModel meeting;
+    private Meeting meeting;
     private UUID testId;
 
     @BeforeEach
     void setUp() {
         testId = UUID.randomUUID();
-        meeting = new WorshipMeetingModel();
+        meeting = new Meeting();
         meeting.setId(testId);
     }
 
@@ -63,7 +62,7 @@ class TimezoneHandlingTest {
 
             // Verificar que NO se convierte a la zona del sistema
             // (esto es más conceptual, pero validamos que preserva el offset)
-            assertFalse(input.getOffset().equals(ZoneOffset.ofHours(0)));
+            assertNotEquals(input.getOffset(), ZoneOffset.ofHours(0));
 
             OffsetDateTime stored = meeting.getScheduledDate();
             assertEquals(input.getOffset(), stored.getOffset());
@@ -81,7 +80,6 @@ class TimezoneHandlingTest {
             meeting.setScheduledDate(scheduled);
 
             assertNotNull(meeting.getScheduledDate());
-            assertTrue(meeting.getScheduledDate() instanceof OffsetDateTime);
             assertNotNull(meeting.getScheduledDate().getOffset());
         }
 
@@ -329,8 +327,7 @@ class TimezoneHandlingTest {
             assertEquals(10, ny.getHour());
 
             // Usuario 3 en Londres (UTC):
-            OffsetDateTime london = utc1;
-            assertEquals(15, london.getHour());
+            assertEquals(15, utc1.getHour());
 
             // Usuario 4 en Tokio (+09:00):
             OffsetDateTime tokyo = utc1.withOffsetSameInstant(ZoneOffset.of("+09:00"));

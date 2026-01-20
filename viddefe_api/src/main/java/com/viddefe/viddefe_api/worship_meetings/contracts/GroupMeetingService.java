@@ -9,20 +9,20 @@ import java.util.UUID;
 public interface GroupMeetingService {
     /**
      * Create a new group meeting.
-     * @param dto {@link CreateMeetingGroupDto} containing the details of the group meeting to be created
+     * @param dto {@link CreateMeetingDto} containing the details of the group meeting to be created
      * @param groupId UUID of the group for which the meeting is to be created
-     * @return the created GroupMeetingDto {@link GroupMeetingDto}
+     * @return the created GroupMeetingDto {@link MeetingDto}
      */
-    GroupMeetingDto createGroupMeeting(CreateMeetingGroupDto dto, UUID groupId);
+    MeetingDto createGroupMeeting(CreateMeetingDto dto, UUID groupId, UUID churchId);
 
     /**
      * Update an existing group meeting.
-     * @param dto {@link CreateMeetingGroupDto} containing the updated details of the group meeting
+     * @param dto {@link CreateMeetingDto} containing the updated details of the group meeting
      * @param groupId UUID of the group to which the meeting belongs
      * @param meetingId UUID of the meeting to be updated
-     * @return the updated GroupMeetingDto {@link GroupMeetingDto}
+     * @return the updated GroupMeetingDto {@link MeetingDto}
      */
-    GroupMeetingDto updateGroupMeeting(CreateMeetingGroupDto dto, UUID groupId, UUID meetingId);
+    MeetingDto updateGroupMeeting(CreateMeetingDto dto, UUID groupId, UUID meetingId);
 
     /**
      * Delete a group meeting.
@@ -34,9 +34,9 @@ public interface GroupMeetingService {
     /**
      * Get a paginated list of group meetings for a specific group.
      * @param groupId UUID of the group whose meetings are to be retrieved
-     * @return Page<GroupMeetingDto> {@link GroupMeetingDto} containing the paginated list of group meetings
+     * @return Page<GroupMeetingDto> {@link MeetingDto} containing the paginated list of group meetings
      */
-    Page<GroupMeetingDto> getGroupMeetingByGroupId(UUID groupId, Pageable pageable);
+    Page<MeetingDto> getGroupMeetingByGroupId(UUID groupId, Pageable pageable);
 
     GroupMeetingDetailedDto getGroupMeetingById(UUID groupId, UUID meetingId);
 

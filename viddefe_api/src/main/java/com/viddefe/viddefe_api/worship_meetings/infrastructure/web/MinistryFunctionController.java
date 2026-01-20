@@ -1,11 +1,10 @@
 package com.viddefe.viddefe_api.worship_meetings.infrastructure.web;
 
 import com.viddefe.viddefe_api.common.response.ApiResponse;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionService;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMinistryFunctionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionTypeDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -26,7 +25,7 @@ public class MinistryFunctionController {
     public ResponseEntity<ApiResponse<MinistryFunctionDto>> create(
             @PathVariable UUID meetingId,
             @Valid @RequestBody CreateMinistryFunctionDto dto,
-            @RequestParam AttendanceEventType eventType
+            @RequestParam TopologyEventType eventType
     ) {
         MinistryFunctionDto response =
                 ministryFunctionService.create(dto, meetingId, eventType);
@@ -40,7 +39,7 @@ public class MinistryFunctionController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<MinistryFunctionDto>>> findByMeeting(
             @PathVariable UUID meetingId,
-            @RequestParam AttendanceEventType eventType
+            @RequestParam TopologyEventType eventType
 
     ) {
         List<MinistryFunctionDto> response =
@@ -54,7 +53,7 @@ public class MinistryFunctionController {
             @PathVariable UUID meetingId,
             @PathVariable UUID id,
             @Valid @RequestBody CreateMinistryFunctionDto dto,
-            @RequestParam AttendanceEventType eventType
+            @RequestParam TopologyEventType eventType
     ) {
         // meetingId se mantiene para semántica y validación de ownership
         MinistryFunctionDto response =

@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.worship_meetings.domain.models;
+package com.viddefe.viddefe_api.worship_meetings.configuration;
 
 /**
  * Enum que define los tipos de reuniones en el sistema.

@@ -1,6 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.contracts;
 
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
@@ -12,7 +12,7 @@ import java.util.UUID;
 
 /**
  * Facade para operaciones unificadas de reuniones (cultos y reuniones de grupo).
- * Orquesta los servicios específicos según el tipo de evento {@link AttendanceEventType}.
+ * Orquesta los servicios específicos según el tipo de evento {@link TopologyEventType}.
  *
  * <p>El contextId representa:</p>
  * <ul>
@@ -30,9 +30,10 @@ public interface MeetingFacade {
      * @param dto DTO con datos de la reunión (debe ser del tipo correcto según eventType)
      * @param contextId churchId para cultos, groupId para reuniones de grupo
      * @param eventType tipo de evento que determina qué servicio usar
+     * @param churchId ID de la iglesia
      * @return MeetingDto con los datos de la reunión creada
      */
-    MeetingDto createMeeting(CreateMeetingDto dto, UUID contextId, AttendanceEventType eventType);
+    MeetingDto createMeeting(CreateMeetingDto dto, UUID contextId, TopologyEventType eventType, UUID churchId);
 
     // ==================== READ ====================
 
@@ -44,7 +45,7 @@ public interface MeetingFacade {
      * @param eventType tipo de evento
      * @return MeetingDto con los datos de la reunión (incluye detalles de asistencia)
      */
-    MeetingDto getMeetingById(UUID contextId, UUID meetingId, AttendanceEventType eventType);
+    MeetingDto getMeetingById(UUID contextId, UUID meetingId, TopologyEventType eventType);
 
     /**
      * Lista las reuniones paginadas por contexto.
@@ -54,7 +55,7 @@ public interface MeetingFacade {
      * @param pageable información de paginación
      * @return Page de MeetingDto
      */
-    Page<? extends MeetingDto> getAllMeetings(UUID contextId, AttendanceEventType eventType, Pageable pageable);
+    Page<MeetingDto> getAllMeetings(UUID contextId, TopologyEventType eventType, Pageable pageable);
 
     // ==================== UPDATE ====================
 
@@ -67,7 +68,7 @@ public interface MeetingFacade {
      * @param eventType tipo de evento
      * @return MeetingDto con los datos actualizados
      */
-    MeetingDto updateMeeting(CreateMeetingDto dto, UUID contextId, UUID meetingId, AttendanceEventType eventType);
+    MeetingDto updateMeeting(CreateMeetingDto dto, UUID contextId, UUID meetingId, TopologyEventType eventType);
 
     // ==================== DELETE ====================
 
@@ -78,7 +79,7 @@ public interface MeetingFacade {
      * @param meetingId ID de la reunión a eliminar
      * @param eventType tipo de evento
      */
-    void deleteMeeting(UUID contextId, UUID meetingId, AttendanceEventType eventType);
+    void deleteMeeting(UUID contextId, UUID meetingId, TopologyEventType eventType);
 
     // ==================== ATTENDANCE ====================
 
@@ -89,7 +90,7 @@ public interface MeetingFacade {
      * @param eventType tipo de evento
      * @return AttendanceDto con los datos de asistencia registrados
      */
-    AttendanceDto recordAttendance(CreateAttendanceDto dto, AttendanceEventType eventType);
+    AttendanceDto recordAttendance(CreateAttendanceDto dto, TopologyEventType eventType);
 
     /**
      * Obtiene la lista de asistencia de una reunión.
@@ -99,5 +100,5 @@ public interface MeetingFacade {
      * @param pageable información de paginación
      * @return Page de AttendanceDto
      */
-    Page<AttendanceDto> getAttendance(UUID meetingId, AttendanceEventType eventType, Pageable pageable);
+    Page<AttendanceDto> getAttendance(UUID meetingId, TopologyEventType eventType, Pageable pageable);
 }

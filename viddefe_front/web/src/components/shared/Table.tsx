@@ -20,6 +20,7 @@ interface TableColumn<T> {
   hideOnMobile?: boolean;
   priority?: number; // 1-5, donde 1 es más importante
   sortable?: boolean; // Indica si la columna es ordenable
+  sortKey?: string; // Campo a usar para el sort en backend (si difiere de key)
 }
 
 interface TableAction<T> {
@@ -296,17 +297,18 @@ export default function Table<T extends { id: string }>({
           <tr>
             {columns.map(col => {
               const isSortable = col.sortable !== false && sorting;
+              const sortField = col.sortKey ?? String(col.key);
               return (
                 <th 
                   key={String(col.key)} 
                   className={`px-4 py-4 text-left font-bold text-primary-900 text-sm uppercase tracking-wider ${
                     isSortable ? 'cursor-pointer hover:bg-primary-50 select-none group transition-colors' : ''
                   }`}
-                  onClick={() => isSortable && handleSortChange(String(col.key))}
+                  onClick={() => isSortable && handleSortChange(sortField)}
                 >
                   <span className="flex items-center">
                     {col.label}
-                    {isSortable && renderSortIcon(String(col.key))}
+                    {isSortable && renderSortIcon(sortField)}
                   </span>
                 </th>
               );

@@ -220,12 +220,6 @@ export interface Event extends BaseEntity {
 
 export type EventStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 
-// Worship Type (Tipo de Culto)
-export interface WorshipType {
-  id: number;
-  name: string;
-}
-
 
 // Registro de asistencia individual
 export interface WorshipAttendance {
@@ -240,7 +234,7 @@ export interface Worship {
   description?: string;
   creationDate: string;
   scheduledDate: string;
-  worshipType: WorshipType;
+  type: MeetingType;
 }
 
 // Worship Detail - respuesta detallada (sin lista de asistencia, solo conteos)
@@ -259,7 +253,7 @@ export interface CreateWorshipDto {
   name: string;
   description?: string;
   scheduledDate: string; // ISO-8601 con offset obligatorio
-  worshipTypeId: number;
+  meetingTypeId: number;
 }
 
 // DTO para actualizar un culto
@@ -268,7 +262,7 @@ export interface UpdateWorshipDto {
   name?: string;
   description?: string;
   scheduledDate?: string; // ISO-8601 con offset obligatorio si se incluye
-  worshipTypeId?: number;
+  meetingTypeId?: number;
 }
 
 // Offering Type (Tipo de Ofrenda)
@@ -326,13 +320,15 @@ export interface MeetingType {
   name: string;
 }
 
-// Meeting (Reunión) - respuesta del backend
+// Meeting (Reunión) - respuesta del backend según nuevo contrato API
 export interface Meeting {
   id: string;
   name: string;
   description?: string;
-  date: string;
+  scheduledDate: string; // ISO-8601 con timezone
+  creationDate: string;  // ISO-8601 con timezone
   type: MeetingType;
+  // Campos adicionales para detalle (pueden no venir en lista)
   totalAttendance?: number;
   presentCount?: number;
   absentCount?: number;
@@ -347,23 +343,25 @@ export interface MeetingAttendance {
   status: 'PRESENT' | 'ABSENT' | string;
 }
 
-// DTO para crear una reunión
-// IMPORTANTE: date debe incluir timezone offset (ISO-8601)
+// DTO para crear una reunión (unificado para worship y group meeting)
+// IMPORTANTE: scheduledDate debe incluir timezone offset (ISO-8601)
 // Ejemplo: "2026-01-15T10:00:00-05:00"
 export interface CreateMeetingDto {
-  groupMeetingTypeId: number;
   name: string;
   description?: string;
-  date: string; // ISO-8601 con offset obligatorio
+  scheduledDate: string; // ISO-8601 con offset obligatorio
+  meetingTypeId: number; // ID del tipo de reunión (unificado)
+  meetingType: string; // 'WORSHIP' | 'GROUP_MEETING'
 }
 
-// DTO para actualizar una reunión
-// IMPORTANTE: date debe incluir timezone offset si se provee
+// DTO para actualizar una reunión (unificado para worship y group meeting)
+// IMPORTANTE: scheduledDate debe incluir timezone offset si se provee
 export interface UpdateMeetingDto {
-  groupMeetingTypeId?: number;
   name?: string;
   description?: string;
-  date?: string; // ISO-8601 con offset obligatorio si se incluye
+  scheduledDate?: string; // ISO-8601 con offset obligatorio si se incluye
+  meetingTypeId?: number; // ID del tipo de reunión (unificado)
+  meetingType?: string; // 'WORSHIP' | 'GROUP_MEETING'
 }
 
 // ============================================================================

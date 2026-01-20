@@ -1,8 +1,12 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.services;
 
+import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
+import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.worship_meetings.application.MeetingService;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.*;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -11,16 +15,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,30 +37,57 @@ class MeetingServiceTest {
     private MeetingService service;
 
     private UUID testId;
-    private UUID contextId;
-    private WorshipMeetingModel worshipMeeting;
-    private GroupMeetings groupMeeting;
+    private UUID churchId;
+    private UUID groupId;
+    private Meeting worshipMeeting;
+    private Meeting groupMeeting;
     private OffsetDateTime testScheduledDate;
+    private MeetingType worshipType;
+    private MeetingType groupType;
+    private ChurchModel church;
+    private HomeGroupsModel homeGroup;
 
     @BeforeEach
     void setUp() {
         testId = UUID.randomUUID();
-        contextId = UUID.randomUUID();
+        churchId = UUID.randomUUID();
+        groupId = UUID.randomUUID();
         testScheduledDate = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
 
-        worshipMeeting = new WorshipMeetingModel();
+        // Setup types
+        worshipType = new MeetingType();
+        worshipType.setId(1L);
+        worshipType.setName("Culto Dominical");
+
+        groupType = new MeetingType();
+        groupType.setId(2L);
+        groupType.setName("Estudio Bíblico");
+
+        // Setup church
+        church = new ChurchModel();
+        church.setId(churchId);
+        church.setName("Iglesia Test");
+
+        // Setup home group
+        homeGroup = new HomeGroupsModel();
+        homeGroup.setId(groupId);
+        homeGroup.setName("Grupo Test");
+
+        // Worship meeting
+        worshipMeeting = new Meeting();
         worshipMeeting.setId(testId);
         worshipMeeting.setName("Culto Dominical");
-        worshipMeeting.setContextId(contextId);
-        worshipMeeting.setTypeId(1L);
+        worshipMeeting.setChurch(church);
+        worshipMeeting.setMeetingType(worshipType);
         worshipMeeting.setScheduledDate(testScheduledDate);
         worshipMeeting.setCreationDate(Instant.now());
 
-        groupMeeting = new GroupMeetings();
+        // Group meeting
+        groupMeeting = new Meeting();
         groupMeeting.setId(UUID.randomUUID());
         groupMeeting.setName("Estudio Bíblico");
-        groupMeeting.setContextId(contextId);
-        groupMeeting.setTypeId(2L);
+        groupMeeting.setGroup(homeGroup);
+        groupMeeting.setMeetingType(groupType);
         groupMeeting.setScheduledDate(testScheduledDate);
         groupMeeting.setCreationDate(Instant.now());
     }
@@ -72,7 +97,7 @@ class MeetingServiceTest {
     class CreateTests {
 
         @Test
-        @DisplayName("Debe crear WorshipMeetingModel")
+        @DisplayName("Debe crear Meeting de tipo Culto")
         void testCreateWorshipMeeting() {
             when(repository.save(any(Meeting.class))).thenReturn(worshipMeeting);
 
@@ -85,7 +110,7 @@ class MeetingServiceTest {
         }
 
         @Test
-        @DisplayName("Debe crear GroupMeetings")
+        @DisplayName("Debe crear Meeting de tipo Grupo")
         void testCreateGroupMeeting() {
             when(repository.save(any(Meeting.class))).thenReturn(groupMeeting);
 
@@ -113,93 +138,76 @@ class MeetingServiceTest {
     class ReadTests {
 
         @Test
-        @DisplayName("findById() debe retornar Optional con Meeting")
+        @DisplayName("findById() debe retornar Meeting")
         void testFindById() {
             when(repository.findById(testId)).thenReturn(Optional.of(worshipMeeting));
 
-            Optional<Meeting> result = service.findById(testId);
+            Meeting result = service.findById(testId);
 
-            assertTrue(result.isPresent());
-            assertEquals(worshipMeeting, result.get());
+            assertNotNull(result);
+            assertEquals(testId, result.getId());
             verify(repository, times(1)).findById(testId);
         }
 
         @Test
-        @DisplayName("findById() debe retornar Optional vacío si no existe")
+        @DisplayName("findById() debe lanzar excepción cuando no existe")
         void testFindByIdNotFound() {
-            when(repository.findById(any(UUID.class))).thenReturn(Optional.empty());
+            UUID randomId = UUID.randomUUID();
+            when(repository.findById(randomId)).thenReturn(Optional.empty());
 
-            Optional<Meeting> result = service.findById(UUID.randomUUID());
-
-            assertFalse(result.isPresent());
+            assertThrows(EntityNotFoundException.class, () -> service.findById(randomId));
         }
 
         @Test
-        @DisplayName("findByIdWithRelations() debe cargar relaciones")
+        @DisplayName("findByIdWithRelations() debe retornar Optional con Meeting")
         void testFindByIdWithRelations() {
             when(repository.findWithRelationsById(testId)).thenReturn(Optional.of(worshipMeeting));
 
             Optional<Meeting> result = service.findByIdWithRelations(testId);
 
             assertTrue(result.isPresent());
-            assertEquals(worshipMeeting, result.get());
-            verify(repository, times(1)).findWithRelationsById(testId);
+            assertEquals(testId, result.get().getId());
         }
-    }
-
-    @Nested
-    @DisplayName("READ - Obtener por Contexto y Tipo")
-    class FilterByContextAndTypeTests {
 
         @Test
-        @DisplayName("findByContextId() debe retornar Page de meetings")
-        void testFindByContextId() {
-            List<Meeting> meetings = new ArrayList<>();
-            meetings.add(worshipMeeting);
-            meetings.add(groupMeeting);
-            Page<Meeting> page = new PageImpl<>(meetings);
+        @DisplayName("findByIdWithRelations() debe retornar Optional vacío cuando no existe")
+        void testFindByIdWithRelationsNotFound() {
+            UUID randomId = UUID.randomUUID();
+            when(repository.findWithRelationsById(randomId)).thenReturn(Optional.empty());
 
-            when(repository.findByContextId(eq(contextId), any(Pageable.class))).thenReturn(page);
+            Optional<Meeting> result = service.findByIdWithRelations(randomId);
 
-            Pageable pageable = PageRequest.of(0, 10);
-            Page<Meeting> result = service.findByContextId(contextId, pageable);
-
-            assertEquals(2, result.getContent().size());
-            verify(repository, times(1)).findByContextId(contextId, pageable);
+            assertTrue(result.isEmpty());
         }
     }
-
 
     @Nested
     @DisplayName("UPDATE - Actualizar Meeting")
     class UpdateTests {
 
         @Test
-        @DisplayName("update() debe guardar cambios")
+        @DisplayName("update() debe guardar y retornar Meeting actualizado")
         void testUpdate() {
-            WorshipMeetingModel updated = new WorshipMeetingModel();
-            updated.setId(testId);
-            updated.setName("Culto Actualizado");
-
-            when(repository.save(any(Meeting.class))).thenReturn(updated);
-
-            Meeting result = service.update(updated);
-
-            assertEquals("Culto Actualizado", result.getName());
-            verify(repository, times(1)).save(updated);
-        }
-
-        @Test
-        @DisplayName("update() debe preservar offset después de actualización")
-        void testUpdatePreservesOffset() {
-            worshipMeeting.setName("Nombre nuevo");
-            OffsetDateTime newSchedule = OffsetDateTime.of(2026, 2, 1, 14, 0, 0, 0, ZoneOffset.of("-05:00"));
-            worshipMeeting.setScheduledDate(newSchedule);
-
+            worshipMeeting.setName("Culto Actualizado");
             when(repository.save(any(Meeting.class))).thenReturn(worshipMeeting);
 
             Meeting result = service.update(worshipMeeting);
 
+            assertNotNull(result);
+            assertEquals("Culto Actualizado", result.getName());
+            verify(repository, times(1)).save(worshipMeeting);
+        }
+
+        @Test
+        @DisplayName("update() debe preservar OffsetDateTime")
+        void testUpdatePreservesOffsetDateTime() {
+            OffsetDateTime newSchedule = OffsetDateTime.of(2026, 1, 20, 14, 0, 0, 0, ZoneOffset.of("-05:00"));
+            worshipMeeting.setScheduledDate(newSchedule);
+            when(repository.save(any(Meeting.class))).thenReturn(worshipMeeting);
+
+            Meeting result = service.update(worshipMeeting);
+
+            assertEquals(newSchedule, result.getScheduledDate());
             assertEquals(ZoneOffset.of("-05:00"), result.getScheduledDate().getOffset());
         }
     }
@@ -209,7 +217,7 @@ class MeetingServiceTest {
     class DeleteTests {
 
         @Test
-        @DisplayName("delete() debe llamar al repository")
+        @DisplayName("delete() debe llamar al repositorio")
         void testDelete() {
             doNothing().when(repository).deleteById(testId);
 
@@ -220,77 +228,35 @@ class MeetingServiceTest {
     }
 
     @Nested
-    @DisplayName("CONFLICTO - Validar Duplicados")
-    class ConflictTests {
+    @DisplayName("Timezone Tests")
+    class TimezoneTests {
 
         @Test
-        @DisplayName("existsConflict() debe retornar true si existe duplicado")
-        void testExistsConflictTrue() {
-            when(repository.existsByContextIdAndTypeIdAndScheduledDate(contextId, 1L, testScheduledDate))
-                    .thenReturn(true);
+        @DisplayName("Debe manejar diferentes zonas horarias")
+        void testDifferentTimezones() {
+            // Crear meeting con hora de Colombia
+            OffsetDateTime colombiaTime = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
+            worshipMeeting.setScheduledDate(colombiaTime);
+            when(repository.save(any(Meeting.class))).thenReturn(worshipMeeting);
 
-            boolean result = service.existsConflict(contextId, 1L, testScheduledDate);
+            Meeting result = service.create(worshipMeeting);
 
-            assertTrue(result);
-            verify(repository, times(1)).existsByContextIdAndTypeIdAndScheduledDate(contextId, 1L, testScheduledDate);
+            assertEquals(colombiaTime, result.getScheduledDate());
+            assertEquals(ZoneOffset.of("-05:00"), result.getScheduledDate().getOffset());
         }
 
         @Test
-        @DisplayName("existsConflict() debe retornar false si no existe duplicado")
-        void testExistsConflictFalse() {
-            when(repository.existsByContextIdAndTypeIdAndScheduledDate(any(UUID.class), any(Long.class), any(OffsetDateTime.class)))
-                    .thenReturn(false);
+        @DisplayName("No debe convertir zona horaria automáticamente")
+        void testNoAutomaticTimezoneConversion() {
+            OffsetDateTime utcTime = OffsetDateTime.of(2026, 1, 15, 15, 0, 0, 0, ZoneOffset.UTC);
+            worshipMeeting.setScheduledDate(utcTime);
+            when(repository.save(any(Meeting.class))).thenReturn(worshipMeeting);
 
-            boolean result = service.existsConflict(UUID.randomUUID(), 99L, testScheduledDate);
+            Meeting result = service.create(worshipMeeting);
 
-            assertFalse(result);
-        }
-
-        @Test
-        @DisplayName("Conflicto debe considerar contexto + tipo + fecha")
-        void testConflictConsidersAllThreeFactors() {
-            UUID otherContext = UUID.randomUUID();
-            Long otherType = 999L;
-
-            when(repository.existsByContextIdAndTypeIdAndScheduledDate(contextId, 1L, testScheduledDate)).thenReturn(true);
-            when(repository.existsByContextIdAndTypeIdAndScheduledDate(otherContext, 1L, testScheduledDate)).thenReturn(false);
-            when(repository.existsByContextIdAndTypeIdAndScheduledDate(contextId, otherType, testScheduledDate)).thenReturn(false);
-
-            assertTrue(service.existsConflict(contextId, 1L, testScheduledDate));
-            assertFalse(service.existsConflict(otherContext, 1L, testScheduledDate));
-            assertFalse(service.existsConflict(contextId, otherType, testScheduledDate));
+            // Debe mantener el offset original, NO convertir a otro
+            assertEquals(ZoneOffset.UTC, result.getScheduledDate().getOffset());
+            assertEquals(15, result.getScheduledDate().getHour());
         }
     }
-
-    @Nested
-    @DisplayName("Polymorphism - Polimorfismo en Herencia")
-    class PolymorphismTests {
-
-        @Test
-        @DisplayName("Repository debe retornar Meeting polimórficas")
-        void testRepositoryReturnsPolymorphic() {
-            List<Meeting> meetings = new ArrayList<>();
-            meetings.add(worshipMeeting);
-            meetings.add(groupMeeting);
-
-            when(repository.findAll()).thenReturn(meetings);
-
-            List<Meeting> result = repository.findAll();
-
-            assertEquals(2, result.size());
-            assertTrue(result.get(0) instanceof WorshipMeetingModel);
-            assertTrue(result.get(1) instanceof GroupMeetings);
-        }
-
-        @Test
-        @DisplayName("Debe permitir cast a tipo específico")
-        void testCastToSpecificType() {
-            Optional<Meeting> meeting = Optional.of(worshipMeeting);
-
-            assertTrue(meeting.get() instanceof WorshipMeetingModel);
-            WorshipMeetingModel worship = (WorshipMeetingModel) meeting.get();
-            assertEquals("Culto Dominical", worship.getName());
-        }
-        }
 }
-

@@ -42,7 +42,7 @@ function MeetingViewModal({
             <FiCalendar className="text-primary-600 mt-1" size={18} />
             <div>
               <p className="text-sm font-medium text-neutral-500">Fecha</p>
-              <p className="text-neutral-800 capitalize">{formatDateForDisplay(meeting.date, 'date')}</p>
+              <p className="text-neutral-800 capitalize">{formatDateForDisplay(meeting.scheduledDate, 'date')}</p>
             </div>
           </div>
 
@@ -51,7 +51,7 @@ function MeetingViewModal({
             <FiClock className="text-primary-600 mt-1" size={18} />
             <div>
               <p className="text-sm font-medium text-neutral-500">Hora</p>
-              <p className="text-neutral-800">{formatDateForDisplay(meeting.date, 'time')}</p>
+              <p className="text-neutral-800">{formatDateForDisplay(meeting.scheduledDate, 'time')}</p>
             </div>
           </div>
 

@@ -2,13 +2,13 @@ package com.viddefe.viddefe_api.worship_meetings.application;
 
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
+import com.viddefe.viddefe_api.worship_meetings.configuration.MeetingTypeEnum;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
-import com.viddefe.viddefe_api.worship_meetings.contracts.TypesWorshipMeetingReader;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingTypeEnum;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingModel;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDto;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Optional;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WorshipServicesImpl - Servicio de Cultos Refactorizado")
-class WorshipServicesImplTest {
+class WorshipServicesImplRefactoredTest {
 
     @Mock
     private MeetingService meetingService;
@@ -38,7 +39,7 @@ class WorshipServicesImplTest {
     private VerifyWorshipMeetingConflict verifyConflict;
 
     @Mock
-    private TypesWorshipMeetingReader typesReader;
+    private MeetingTypesService meetingTypesService;
 
     @Mock
     private ChurchLookup churchLookup;
@@ -51,9 +52,9 @@ class WorshipServicesImplTest {
 
     private UUID churchId;
     private UUID worshipId;
-    private CreateWorshipDto createDto;
-    private WorshipMeetingModel worshipMeeting;
-    private WorshipMeetingTypes worshipType;
+    private CreateMeetingDto createDto;
+    private Meeting worshipMeeting;
+    private MeetingType worshipType;
     private ChurchModel church;
     private OffsetDateTime testScheduledDate;
 
@@ -64,22 +65,14 @@ class WorshipServicesImplTest {
         testScheduledDate = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
 
         // DTO
-        createDto = new CreateWorshipDto();
+        createDto = new CreateMeetingDto();
         createDto.setName("Culto Dominical");
         createDto.setDescription("Servicio de adoración");
         createDto.setScheduledDate(testScheduledDate);
-        createDto.setWorshipTypeId(1L);
-
-        // Entity
-        worshipMeeting = new WorshipMeetingModel();
-        worshipMeeting.setId(worshipId);
-        worshipMeeting.setName("Culto Dominical");
-        worshipMeeting.setContextId(churchId);
-        worshipMeeting.setTypeId(1L);
-        worshipMeeting.setScheduledDate(testScheduledDate);
+        createDto.setMeetingTypeId(1L);
 
         // Type
-        worshipType = new WorshipMeetingTypes();
+        worshipType = new MeetingType();
         worshipType.setId(1L);
         worshipType.setName("Dominical");
 
@@ -87,6 +80,15 @@ class WorshipServicesImplTest {
         church = new ChurchModel();
         church.setId(churchId);
         church.setName("Iglesia Test");
+
+        // Entity
+        worshipMeeting = new Meeting();
+        worshipMeeting.setId(worshipId);
+        worshipMeeting.setName("Culto Dominical");
+        worshipMeeting.setChurch(church);
+        worshipMeeting.setMeetingType(worshipType);
+        worshipMeeting.setScheduledDate(testScheduledDate);
+        worshipMeeting.setCreationDate(Instant.now());
     }
 
     @Nested
@@ -97,13 +99,13 @@ class WorshipServicesImplTest {
         @DisplayName("createWorship() debe crear culto sin conversión de zona")
         void testCreateWorshipNoTimezoneConversion() {
             // Setup
-            doNothing().when(verifyConflict).verifyHourOfWorshipMeeting(createDto, churchId, null);
-            when(typesReader.getWorshipMeetingTypesById(1L)).thenReturn(worshipType);
+            doNothing().when(verifyConflict).verifyHourOfMeeting(any(CreateMeetingDto.class), eq(churchId), isNull(), isNull());
+            when(meetingTypesService.getMeetingTypesById(1L)).thenReturn(worshipType);
             when(churchLookup.getChurchById(churchId)).thenReturn(church);
-            when(meetingService.create(any(WorshipMeetingModel.class))).thenReturn(worshipMeeting);
+            when(meetingService.create(any(Meeting.class))).thenReturn(worshipMeeting);
 
             // Execute
-            WorshipDto result = worshipService.createWorship(createDto, churchId);
+            MeetingDto result = worshipService.createWorship(createDto, churchId);
 
             // Assert
             assertNotNull(result);
@@ -111,61 +113,61 @@ class WorshipServicesImplTest {
             assertEquals(testScheduledDate.getOffset(), ZoneOffset.of("-05:00"));
 
             // Verify
-            verify(verifyConflict, times(1)).verifyHourOfWorshipMeeting(createDto, churchId, null);
-            verify(typesReader, times(1)).getWorshipMeetingTypesById(1L);
+            verify(verifyConflict, times(1)).verifyHourOfMeeting(any(CreateMeetingDto.class), eq(churchId), isNull(), isNull());
+            verify(meetingTypesService, times(1)).getMeetingTypesById(1L);
             verify(churchLookup, times(1)).getChurchById(churchId);
-            verify(meetingService, times(1)).create(any(WorshipMeetingModel.class));
+            verify(meetingService, times(1)).create(any(Meeting.class));
         }
 
         @Test
-        @DisplayName("createWorship() debe asignar contextId = churchId")
+        @DisplayName("createWorship() debe asignar church correctamente")
         void testCreateWorshipAssignsContext() {
-            doNothing().when(verifyConflict).verifyHourOfWorshipMeeting(createDto, churchId, null);
-            when(typesReader.getWorshipMeetingTypesById(1L)).thenReturn(worshipType);
+            doNothing().when(verifyConflict).verifyHourOfMeeting(any(CreateMeetingDto.class), eq(churchId), isNull(), isNull());
+            when(meetingTypesService.getMeetingTypesById(1L)).thenReturn(worshipType);
             when(churchLookup.getChurchById(churchId)).thenReturn(church);
-            when(meetingService.create(any(WorshipMeetingModel.class))).thenAnswer(invocation -> {
-                WorshipMeetingModel meeting = invocation.getArgument(0);
-                assertEquals(churchId, meeting.getContextId());
-                return meeting;
+            when(meetingService.create(any(Meeting.class))).thenAnswer(invocation -> {
+                Meeting meeting = invocation.getArgument(0);
+                assertEquals(churchId, meeting.getChurch().getId());
+                return worshipMeeting;
             });
 
             worshipService.createWorship(createDto, churchId);
 
-            verify(meetingService, times(1)).create(any(WorshipMeetingModel.class));
+            verify(meetingService, times(1)).create(any(Meeting.class));
         }
 
         @Test
-        @DisplayName("createWorship() debe asignar typeId = worshipTypeId")
+        @DisplayName("createWorship() debe asignar meetingType correctamente")
         void testCreateWorshipAssignsTypeId() {
-            doNothing().when(verifyConflict).verifyHourOfWorshipMeeting(createDto, churchId, null);
-            when(typesReader.getWorshipMeetingTypesById(1L)).thenReturn(worshipType);
+            doNothing().when(verifyConflict).verifyHourOfMeeting(any(CreateMeetingDto.class), eq(churchId), isNull(), isNull());
+            when(meetingTypesService.getMeetingTypesById(1L)).thenReturn(worshipType);
             when(churchLookup.getChurchById(churchId)).thenReturn(church);
-            when(meetingService.create(any(WorshipMeetingModel.class))).thenAnswer(invocation -> {
-                WorshipMeetingModel meeting = invocation.getArgument(0);
-                assertEquals(1L, meeting.getTypeId());
-                return meeting;
+            when(meetingService.create(any(Meeting.class))).thenAnswer(invocation -> {
+                Meeting meeting = invocation.getArgument(0);
+                assertEquals(1L, meeting.getMeetingType().getId());
+                return worshipMeeting;
             });
 
             worshipService.createWorship(createDto, churchId);
 
-            verify(meetingService, times(1)).create(any(WorshipMeetingModel.class));
+            verify(meetingService, times(1)).create(any(Meeting.class));
         }
 
         @Test
         @DisplayName("createWorship() debe preservar OffsetDateTime sin conversión")
         void testCreateWorshipPreservesOffsetDateTime() {
-            doNothing().when(verifyConflict).verifyHourOfWorshipMeeting(createDto, churchId, null);
-            when(typesReader.getWorshipMeetingTypesById(1L)).thenReturn(worshipType);
+            doNothing().when(verifyConflict).verifyHourOfMeeting(any(CreateMeetingDto.class), eq(churchId), isNull(), isNull());
+            when(meetingTypesService.getMeetingTypesById(1L)).thenReturn(worshipType);
             when(churchLookup.getChurchById(churchId)).thenReturn(church);
-            when(meetingService.create(any(WorshipMeetingModel.class))).thenAnswer(invocation -> {
-                WorshipMeetingModel meeting = invocation.getArgument(0);
+            when(meetingService.create(any(Meeting.class))).thenAnswer(invocation -> {
+                Meeting meeting = invocation.getArgument(0);
                 // Debe preservar exactamente como viene del DTO
                 assertEquals(testScheduledDate, meeting.getScheduledDate());
                 assertEquals(ZoneOffset.of("-05:00"), meeting.getScheduledDate().getOffset());
-                return meeting;
+                return worshipMeeting;
             });
 
-            WorshipDto result = worshipService.createWorship(createDto, churchId);
+            MeetingDto result = worshipService.createWorship(createDto, churchId);
 
             // El resultado también debe tener el offset
             assertNotNull(result.getScheduledDate());
@@ -179,11 +181,10 @@ class WorshipServicesImplTest {
         @Test
         @DisplayName("getWorshipById() debe retornar culto con relaciones cargadas")
         void testGetWorshipByIdWithRelations() {
-            worshipMeeting.setWorshipType(worshipType);
             when(meetingService.findByIdWithRelations(worshipId)).thenReturn(Optional.of(worshipMeeting));
             when(attendanceService.countByEventIdWithDefaults(any(), any(), any())).thenReturn(10L);
 
-            WorshipDto result = worshipService.getWorshipById(worshipId);
+            var result = worshipService.getWorshipById(worshipId);
 
             assertNotNull(result);
             assertEquals("Culto Dominical", result.getName());
@@ -193,9 +194,10 @@ class WorshipServicesImplTest {
         @Test
         @DisplayName("getWorshipById() debe fallar si no existe")
         void testGetWorshipByIdNotFound() {
-            when(meetingService.findByIdWithRelations(UUID.randomUUID())).thenReturn(Optional.empty());
+            UUID randomId = UUID.randomUUID();
+            when(meetingService.findByIdWithRelations(randomId)).thenReturn(Optional.empty());
 
-            assertThrows(Exception.class, () -> worshipService.getWorshipById(UUID.randomUUID()));
+            assertThrows(Exception.class, () -> worshipService.getWorshipById(randomId));
         }
     }
 
@@ -207,21 +209,21 @@ class WorshipServicesImplTest {
         @DisplayName("updateWorship() debe actualizar sin conversión de zona")
         void testUpdateWorshipNoConversion() {
             OffsetDateTime newSchedule = OffsetDateTime.of(2026, 1, 20, 14, 0, 0, 0, ZoneOffset.of("-05:00"));
-            CreateWorshipDto updateDto = new CreateWorshipDto();
+            CreateMeetingDto updateDto = new CreateMeetingDto();
             updateDto.setName("Culto Actualizado");
             updateDto.setDescription("Nuevo culto");
             updateDto.setScheduledDate(newSchedule);
-            updateDto.setWorshipTypeId(1L);
+            updateDto.setMeetingTypeId(1L);
 
-            doNothing().when(verifyConflict).verifyHourOfWorshipMeeting(updateDto, churchId, worshipId);
-            when(meetingService.findById(worshipId)).thenReturn(Optional.of(worshipMeeting));
-            when(typesReader.getWorshipMeetingTypesById(1L)).thenReturn(worshipType);
-            when(meetingService.update(any(WorshipMeetingModel.class))).thenReturn(worshipMeeting);
+            doNothing().when(verifyConflict).verifyHourOfMeeting(any(CreateMeetingDto.class), eq(churchId), isNull(), eq(worshipId));
+            when(meetingService.findById(worshipId)).thenReturn(worshipMeeting);
+            when(meetingTypesService.getMeetingTypesById(1L)).thenReturn(worshipType);
+            when(meetingService.update(any(Meeting.class))).thenReturn(worshipMeeting);
 
-            WorshipDto result = worshipService.updateWorship(worshipId, updateDto, churchId);
+            MeetingDto result = worshipService.updateWorship(worshipId, updateDto, churchId);
 
             assertNotNull(result);
-            verify(meetingService, times(1)).update(any(WorshipMeetingModel.class));
+            verify(meetingService, times(1)).update(any(Meeting.class));
         }
 
         @Test
@@ -230,22 +232,23 @@ class WorshipServicesImplTest {
             var createDate = worshipMeeting.getCreationDate();
             OffsetDateTime newSchedule = OffsetDateTime.of(2026, 1, 20, 14, 0, 0, 0, ZoneOffset.of("-05:00"));
 
-            CreateWorshipDto updateDto = new CreateWorshipDto();
+            CreateMeetingDto updateDto = new CreateMeetingDto();
+            updateDto.setName("Culto Actualizado");
             updateDto.setScheduledDate(newSchedule);
-            updateDto.setWorshipTypeId(1L);
+            updateDto.setMeetingTypeId(1L);
 
-            doNothing().when(verifyConflict).verifyHourOfWorshipMeeting(updateDto, churchId, worshipId);
-            when(meetingService.findById(worshipId)).thenReturn(Optional.of(worshipMeeting));
-            when(typesReader.getWorshipMeetingTypesById(1L)).thenReturn(worshipType);
-            when(meetingService.update(any(WorshipMeetingModel.class))).thenAnswer(invocation -> {
-                WorshipMeetingModel meeting = invocation.getArgument(0);
+            doNothing().when(verifyConflict).verifyHourOfMeeting(any(CreateMeetingDto.class), eq(churchId), isNull(), eq(worshipId));
+            when(meetingService.findById(worshipId)).thenReturn(worshipMeeting);
+            when(meetingTypesService.getMeetingTypesById(1L)).thenReturn(worshipType);
+            when(meetingService.update(any(Meeting.class))).thenAnswer(invocation -> {
+                Meeting meeting = invocation.getArgument(0);
                 assertEquals(createDate, meeting.getCreationDate());
                 return meeting;
             });
 
             worshipService.updateWorship(worshipId, updateDto, churchId);
 
-            verify(meetingService, times(1)).update(any(WorshipMeetingModel.class));
+            verify(meetingService, times(1)).update(any(Meeting.class));
         }
     }
 
@@ -256,7 +259,7 @@ class WorshipServicesImplTest {
         @Test
         @DisplayName("deleteWorship() debe llamar al MeetingService")
         void testDeleteWorship() {
-            when(meetingService.findById(worshipId)).thenReturn(Optional.of(worshipMeeting));
+            when(meetingService.findById(worshipId)).thenReturn(worshipMeeting);
             doNothing().when(meetingService).delete(worshipId);
 
             worshipService.deleteWorship(worshipId);
@@ -267,9 +270,10 @@ class WorshipServicesImplTest {
         @Test
         @DisplayName("deleteWorship() debe fallar si no existe")
         void testDeleteWorshipNotFound() {
-            when(meetingService.findById(UUID.randomUUID())).thenReturn(Optional.empty());
+            UUID randomId = UUID.randomUUID();
+            when(meetingService.findById(randomId)).thenThrow(new jakarta.persistence.EntityNotFoundException("Meeting not found"));
 
-            assertThrows(Exception.class, () -> worshipService.deleteWorship(UUID.randomUUID()));
+            assertThrows(Exception.class, () -> worshipService.deleteWorship(randomId));
         }
     }
 
@@ -278,17 +282,17 @@ class WorshipServicesImplTest {
     class IntegrationTests {
 
         @Test
-        @DisplayName("Debe usar MeetingService en lugar de WorshipRepository")
+        @DisplayName("Debe usar MeetingService en lugar de Repository directo")
         void testUsesMeetingService() {
-            doNothing().when(verifyConflict).verifyHourOfWorshipMeeting(createDto, churchId, null);
-            when(typesReader.getWorshipMeetingTypesById(1L)).thenReturn(worshipType);
+            doNothing().when(verifyConflict).verifyHourOfMeeting(any(CreateMeetingDto.class), eq(churchId), isNull(), isNull());
+            when(meetingTypesService.getMeetingTypesById(1L)).thenReturn(worshipType);
             when(churchLookup.getChurchById(churchId)).thenReturn(church);
-            when(meetingService.create(any(WorshipMeetingModel.class))).thenReturn(worshipMeeting);
+            when(meetingService.create(any(Meeting.class))).thenReturn(worshipMeeting);
 
             worshipService.createWorship(createDto, churchId);
 
             // Verifica que usa MeetingService, no repository
-            verify(meetingService, times(1)).create(any(WorshipMeetingModel.class));
+            verify(meetingService, times(1)).create(any(Meeting.class));
         }
 
         @Test
@@ -300,4 +304,3 @@ class WorshipServicesImplTest {
         }
     }
 }
-

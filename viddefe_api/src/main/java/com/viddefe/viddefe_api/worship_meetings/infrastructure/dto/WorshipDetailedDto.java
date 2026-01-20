@@ -6,19 +6,19 @@ import lombok.Setter;
 import java.time.OffsetDateTime;
 
 @Getter @Setter
-public class WorshipDetailedDto extends WorshipDto{
+public class WorshipDetailedDto extends MeetingDto {
     private Long totalAttendance;
     private Long presentCount;
     private Long absentCount;
     private OffsetDateTime date;
 
-    public WorshipDetailedDto fromWorshipDto(WorshipDto worshipDto) {
+    public WorshipDetailedDto fromWorshipDto(MeetingDto worshipDto) {
         this.setId(worshipDto.getId());
         this.setName(worshipDto.getName());
         this.setDescription(worshipDto.getDescription());
         this.setCreationDate(worshipDto.getCreationDate());
         this.setScheduledDate(worshipDto.getScheduledDate());
-        this.setWorshipType(worshipDto.getWorshipType());
+        this.setType(worshipDto.getType());
         return this;
     }
     //private List<>

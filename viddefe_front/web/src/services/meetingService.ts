@@ -92,12 +92,18 @@ export interface ApiResponse<T> {
 // TYPES - Meeting Request/Response
 // ============================================================================
 
+export interface MeetingTypeResponse {
+  id: number;
+  name: string;
+}
+
 export interface MeetingResponse {
   id: string;
   name: string;
   description?: string;
   scheduledDate: string;
   creationDate: string;
+  type: MeetingTypeResponse;
 }
 
 // ============================================================================

@@ -1,7 +1,7 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.models;
 
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionDto;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -31,7 +31,7 @@ public class MinistryFunction {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false)
-    private AttendanceEventType eventType;
+    private TopologyEventType eventType;
 
     private Instant reminderSentAt;
 

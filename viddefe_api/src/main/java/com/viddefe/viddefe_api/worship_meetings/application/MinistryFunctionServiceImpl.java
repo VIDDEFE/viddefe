@@ -7,12 +7,12 @@ import com.viddefe.viddefe_api.notifications.contracts.Notificator;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
-import com.viddefe.viddefe_api.worship_meetings.contracts.EventMeetingReaderCaseUse;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionTypeReader;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunction;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunctionTypes;
+import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MinistryFunctionRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMinistryFunctionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
@@ -32,8 +32,8 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     private final MinistryFunctionRepository ministryFunctionRepository;
     private final MinistryFunctionTypeReader ministryFunctionTypeReader;
     private final PeopleReader peopleReader;
-    private final EventMeetingReaderCaseUse eventMeetingReaderCaseUse;
     private final NotificatorFactory notificatorFactory;
+    private final MeetingService meetingService;
     private static final String TEMPLATE_ASSIGNED = """
     Hola {{name}} 👋
     
@@ -63,7 +63,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     public MinistryFunctionDto create(
             CreateMinistryFunctionDto dto,
             UUID eventId,
-            AttendanceEventType eventType
+            TopologyEventType eventType
     ) {
         MinistryFunctionTypes role = ministryFunctionTypeReader.findById(dto.getRoleId());
         PeopleModel people = peopleReader.getPeopleById(dto.getPeopleId());
@@ -90,7 +90,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     public MinistryFunctionDto update(
             UUID id,
             CreateMinistryFunctionDto dto,
-            AttendanceEventType eventType
+            TopologyEventType eventType
     ) {
         MinistryFunction entity = ministryFunctionRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Ministry function not found"));
@@ -115,7 +115,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     }
 
     @Override
-    public List<MinistryFunctionDto> findByEventId(UUID eventId, AttendanceEventType eventType) {
+    public List<MinistryFunctionDto> findByEventId(UUID eventId, TopologyEventType eventType) {
         return ministryFunctionRepository.findByEventId(eventId).stream().map(MinistryFunction::toDto).toList();
     }
 
@@ -133,7 +133,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     }
 
     private void sendNotification(PeopleResDto person, UUID eventId, MinistryFunctionTypes role, String template) {
-        MeetingDto meetingDto = eventMeetingReaderCaseUse.getMeetingDto(eventId);
+        MeetingDto meetingDto = meetingService.findById(eventId).toDto();
         Notificator notificator = notificatorFactory.get(Channels.WHATSAPP);
         NotificationDto notificationDto = new NotificationDto();
         notificationDto.setTo(person.phone());
