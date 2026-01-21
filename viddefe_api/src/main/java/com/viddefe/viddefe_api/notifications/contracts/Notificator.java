@@ -1,11 +1,8 @@
 package com.viddefe.viddefe_api.notifications.contracts;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
-import com.viddefe.viddefe_api.notifications.config.Channels;
+import com.viddefe.viddefe_api.notifications.common.Channels;
 import jakarta.validation.Valid;
-
-import java.nio.file.Path;
-import java.util.Map;
 
 /**
  * Messenger contract to send messages via different channels

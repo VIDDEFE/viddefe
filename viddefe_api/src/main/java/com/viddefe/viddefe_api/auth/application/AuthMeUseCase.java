@@ -48,9 +48,11 @@ public class AuthMeUseCase implements AuthMeService {
         assert churchResDto != null;
         churchResDto.setPastor(pastor != null ? pastor.toDto() : null);
 
+        String contact = user.getEmail() != null && !user.getEmail().isBlank() ? user.getEmail() : user.getPhone();
+
         return new UserInfo(
                 churchResDto,
-                user.getEmail(),
+                contact,
                 user.getRolUser(),
                 user.getPeople().toDto()
         );

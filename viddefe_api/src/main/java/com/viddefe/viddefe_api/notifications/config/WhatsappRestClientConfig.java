@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.notifications.config.rest;
+package com.viddefe.viddefe_api.notifications.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

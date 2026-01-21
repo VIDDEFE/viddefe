@@ -3,15 +3,12 @@ package com.viddefe.viddefe_api.notifications.Infrastructure.whatsapp;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
 import com.viddefe.viddefe_api.notifications.application.WhatsappClient;
 import com.viddefe.viddefe_api.notifications.common.ResolverMessage;
-import com.viddefe.viddefe_api.notifications.config.Channels;
+import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.nio.file.Path;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor

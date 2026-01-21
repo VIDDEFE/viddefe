@@ -1,6 +1,7 @@
 package com.viddefe.viddefe_api.notifications.Infrastructure.dto;
 
-import jakarta.validation.constraints.Email;
+import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.notifications.common.RabbitPriority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -26,5 +27,5 @@ public class NotificationDto{
     private Map<String, Object> variables;
 
     @NotNull
-    private Instant createdAt;
+    private Channels channels;
 }

@@ -1,18 +1,19 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
-import com.viddefe.viddefe_api.notifications.Infrastructure.factory.NotificatorFactory;
-import com.viddefe.viddefe_api.notifications.config.Channels;
-import com.viddefe.viddefe_api.notifications.contracts.Notificator;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
+import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.notifications.common.RabbitPriority;
+import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingReader;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionTypeReader;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunction;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunctionTypes;
-import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MinistryFunctionRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMinistryFunctionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
@@ -32,8 +33,9 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     private final MinistryFunctionRepository ministryFunctionRepository;
     private final MinistryFunctionTypeReader ministryFunctionTypeReader;
     private final PeopleReader peopleReader;
-    private final NotificatorFactory notificatorFactory;
     private final MeetingService meetingService;
+    private final NotificationEventPublisher notificatorPublisher;
+    private final MeetingReader meetingReader;
     private static final String TEMPLATE_ASSIGNED = """
     Hola {{name}} 👋
     
@@ -67,9 +69,9 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     ) {
         MinistryFunctionTypes role = ministryFunctionTypeReader.findById(dto.getRoleId());
         PeopleModel people = peopleReader.getPeopleById(dto.getPeopleId());
-
+        Meeting event = meetingReader.getById(eventId);
         MinistryFunction entity = new MinistryFunction();
-        entity.setEventId(eventId);
+        entity.setEvent(event);
         entity.setPeople(people);
         entity.setMinistryFunctionType(role);
         entity.setEventType(eventType);
@@ -78,7 +80,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
 
         sendNotification(
                 people.toDto(),
-                eventId,
+                event,
                 role,
                 TEMPLATE_ASSIGNED
         );
@@ -106,7 +108,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
 
         sendNotification(
                 people.toDto(),
-                entity.getEventId(),
+                entity.getEvent(),
                 role,
                 TEMPLATE_UPDATED
         );
@@ -132,14 +134,13 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
         return ministryFunctionTypeReader.findAll().stream().map(MinistryFunctionTypes::toDto).toList();
     }
 
-    private void sendNotification(PeopleResDto person, UUID eventId, MinistryFunctionTypes role, String template) {
-        MeetingDto meetingDto = meetingService.findById(eventId).toDto();
-        Notificator notificator = notificatorFactory.get(Channels.WHATSAPP);
-        NotificationDto notificationDto = new NotificationDto();
-        notificationDto.setTo(person.phone());
-        notificationDto.setCreatedAt(Instant.now());
-        notificationDto.setTemplate(template);
-        notificationDto.setVariables(
+    private void sendNotification(PeopleResDto person, Meeting meeting, MinistryFunctionTypes role, String template) {
+        MeetingDto meetingDto = meeting.toDto();
+        NotificationEvent event = new NotificationEvent();
+        event.setCreatedAt(Instant.now());
+        event.setTemplate(template);
+        event.setPriority(RabbitPriority.MEDIUM);
+        event.setVariables(
                 java.util.Map.of(
                         "name", person.firstName() + " " + person.lastName(),
                         "date", meetingDto.getScheduledDate().toLocalDate().toString(),
@@ -147,6 +148,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
                         "role", role.getName()
                 )
         );
-        notificator.send(notificationDto);
+        event.setChannels(Channels.WHATSAPP);
+        notificatorPublisher.publish(event);
     }
 }
