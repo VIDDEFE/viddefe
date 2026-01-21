@@ -1,6 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationMeetingEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.common.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
@@ -16,7 +16,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,8 @@ public class MinistryNotificationJobRoutine {
     private static final int BATCH_SIZE = 100;
     private final MinistryFunctionRepository ministryFunctionRepository;
     private static final ForkJoinPool PUBLISH_POOL = new ForkJoinPool(10);
+    private static final Integer DAYS_BEFORE_MEETING = 1;
+    private static final Integer HOURS_BEFORE_MEETING = 1; // 1 hora
     private final String TEMPLATE_GROUP_MEETING = """
         Hola {{name}} 👋
         Te recordamos que tienes una función ministerial asignada para la próxima reunión de grupo {{groupName}} en la iglesia {{churchName}}.
@@ -50,20 +54,22 @@ public class MinistryNotificationJobRoutine {
         """;
     private final NotificationEventPublisher notificationEventPublisher;
 
-    @Scheduled(fixedRate = 10000) // Ejecuta cada hora 6000 ms * 60 = 1 hora. 6000 ms = 1 minuto
+    @Scheduled(fixedRate = 6000 * 60) // Ejecuta cada hora 6000 ms * 60 = 1 hora. 6000 ms = 1 minuto
     @Async
     public void execute() {
         System.out.println("Inicio de la rutina de notificaciones ministeriales");
 
-        OffsetDateTime nowOffset = OffsetDateTime.now();
-        OffsetDateTime limitOffset = nowOffset.plusHours(1);
 
         Pageable pageable = PageRequest.of(0, BATCH_SIZE);
         Page<MinistryFunction> page;
 
+        OffsetDateTime now = OffsetDateTime.now();
+
         do {
             page = ministryFunctionRepository
-                    .findPendingReminders(nowOffset, limitOffset, pageable);
+                    .findUpcomingMinistryFunctions(now,pageable);
+
+            System.out.println(page.getTotalPages());
 
             if (page.isEmpty()) {
                 System.out.println("No hay notificaciones pendientes en este rango de tiempo.");
@@ -77,9 +83,45 @@ public class MinistryNotificationJobRoutine {
         } while (page.hasNext());
     }
 
+    private boolean isReminderDue(MinistryFunction function) {
+
+        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime scheduledDate = function.getMeeting().getScheduledDate();
+
+        // 0. Evento ya pasó → nunca enviar
+        if (scheduledDate.isBefore(now)) {
+            return false;
+        }
+
+        // 1. Ventana de envío
+        OffsetDateTime windowStart = scheduledDate.minusDays(DAYS_BEFORE_MEETING);
+        OffsetDateTime windowEnd   = scheduledDate.minusHours(HOURS_BEFORE_MEETING);
+
+        if (now.isBefore(windowStart) || now.isAfter(windowEnd)) {
+            return false;
+        }
+
+        // 2. No enviar más de una vez el mismo día
+        Instant reminderSentAt = function.getReminderSentAt();
+
+        if (reminderSentAt != null) {
+            LocalDate lastSentDay =
+                    reminderSentAt.atOffset(ZoneOffset.UTC).toLocalDate();
+
+            LocalDate today =
+                    now.withOffsetSameInstant(ZoneOffset.UTC).toLocalDate();
+
+            return !lastSentDay.equals(today);
+        }
+
+        return true;
+    }
+
+
     private void processBatch(List<MinistryFunction> batch) {
         PUBLISH_POOL.submit(() ->
                 batch.parallelStream()
+                        .filter(this::isReminderDue)
                         .map(this::buildNotificationEvent)
                         .forEach(notificationEventPublisher::publish)
         ).join();
@@ -96,22 +138,23 @@ public class MinistryNotificationJobRoutine {
     private Map<String, Object> resolveVariables(MinistryFunction function) {
         Map<String, Object> variables = new HashMap<>();
         variables.put("name", function.getPeople().getFirstName());
-        variables.put("eventName", function.getEvent().getName());
+        variables.put("eventName", function.getMeeting().getName());
         variables.put("role", function.getMinistryFunctionType().getName());
-        variables.put("date", function.getEvent().getScheduledDate().toString());
+        variables.put("date", function.getMeeting().getScheduledDate().toString());
         if(function.getEventType() == TopologyEventType.GROUP_MEETING) {
-            variables.put("groupName", function.getEvent().getGroup().getName());
+            variables.put("groupName", function.getMeeting().getGroup().getName());
         }
-        variables.put("churchName", function.getEvent().getChurch().getName());
+        variables.put("churchName", function.getMeeting().getChurch().getName());
         System.out.println("Variables para la notificación: " + variables);
         return variables;
     }
 
-    private NotificationEvent buildNotificationEvent(
+    private NotificationMeetingEvent buildNotificationEvent(
             MinistryFunction function
     ) {
-        NotificationEvent event = new NotificationEvent();
+        NotificationMeetingEvent event = new NotificationMeetingEvent();
         event.setCreatedAt(Instant.now());
+        event.setMeetingId(function.getMeeting().getId());
         event.setChannels(Channels.WHATSAPP);
         event.setPriority(RabbitPriority.LOW);
         event.setPersonId(function.getPeople().getId());

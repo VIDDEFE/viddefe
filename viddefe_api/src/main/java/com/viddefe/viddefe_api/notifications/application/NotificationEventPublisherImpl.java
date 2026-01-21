@@ -8,8 +8,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
 
-import java.util.List;
-
 /**
  * EventNotification is responsible for handling event notifications.
  * it´s recibes events {@link NotificationDto} and process store the notifications in RabbitMQ
@@ -22,7 +20,6 @@ public class NotificationEventPublisherImpl implements NotificationEventPublishe
     private final RabbitTemplate rabbitTemplate;
 
     public void publish(NotificationEvent event) {
-
         rabbitTemplate.convertAndSend(
                 RabbitQueues.NOTIFICATIONS_EXCHANGE,
                 RabbitQueues.NOTIFICATIONS_ROUTING,

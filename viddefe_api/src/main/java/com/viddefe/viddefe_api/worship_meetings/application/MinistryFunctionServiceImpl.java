@@ -1,6 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationMeetingEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.common.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
@@ -24,6 +24,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,9 +71,13 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     ) {
         MinistryFunctionTypes role = ministryFunctionTypeReader.findById(dto.getRoleId());
         PeopleModel people = peopleReader.getPeopleById(dto.getPeopleId());
+        if(people.getPhone()==null || people.getPhone().isBlank()){
+            throw new IllegalArgumentException("La persona debe tener un número de teléfono válido para ser " +
+                    "asignada a una función ministerial.");
+        }
         Meeting event = meetingReader.getById(eventId);
         MinistryFunction entity = new MinistryFunction();
-        entity.setEvent(event);
+        entity.setMeeting(event);
         entity.setPeople(people);
         entity.setMinistryFunctionType(role);
         entity.setEventType(eventType);
@@ -80,7 +86,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
 
         sendNotification(
                 people.toDto(),
-                event,
+                saved.getMeeting(),
                 role,
                 TEMPLATE_ASSIGNED
         );
@@ -105,10 +111,9 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
         entity.setEventType(eventType);
 
         MinistryFunction saved = ministryFunctionRepository.save(entity);
-
         sendNotification(
                 people.toDto(),
-                entity.getEvent(),
+                saved.getMeeting(),
                 role,
                 TEMPLATE_UPDATED
         );
@@ -118,7 +123,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
 
     @Override
     public List<MinistryFunctionDto> findByEventId(UUID eventId, TopologyEventType eventType) {
-        return ministryFunctionRepository.findByEventId(eventId).stream().map(MinistryFunction::toDto).toList();
+        return ministryFunctionRepository.findByMeetingId(eventId).stream().map(MinistryFunction::toDto).toList();
     }
 
     @Override
@@ -136,8 +141,11 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
 
     private void sendNotification(PeopleResDto person, Meeting meeting, MinistryFunctionTypes role, String template) {
         MeetingDto meetingDto = meeting.toDto();
-        NotificationEvent event = new NotificationEvent();
+        NotificationMeetingEvent event = new NotificationMeetingEvent();
+        System.out.println("MEETING: " + meeting.getId().toString());
+        event.setMeetingId(meeting.getId());
         event.setCreatedAt(Instant.now());
+        event.setPersonId(person.id());
         event.setTemplate(template);
         event.setPriority(RabbitPriority.MEDIUM);
         event.setVariables(
@@ -149,6 +157,42 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
                 )
         );
         event.setChannels(Channels.WHATSAPP);
+        System.out.println("EVENNT ENVENTID: "+event.getMeetingId().toString());
         notificatorPublisher.publish(event);
     }
+
+    private boolean shouldSendReminder(
+            MinistryFunction mf,
+            OffsetDateTime now,
+            int daysBefore,
+            int hoursBefore
+    ) {
+        OffsetDateTime scheduled = mf.getMeeting().getScheduledDate();
+
+        // Window start: X days before
+        OffsetDateTime windowStart = scheduled.minusDays(daysBefore);
+
+        // Window end: X hours before
+        OffsetDateTime windowEnd = scheduled.minusHours(hoursBefore);
+
+        if (now.isBefore(windowStart)) return false;
+        if (now.isAfter(windowEnd)) return false;
+
+        // One reminder per day
+        Instant lastSent = mf.getReminderSentAt();
+        if (lastSent != null) {
+            OffsetDateTime lastSentDay =
+                    lastSent.atOffset(ZoneOffset.UTC).toLocalDate().atStartOfDay().atOffset(ZoneOffset.UTC);
+
+            OffsetDateTime today =
+                    now.toLocalDate().atStartOfDay().atOffset(now.getOffset());
+
+            if (!lastSentDay.isBefore(today)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 }

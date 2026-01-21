@@ -1,6 +1,7 @@
 package com.viddefe.viddefe_api.notifications.Infrastructure.dto;
 
 import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import com.viddefe.viddefe_api.notifications.common.RabbitPriority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,21 +13,25 @@ import java.util.Map;
 import java.util.UUID;
 
 @Getter @Setter
-public class NotificationEvent {
+public abstract class NotificationEvent {
+    @NotNull
+    protected UUID meetingId;
     @NotNull(message = "personId cannot be null")
-    private UUID personId;
+    protected UUID personId;
     @NotNull(message = "channels cannot be null")
-    private Channels channels;
+    protected Channels channels;
     @NotNull(message = "priority cannot be null")
-    private RabbitPriority priority;
+    protected RabbitPriority priority;
     @NotNull(message = "createdAt cannot be null")
-    private Instant createdAt;
+    protected Instant createdAt;
     @NotNull(message = "to cannot be null")
     @NotBlank(message = "to cannot be blank")
-    private String subject;
+    protected String subject;
     @NotNull(message = "template cannot be null")
     @NotBlank(message = "template cannot be blank")
-    private String template;
+    protected String template;
     @NotNull(message = "variables cannot be null")
-    private Map<String, Object> variables;
+    protected Map<String, Object> variables;
+
+    public abstract NotificationTypeEnum getNotificationType();
 }
