@@ -51,4 +51,6 @@ public interface PeopleReader {
      * @return Lista de PeopleModel encontrados
      */
     List<PeopleModel> getPeopleByIds(List<UUID> ids);
+
+    void verifyPersonExistsByCcAndChurchId(String cc, UUID churchId);
 }

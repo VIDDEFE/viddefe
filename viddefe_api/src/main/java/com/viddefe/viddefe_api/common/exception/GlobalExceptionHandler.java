@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -104,9 +105,12 @@ public class GlobalExceptionHandler {
 
         String message = "Operation violates database constraints";
 
+
         Throwable cause = ex.getMostSpecificCause();
-        if (cause.getMessage() != null) {
-            message = cause.getMessage();
+        if (cause instanceof SQLException psqlEx) {
+            if ("23505".equals(psqlEx.getSQLState())) {
+                message = "Ups algo error en nuestra base de datos, contacta con soporte.";
+            }
         }
 
         return buildResponse(
