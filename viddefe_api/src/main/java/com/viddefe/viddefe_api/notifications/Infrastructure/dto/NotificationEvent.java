@@ -14,7 +14,6 @@ import java.util.UUID;
 
 @Getter @Setter
 public abstract class NotificationEvent {
-    @NotNull
     protected UUID meetingId;
     @NotNull(message = "personId cannot be null")
     protected UUID personId;

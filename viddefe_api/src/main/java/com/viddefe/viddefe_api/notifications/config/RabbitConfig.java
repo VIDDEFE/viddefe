@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.notifications.config;
 
+import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import com.viddefe.viddefe_api.notifications.common.RabbitQueues;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -10,6 +11,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitConfig {
+
+    /* ===============================
+     *  Message serialization
+     * =============================== */
 
     @Bean
     public Jackson2JsonMessageConverter jackson2JsonMessageConverter() {
@@ -26,30 +31,78 @@ public class RabbitConfig {
         return template;
     }
 
+    /* ===============================
+     *  Exchange
+     * =============================== */
+
     @Bean
     public DirectExchange notificationsExchange() {
         return new DirectExchange(
                 RabbitQueues.NOTIFICATIONS_EXCHANGE,
-                true,
-                false
+                true,   // durable
+                false   // autoDelete
         );
     }
 
+    /* ===============================
+     *  Queues
+     * =============================== */
+
     @Bean
-    public Queue notificationsQueue() {
-        return QueueBuilder.durable(RabbitQueues.NOTIFICATIONS_QUEUE)
-                .withArgument("x-max-priority", 10) // 🔥 priority queue
+    public Queue accountNotificationsQueue() {
+        return QueueBuilder.durable(RabbitQueues.ACCOUNT_QUEUE)
+                .withArgument("x-max-priority", 10)
                 .build();
     }
 
     @Bean
-    public Binding notificationsBinding(
-            Queue notificationsQueue,
+    public Queue passwordNotificationsQueue() {
+        return QueueBuilder.durable(RabbitQueues.PASSWORD_QUEUE)
+                .withArgument("x-max-priority", 10)
+                .build();
+    }
+
+    @Bean
+    public Queue ministryNotificationsQueue() {
+        return QueueBuilder.durable(RabbitQueues.MINISTRY_QUEUE)
+                .withArgument("x-max-priority", 10)
+                .build();
+    }
+
+    /* ===============================
+     *  Bindings
+     * =============================== */
+
+    @Bean
+    public Binding accountBinding(
+            Queue accountNotificationsQueue,
             DirectExchange notificationsExchange
     ) {
         return BindingBuilder
-                .bind(notificationsQueue)
+                .bind(accountNotificationsQueue)
                 .to(notificationsExchange)
-                .with(RabbitQueues.NOTIFICATIONS_ROUTING);
+                .with(NotificationTypeEnum.ACCOUNT_CREATED.routingKey());
+    }
+
+    @Bean
+    public Binding passwordBinding(
+            Queue passwordNotificationsQueue,
+            DirectExchange notificationsExchange
+    ) {
+        return BindingBuilder
+                .bind(passwordNotificationsQueue)
+                .to(notificationsExchange)
+                .with(NotificationTypeEnum.PASSWORD_RESET.routingKey());
+    }
+
+    @Bean
+    public Binding ministryBinding(
+            Queue ministryNotificationsQueue,
+            DirectExchange notificationsExchange
+    ) {
+        return BindingBuilder
+                .bind(ministryNotificationsQueue)
+                .to(notificationsExchange)
+                .with(NotificationTypeEnum.MINISTRY_FUNCTION_REMINDER.routingKey());
     }
 }

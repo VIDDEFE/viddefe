@@ -72,4 +72,18 @@ public class AuthMeUseCase implements AuthMeService {
                 .map(PermissionModel::getName)
                 .toList();
     }
+
+    @Override
+    public String getContactByPersonId(UUID personId) throws InterruptedException {
+        System.out.println("Getting contact for personId: " + personId);
+        UserModel user = userRepository.findByPeopleId(personId).orElseThrow(
+                () -> new EntityNotFoundException("User not found for personId: " + personId)
+        );
+        Thread.sleep(2000); // Simulated delay of 2 seconds
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            return user.getEmail();
+        } else {
+            return user.getPhone();
+        }
+    }
 }

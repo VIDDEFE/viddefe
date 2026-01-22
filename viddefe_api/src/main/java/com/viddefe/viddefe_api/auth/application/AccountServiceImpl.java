@@ -47,13 +47,19 @@ public class AccountServiceImpl implements AccountService {
             "Please change your password after logging in.";
 
     @Override
-    public void invite(InvitationDto dtp) {
+    public void invite(InvitationDto dtp, UUID churchId) {
         // Implementation goes here
         if((dtp.getEmail() != null && !dtp.getEmail().isBlank()) && userRepository.existsByEmail(dtp.getEmail())) {
             throw new DataIntegrityViolationException("User with email already exists");
         }else if((dtp.getPhone() != null && !dtp.getPhone().isBlank()) && userRepository.existsByPhone(dtp.getPhone())) {
             throw new DataIntegrityViolationException("User with phone number already exists");
-        }
+        }else if(userRepository.existsUserByPeopleIdAndPeopleChurchId(
+                dtp.getPersonId(),
+                peopleReader.getPeopleById(dtp.getPersonId()).getChurch().getId()
+        )){
+            throw new DataIntegrityViolationException("User for the selected person already exists in the church");
+        };
+
         List<PermissionModel> permissionModels = permissionService.findByListNames(dtp.getPermissions());
 
         RolUserModel role = rolesUserService.foundRolUserById(dtp.getRole());
@@ -71,10 +77,12 @@ public class AccountServiceImpl implements AccountService {
         Channels channel = Channels.from(dtp.getChannel());
         NotificationAccountEvent event = new NotificationAccountEvent();
         event.setPriority(RabbitPriority.HIGH);
+        event.setSubject("Bienvenido a VidDefe!");
         event.setChannels(channel);
         event.setPersonId(person.getId());
         event.setCreatedAt(Instant.now());
         event.setVariables(resolveVariables(event, person, userModel, temporaryPassword));
+        event.setTemplate("/emails/invitation.html");
         notificationEventPublisher.publish(event);
     }
 

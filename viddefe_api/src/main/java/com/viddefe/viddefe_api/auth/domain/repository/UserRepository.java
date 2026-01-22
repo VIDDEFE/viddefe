@@ -15,6 +15,11 @@ public interface UserRepository extends JpaRepository<UserModel, UUID> {
 
     boolean existsByPhone(String phone);
 
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END " +
+           "FROM UserModel u " +
+           "WHERE u.people.id = :personId AND u.people.church.id = :churchId")
+    boolean existsUserByPeopleIdAndPeopleChurchId(UUID personId, UUID churchId);
+
     /**
      * Busca usuario por ID con people y church pre-cargados.
      * Evita N+1 en AuthMeUseCase.getUserInfo()
@@ -52,4 +57,5 @@ public interface UserRepository extends JpaRepository<UserModel, UUID> {
            "WHERE u.phone = :phone")
     Optional<UserModel> findByPhoneWithRelations(@Param("phone") String phone);
 
+    Optional<UserModel> findByPeopleId(UUID personId);
 }

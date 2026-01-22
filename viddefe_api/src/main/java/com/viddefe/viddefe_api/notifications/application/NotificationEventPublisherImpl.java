@@ -19,10 +19,12 @@ public class NotificationEventPublisherImpl implements NotificationEventPublishe
 
     private final RabbitTemplate rabbitTemplate;
 
+    @Override
     public void publish(NotificationEvent event) {
+
         rabbitTemplate.convertAndSend(
                 RabbitQueues.NOTIFICATIONS_EXCHANGE,
-                RabbitQueues.NOTIFICATIONS_ROUTING,
+                event.getNotificationType().routingKey(),   // Decide the routing key based on notification type
                 event,
                 message -> {
                     message.getMessageProperties()
