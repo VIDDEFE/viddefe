@@ -1,22 +1,18 @@
 package com.viddefe.viddefe_api.notifications.Infrastructure.email;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
-import com.viddefe.viddefe_api.notifications.config.Channels;
+import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.context.Context;
-
-import java.nio.file.Path;
 
 @Service
 @RequiredArgsConstructor

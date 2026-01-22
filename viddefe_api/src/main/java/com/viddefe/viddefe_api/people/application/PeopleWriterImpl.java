@@ -5,6 +5,7 @@ import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;
+import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.contracts.PeopleWriter;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
@@ -31,10 +32,12 @@ public class PeopleWriterImpl implements PeopleWriter {
     private final PeopleTypeService peopleTypeService;
     private final StatesCitiesService statesCitiesService;
     private final ChurchLookup churchLookup;
-    
+    private final PeopleReader peopleReader;
+
     @Override
     @Transactional
     public PeopleModel createPerson(PeopleDTO dto) {
+        peopleReader.verifyPersonExistsByCcAndChurchId(dto.getCc(), dto.getChurchId());
         PeopleModel person = buildPersonFromDto(dto);
         return peopleRepository.save(person);
     }
@@ -46,6 +49,9 @@ public class PeopleWriterImpl implements PeopleWriter {
                 .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("Person not found: " + id));
         
         person.fromDto(dto);
+        if(!person.getCc().equals(dto.getCc())) {
+            peopleReader.verifyPersonExistsByCcAndChurchId(dto.getCc(), dto.getId());
+        }
         // Actualizar relaciones si se proporcionan
         if (dto.getTypePersonId() != null) {
             person.setTypePerson(peopleTypeService.getPeopleTypeById(dto.getTypePersonId()));

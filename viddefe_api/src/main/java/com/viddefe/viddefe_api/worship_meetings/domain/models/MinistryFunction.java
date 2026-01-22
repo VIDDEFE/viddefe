@@ -26,8 +26,11 @@ public class MinistryFunction {
     @JoinColumn(name = "people_id", nullable = false)
     private PeopleModel people;
 
-    @Column(nullable = false, unique = false)
-    private UUID eventId;
+    @ManyToOne(
+        fetch = FetchType.EAGER
+    )
+    @JoinColumn(name = "meeting_id", nullable = false)
+    private Meeting meeting;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false)

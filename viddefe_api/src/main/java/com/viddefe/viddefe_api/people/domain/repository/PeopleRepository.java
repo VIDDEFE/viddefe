@@ -47,4 +47,5 @@ public interface PeopleRepository extends JpaRepository<PeopleModel, UUID> {
            "WHERE p.id = :id")
     Optional<PeopleModel> findByIdWithRelations(@Param("id") UUID id);
 
+    Optional<PeopleModel> findByCcAndChurchId(String cc, UUID churchId);
 }

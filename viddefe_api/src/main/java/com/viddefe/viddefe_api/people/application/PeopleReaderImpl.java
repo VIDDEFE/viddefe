@@ -7,6 +7,7 @@ import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
 import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,4 +58,17 @@ public class PeopleReaderImpl implements PeopleReader {
     public List<PeopleModel> getPeopleByIds(List<UUID> ids) {
         return peopleRepository.findAllById(ids);
     }
+
+    @Override
+    public void verifyPersonExistsByCcAndChurchId(String cc, UUID churchId) {
+        System.out.println("Hey bro why?");
+        System.out.println("Hey bro why? cc: " + cc + ", churchId: " + churchId);
+        peopleRepository.findByCcAndChurchId(cc, churchId)
+                .ifPresent(p -> {
+                    throw new IllegalArgumentException(
+                            "La persona con cédula " + cc + " ya existe en la iglesia"
+                    );
+                });
+    }
+
 }

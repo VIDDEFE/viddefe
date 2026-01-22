@@ -1,7 +1,8 @@
 package com.viddefe.viddefe_api.notifications.Infrastructure.factory;
 
-import com.viddefe.viddefe_api.notifications.config.Channels;
+import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -29,7 +30,7 @@ public class NotificatorFactory {
      * @return The notificator for the given channel
      * @throws IllegalArgumentException if the channel is not supported
      */
-    public Notificator get(Channels channel) {
+    public Notificator get(@NotNull Channels channel) {
         return Optional.ofNullable(notificators.get(channel))
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Channel not supported: " + channel

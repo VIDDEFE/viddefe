@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.notifications.config;
+package com.viddefe.viddefe_api.notifications.common;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 

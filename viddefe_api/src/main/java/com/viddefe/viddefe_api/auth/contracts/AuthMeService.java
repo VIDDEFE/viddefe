@@ -23,5 +23,12 @@ public interface AuthMeService {
      * @param  userId {@link UUID}
      * @return list of permissions
      */
-        List<String> getUserPermissions(UUID userId);
+    List<String> getUserPermissions(UUID userId);
+
+    /**
+     *
+     * @param personId {@link UUID}
+     * @return contact string {EMAIL or PHONE}
+     */
+    String getContactByPersonId(UUID personId) throws InterruptedException;
 }

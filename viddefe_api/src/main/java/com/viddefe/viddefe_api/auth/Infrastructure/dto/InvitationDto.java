@@ -1,6 +1,5 @@
 package com.viddefe.viddefe_api.auth.Infrastructure.dto;
 
-import com.viddefe.viddefe_api.notifications.config.Channels;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
