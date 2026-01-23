@@ -20,9 +20,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
-import java.util.Objects;
-
-import static java.rmi.server.LogStream.log;
 
 @Slf4j
 @Component
@@ -48,7 +45,7 @@ public class NotificationConsumer {
         PeopleResDto person =
                 peopleReader.getPeopleById(event.getPersonId()).toDto();
 
-        sendNotification(person.phone(), event);
+        sendNotification(person.getPhone(), event);
 
         handleMinistryFunctionReminder(event);
 

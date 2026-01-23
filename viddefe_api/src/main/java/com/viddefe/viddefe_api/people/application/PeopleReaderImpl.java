@@ -61,8 +61,6 @@ public class PeopleReaderImpl implements PeopleReader {
 
     @Override
     public void verifyPersonExistsByCcAndChurchId(String cc, UUID churchId) {
-        System.out.println("Hey bro why?");
-        System.out.println("Hey bro why? cc: " + cc + ", churchId: " + churchId);
         peopleRepository.findByCcAndChurchId(cc, churchId)
                 .ifPresent(p -> {
                     throw new IllegalArgumentException(

@@ -2,6 +2,8 @@ package com.viddefe.viddefe_api.people.domain.repository;
 
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleRowProjection;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,18 +25,35 @@ public interface PeopleRepository extends JpaRepository<PeopleModel, UUID> {
      * @return Página de personas con state y typePerson pre-cargados
      */
     @Query("""
-    SELECT p
+    SELECT
+        p.id AS id,
+        p.cc AS cc,
+        p.firstName AS firstName,
+        p.lastName AS lastName,
+        p.phone AS phone,
+        p.avatar AS avatar,
+        p.birthDate AS birthDate,
+        tp.id AS typePersonId,
+        tp.name AS typePersonName,
+        s.id AS stateId,
+        s.name AS stateName,
+        aq.attendanceQuality AS attendanceQuality
     FROM PeopleModel p
-    LEFT JOIN FETCH p.state
-    LEFT JOIN FETCH p.typePerson
+    LEFT JOIN p.typePerson tp
+    LEFT JOIN p.state s
+    LEFT JOIN AttendanceQualityPeople aqp ON aqp.people.id = p.id
+    LEFT JOIN AttendanceQuality aq ON aq.id = aqp.attendanceQuality.id
     WHERE p.church.id = :churchId
-      AND (:typePersonId IS NULL OR p.typePerson.id = :typePersonId)
+      AND (:typePersonId IS NULL OR tp.id = :typePersonId)
+      AND (:attendanceQuality IS NULL OR aq.attendanceQuality = :attendanceQuality)
 """)
-    Page<PeopleModel> findByChurchAndOptionalType(
-            @Param("churchId") UUID churchId,
-            @Param("typePersonId") Long typePersonId,
+    Page<PeopleRowProjection> findByChurchAndOptionalType(
+            UUID churchId,
+            Long typePersonId,
+            AttendanceQualityEnum attendanceQuality,
             Pageable pageable
     );
+
 
     /**
      * Busca persona por ID con todas las relaciones pre-cargadas.

@@ -10,17 +10,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface AttendanceRepository extends JpaRepository<AttendanceModel, UUID> {
     Optional<AttendanceModel> findByPeopleIdAndEventId(UUID peopleId, UUID eventId);
-
-    Page<AttendanceModel> findByEventId(UUID eventId, Pageable pageable);
-
-    long countByEventIdAndStatus(UUID eventId, AttendanceStatus status);
-
-    long countByEventId(UUID id);
 
     @Query("""
     SELECT new com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceProjectionDto(
@@ -58,4 +53,21 @@ public interface AttendanceRepository extends JpaRepository<AttendanceModel, UUI
     );
 
     long countTotalByEventId(UUID eventId);
+
+
+    @Query("""
+    SELECT COUNT(at.id)/COUNT(m.id)
+        FROM Meeting m
+        LEFT JOIN AttendanceModel at
+            ON at.eventId = m.id
+           AND at.people.id = :peopleId
+           AND at.eventType = :eventType
+      WHERE m.scheduledDate BETWEEN :from AND :to
+    """
+    )
+    Double calculateAttendancePercentage(@Param("peopleId") UUID peopleId,
+                                         @Param("eventType") TopologyEventType eventType,
+                                         @Param("to") OffsetDateTime to,
+                                         @Param("from") OffsetDateTime from
+                                         );
 }

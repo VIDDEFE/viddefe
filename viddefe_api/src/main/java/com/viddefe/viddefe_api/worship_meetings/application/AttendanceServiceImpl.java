@@ -8,24 +8,30 @@ import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendancePeopleEvent;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceProjectionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AttendanceServiceImpl implements AttendanceService {
     private final AttendanceRepository attendanceRepository;
+    private final ApplicationEventPublisher publisher;
     private final PeopleReader peopleReader;
 
     @Override
     public AttendanceDto updateAttendance(CreateAttendanceDto dto, TopologyEventType type) {
         PeopleModel person = peopleReader.getPeopleById(dto.getPeopleId());
+        boolean isNewAttendee;
+        isNewAttendee = countAttendanceByPeopleId(person.getId(), type) == 0;
         AttendanceModel attendanceModel = attendanceRepository.findByPeopleIdAndEventId
                 (dto.getPeopleId(), dto.getEventId())
                 .orElseGet(()-> new AttendanceModel(
@@ -33,19 +39,33 @@ public class AttendanceServiceImpl implements AttendanceService {
                         person,
                         dto.getEventId(),
                         type,
-                        null
+                        null,
+                        isNewAttendee
                 ));
         AttendanceStatus status = attendanceModel.getId() != null ?
                 AttendanceStatus.ABSENT :
                 AttendanceStatus.PRESENT;
 
         attendanceModel.setStatus(status);
+        OffsetDateTime now = OffsetDateTime.now();
+        AttendancePeopleEvent attendancePeopleEvent = new AttendancePeopleEvent(
+                dto.getEventId(),
+                dto.getPeopleId(),
+                dto.getEventId(),
+                type,
+                now
+
+        );
         if(attendanceModel.getId() != null){
             attendanceRepository.deleteById(attendanceModel.getId());
+            publisher.publishEvent(attendancePeopleEvent);
             return attendanceModel.toDto();
         }
 
-        return attendanceRepository.save(attendanceModel).toDto();
+        AttendanceModel saved = attendanceRepository.save(attendanceModel);
+
+        publisher.publishEvent(attendancePeopleEvent);
+        return saved.toDto();
     }
 
     @Override
@@ -63,6 +83,14 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public long countByEventIdWithDefaults(UUID eventId, TopologyEventType eventType, AttendanceStatus status) {
         return attendanceRepository.countByEventIdWithDefaults(eventId, eventType, status);
+    }
+
+    private Long countAttendanceByPeopleId(UUID peopleId, TopologyEventType eventType) {
+        return attendanceRepository.countByEventIdWithDefaults(
+                peopleId,
+                eventType,
+                AttendanceStatus.PRESENT
+        );
     }
 
 }
