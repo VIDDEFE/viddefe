@@ -145,12 +145,12 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
         System.out.println("MEETING: " + meeting.getId().toString());
         event.setMeetingId(meeting.getId());
         event.setCreatedAt(Instant.now());
-        event.setPersonId(person.id());
+        event.setPersonId(person.getId());
         event.setTemplate(template);
         event.setPriority(RabbitPriority.MEDIUM);
         event.setVariables(
                 java.util.Map.of(
-                        "name", person.firstName() + " " + person.lastName(),
+                        "name", person.getFirstName() + " " + person.getLastName(),
                         "date", meetingDto.getScheduledDate().toLocalDate().toString(),
                         "eventName", meetingDto.getName(),
                         "role", role.getName()

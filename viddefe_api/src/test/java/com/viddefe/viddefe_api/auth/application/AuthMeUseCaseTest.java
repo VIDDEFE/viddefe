@@ -162,7 +162,7 @@ class AuthMeUseCaseTest {
 
             // Then
             assertThat(result.church().getPastor()).isNotNull();
-            assertThat(result.church().getPastor().firstName()).isEqualTo("Pastor");
+            assertThat(result.church().getPastor().getFirstName()).isEqualTo("Pastor");
         }
 
         @Test

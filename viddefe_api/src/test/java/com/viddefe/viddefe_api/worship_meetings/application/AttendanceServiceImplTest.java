@@ -102,7 +102,8 @@ class AttendanceServiceImplTest {
                 person,
                 eventId,
                 TopologyEventType.TEMPLE_WORHSIP,
-                status
+                status,
+                true
         );
     }
 

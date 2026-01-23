@@ -42,6 +42,8 @@ public class AttendanceModel {
     @Column(nullable = false)
     private AttendanceStatus status;
 
+    private Boolean isNewAttendee;
+
     public AttendanceDto toDto() {
         AttendanceDto attendanceDto = new AttendanceDto();
         attendanceDto.setStatus(this.status.getDisplayName());

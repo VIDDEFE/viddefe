@@ -72,8 +72,11 @@ public class PeopleModel {
                 this.phone,
                 this.avatar,
                 java.sql.Date.valueOf(this.birthDate),
-                this.typePerson,
-                this.state.toDto()
+                this.typePerson.toDto(),
+                this.state.toDto(),
+                null
+
+
         );
     }
 

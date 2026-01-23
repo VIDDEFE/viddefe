@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.CitiesDto;
 import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
