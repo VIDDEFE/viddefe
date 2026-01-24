@@ -25,8 +25,8 @@ public class PeopleDTO {
 
     @NotBlank(message = "El teléfono es obligatorio")
     @Pattern(
-            regexp = "^[0-9+\\-\\s]{7,20}$",
-            message = "El teléfono debe tener entre 7 y 20 dígitos y solo puede incluir números, +, - o espacios"
+            regexp = "^\\+573[0-9]{9}$",
+            message = "Debe ser un número celular colombiano válido en formato +573XXXXXXXXX"
     )
     private String phone;
 

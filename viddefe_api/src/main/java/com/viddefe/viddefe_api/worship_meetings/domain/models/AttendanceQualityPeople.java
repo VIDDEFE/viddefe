@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.models;
 
+import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
@@ -42,8 +43,7 @@ public class AttendanceQualityPeople {
     private PeopleModel people;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "event_type", nullable = false)
     private TopologyEventType eventType;
 
-    private UUID contextId;
 }
-

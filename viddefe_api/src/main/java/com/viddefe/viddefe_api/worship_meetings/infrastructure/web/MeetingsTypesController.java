@@ -4,6 +4,7 @@ import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionService;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceQualityDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingTypeDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionTypeDto;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,12 @@ public class MeetingsTypesController {
         List<MinistryFunctionTypeDto> response =
                 ministryFunctionService.getAllMinistryFunctionTypes();
 
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/attedance/levels")
+    public ResponseEntity<ApiResponse<List<AttendanceQualityDto>>> getAttendanceLevels() {
+        List<AttendanceQualityDto> response = meetingTypesService.getAttendanceLevels();
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

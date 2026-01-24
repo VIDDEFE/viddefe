@@ -307,19 +307,19 @@ export default function MyGroup() {
   // Estado de error o sin grupo
   if (error || !data) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         <div className="flex flex-col items-center justify-center min-h-75">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FiUsers className="text-amber-600 text-2xl" />
+          <div className="text-center max-w-xl w-full">
+            <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <FiUsers className="text-amber-600 text-5xl" />
             </div>
-            <h2 className="text-xl font-semibold text-neutral-800 mb-2">
-              No perteneces a ningún grupo
+            <h2 className="text-3xl font-bold text-amber-700 mb-4">
+              ¡No perteneces a ningún grupo!
             </h2>
-            <p className="text-neutral-600 mb-4">
-              {error?.message || 'Aún no has sido asignado a un grupo de hogar'}
+            <p className="text-lg text-neutral-700 mb-6">
+              {error?.message || 'Aún no has sido asignado a un grupo de hogar. Si crees que esto es un error, contacta a tu líder o administrador.'}
             </p>
-            <Button variant="secondary" onClick={() => navigate('/groups')}>
+            <Button variant="secondary" size="lg" onClick={() => navigate('/groups')}>
               Ver todos los grupos
             </Button>
           </div>

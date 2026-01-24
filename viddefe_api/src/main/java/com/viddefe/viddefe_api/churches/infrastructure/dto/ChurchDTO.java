@@ -37,8 +37,13 @@ public class ChurchDTO {
     @Size(max = 100, message = "El correo no puede superar los 100 caracteres")
     private String email;
 
-    @NotNull(message = "El telefono es obligatorio")
-    private Long phone;
+    @NotBlank(message = "El teléfono es obligatorio")
+    @Pattern(
+            regexp = "^\\+573[0-9]{9}$",
+            message = "Debe ser un número celular colombiano válido en formato +573XXXXXXXXX"
+    )
+    private String phone;
+
     @NotNull(message = "La fecha de fundacion es obligatoria")
     private Date foundationDate;
 

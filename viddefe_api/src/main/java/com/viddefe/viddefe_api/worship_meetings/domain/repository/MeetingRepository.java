@@ -135,8 +135,13 @@ public interface MeetingRepository extends JpaRepository<Meeting, UUID> {
     JOIN AttendanceModel at 
         ON at.eventId = m.id
        AND at.eventType = :eventType
-    WHERE m.church.id = :contextId
-      AND m.scheduledDate BETWEEN :startOfTime AND :endOfTime
+    WHERE m.scheduledDate BETWEEN :startOfTime AND :endOfTime
+      AND (
+            (:eventType = com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType.TEMPLE_WORHSIP
+                AND m.church.id = :contextId)
+         OR (:eventType = com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType.GROUP_MEETING
+                AND m.group.id = :contextId)
+      )
 """)
     MetricsAttendanceDto getMetricsAttendanceById(
             @NotNull UUID contextId,
@@ -145,5 +150,26 @@ public interface MeetingRepository extends JpaRepository<Meeting, UUID> {
             @Param("endOfTime") @NotNull OffsetDateTime endOfTime
     );
 
+
+    @Query("""
+    SELECT m
+    FROM Meeting m
+    JOIN FETCH m.church c
+    JOIN FETCH m.group g
+    WHERE m.scheduledDate BETWEEN :startTime AND :endTime
+      AND (
+            (:eventType = com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType.TEMPLE_WORHSIP
+                AND c.id = :contextId)
+         OR (:eventType = com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType.GROUP_MEETING
+                AND g.id = :contextId)
+      )
+""")
+    Page<Meeting> findByScheduledDateBetweenAndEventType(
+            @Param("contextId") UUID contextId,
+            @Param("eventType") TopologyEventType eventType,
+            @Param("startTime") OffsetDateTime startTime,
+            @Param("endTime") OffsetDateTime endTime,
+            Pageable pageable
+    );
 }
 

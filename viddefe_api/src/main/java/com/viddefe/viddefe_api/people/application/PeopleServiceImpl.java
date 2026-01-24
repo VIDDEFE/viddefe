@@ -11,6 +11,7 @@ import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleRowProjection;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleTypeDto;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceQuality;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -65,7 +66,7 @@ public class PeopleServiceImpl implements PeopleService {
     }
 
     private PeopleResDto mapToDtoFromProjection(PeopleRowProjection p){
-        String levelAttendanceQuality = p.getAttendanceQuality() != null ? p.getAttendanceQuality().getDescription() : AttendanceQualityEnum.NO_YET.getDescription();
+        AttendanceQuality attendanceQuality = p.getAttendanceQuality() != null ? p.getAttendanceQuality() : new AttendanceQuality(null,AttendanceQualityEnum.NO_YET.getDescription(), AttendanceQualityEnum.NO_YET);
         return new PeopleResDto(
                 p.getId(),
                 p.getCc(),
@@ -76,7 +77,7 @@ public class PeopleServiceImpl implements PeopleService {
                 p.getBirthDate() != null ? Date.valueOf(p.getBirthDate()) : null,
                 new PeopleTypeDto(p.getTypePersonId(), p.getTypePersonName()),
                 new StatesDto(p.getStateId(), p.getStateName()),
-                levelAttendanceQuality
+                attendanceQuality.toDto()
         );
     }
 

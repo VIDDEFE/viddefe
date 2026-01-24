@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.worship_meetings.application;
 import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
@@ -54,8 +55,10 @@ class AttendanceServiceImplTest {
     private UUID eventId;
     private UUID peopleId;
     private UUID attendanceId;
+    private UUID contextId;
     private PeopleModel person;
     private CreateAttendanceDto createDto;
+    private AttendanceQualityEnum attendanceQualityEnum;
 
     private PeopleModel createPeopleModel(UUID id, String firstName, String lastName) {
         PeopleModel people = new PeopleModel();
@@ -77,6 +80,8 @@ class AttendanceServiceImplTest {
         eventId = UUID.randomUUID();
         peopleId = UUID.randomUUID();
         attendanceId = UUID.randomUUID();
+        contextId = UUID.randomUUID();
+        attendanceQualityEnum = AttendanceQualityEnum.HIGH;
 
         person = createPeopleModel(peopleId, "Juan", "Pérez");
 
@@ -245,12 +250,12 @@ class AttendanceServiceImplTest {
             AttendanceProjectionDto projection = new AttendanceProjectionDto(person, AttendanceStatus.PRESENT);
             Page<AttendanceProjectionDto> projectionPage = new PageImpl<>(List.of(projection));
 
-            when(attendanceRepository.findAttendanceByEventWithDefaults(
-                    eventId, TopologyEventType.TEMPLE_WORHSIP, pageable))
+            when(attendanceRepository.findAttendanceByEventAndContexIdWithDefaults(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP,contextId, attendanceQualityEnum, pageable ))
                     .thenReturn(projectionPage);
 
             // Act
-            Page<AttendanceDto> result = attendanceService.getAttendanceByEventId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP);
+            Page<AttendanceDto> result = attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId, attendanceQualityEnum);
 
             // Assert
             assertNotNull(result);
@@ -262,12 +267,12 @@ class AttendanceServiceImplTest {
         void getAttendanceByEventId_WhenNoAttendances_ShouldReturnEmptyPage() {
             // Arrange
             Pageable pageable = PageRequest.of(0, 10);
-            when(attendanceRepository.findAttendanceByEventWithDefaults(
-                    eventId, TopologyEventType.TEMPLE_WORHSIP, pageable))
+            when(attendanceRepository.findAttendanceByEventAndContexIdWithDefaults(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP, contextId,attendanceQualityEnum,pageable))
                     .thenReturn(Page.empty());
 
             // Act
-            Page<AttendanceDto> result = attendanceService.getAttendanceByEventId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP);
+            Page<AttendanceDto> result = attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId, attendanceQualityEnum);
 
             // Assert
             assertTrue(result.isEmpty());
@@ -278,16 +283,16 @@ class AttendanceServiceImplTest {
         void getAttendanceByEventId_ShouldUseTempleWorshipEventType() {
             // Arrange
             Pageable pageable = PageRequest.of(0, 10);
-            when(attendanceRepository.findAttendanceByEventWithDefaults(
-                    eq(eventId), eq(TopologyEventType.TEMPLE_WORHSIP), eq(pageable)))
+            when(attendanceRepository.findAttendanceByEventAndContexIdWithDefaults(
+                    eq(eventId), eq(TopologyEventType.TEMPLE_WORHSIP),eq(contextId), eq(attendanceQualityEnum), eq(pageable)))
                     .thenReturn(Page.empty());
 
             // Act
-            attendanceService.getAttendanceByEventId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP);
+            attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId,attendanceQualityEnum);
 
             // Assert
-            verify(attendanceRepository).findAttendanceByEventWithDefaults(
-                    eventId, TopologyEventType.TEMPLE_WORHSIP, pageable);
+            verify(attendanceRepository).findAttendanceByEventAndContexIdWithDefaults(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP,contextId, attendanceQualityEnum,pageable);
         }
 
         @Test
@@ -295,16 +300,16 @@ class AttendanceServiceImplTest {
         void getAttendanceByEventId_ShouldRespectPagination() {
             // Arrange
             Pageable pageable = PageRequest.of(2, 5);
-            when(attendanceRepository.findAttendanceByEventWithDefaults(
-                    eventId, TopologyEventType.TEMPLE_WORHSIP, pageable))
+            when(attendanceRepository.findAttendanceByEventAndContexIdWithDefaults(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP,contextId,attendanceQualityEnum, pageable))
                     .thenReturn(Page.empty());
 
             // Act
-            attendanceService.getAttendanceByEventId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP);
+            attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId, attendanceQualityEnum);
 
             // Assert
-            verify(attendanceRepository).findAttendanceByEventWithDefaults(
-                    eventId, TopologyEventType.TEMPLE_WORHSIP, pageable);
+            verify(attendanceRepository).findAttendanceByEventAndContexIdWithDefaults(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP,contextId, attendanceQualityEnum,pageable);
         }
     }
 

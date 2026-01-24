@@ -1,17 +1,19 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceQualityReader;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceQuality;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.TopologyMeetingModel;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingTypeRepository;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.TopologyMeetingRepository;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceQualityDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingTypeDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,6 +21,7 @@ import java.util.List;
 public class MeetingTypeServiceImpl implements MeetingTypesService {
     private final MeetingTypeRepository meetingTypeConfigRepository;
     private final TopologyMeetingRepository topologyMeetingRepository;
+    private final AttendanceQualityReader attendanceQualityReader;
 
     @Override
     public List<MeetingTypeDto> getAllMeetingByTopologyEventTypes(TopologyEventType topologyEventType) {
@@ -33,5 +36,12 @@ public class MeetingTypeServiceImpl implements MeetingTypesService {
         return meetingTypeConfigRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("Meeting Type with id " + id + " not found")
         );
+    }
+
+    @Override
+    public List<AttendanceQualityDto> getAttendanceLevels() {
+        return attendanceQualityReader.getAllAttendanceQualities().stream().map(
+                AttendanceQuality::toDto
+        ).toList();
     }
 }

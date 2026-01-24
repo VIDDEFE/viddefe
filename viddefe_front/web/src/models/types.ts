@@ -77,6 +77,12 @@ export interface Person extends BaseEntity {
   hasUser?: boolean;
   userId?: string;
   avatar?: string;
+  attendanceQuality?: AttendaceQualityDto;
+}
+
+export type AttendaceQualityDto = {
+  id?: number;
+  name: string;
 }
 
 export type PersonRole = {

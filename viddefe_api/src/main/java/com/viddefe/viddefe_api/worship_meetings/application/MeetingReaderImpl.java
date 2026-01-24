@@ -7,6 +7,8 @@ import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingReposit
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MetricsAttendanceDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -27,18 +29,13 @@ public class MeetingReaderImpl implements MeetingReader {
 
     @Override
     public MetricsAttendanceDto getMetricsAttendance(UUID contextId, TopologyEventType eventType, OffsetDateTime startTime, OffsetDateTime endTime) {
-        return switch (eventType) {
-            case TEMPLE_WORHSIP -> getWorshipMetricsAttendance(contextId, startTime, endTime);
-            case GROUP_MEETING -> getGroupMetricsAttendance(contextId);
-        };
+        return meetingRepository.getMetricsAttendanceById(contextId, eventType, startTime, endTime);
     }
 
-    private MetricsAttendanceDto getWorshipMetricsAttendance(UUID contextId, OffsetDateTime startTime, OffsetDateTime endTime) {
-        return meetingRepository.getMetricsAttendanceById(contextId, TopologyEventType.TEMPLE_WORHSIP
-        , startTime, endTime);
+    @Override
+    public Page<Meeting> getMeetingsByScheduledDateBetween(UUID contextId, TopologyEventType eventType, OffsetDateTime startTime, OffsetDateTime endTime, Pageable pageable) {
+        return meetingRepository.
+                findByScheduledDateBetweenAndEventType(contextId, eventType, startTime, endTime, pageable);
     }
 
-    private MetricsAttendanceDto getGroupMetricsAttendance(UUID contextId) {
-        return new MetricsAttendanceDto();
-    }
 }

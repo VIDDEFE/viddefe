@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.repository;
 
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
@@ -23,16 +24,28 @@ public interface AttendanceRepository extends JpaRepository<AttendanceModel, UUI
         COALESCE(a.status, com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus.ABSENT)
     )
     FROM PeopleModel p
+    JOIN Meeting m ON m.id = :eventId AND (m.church.id = :contextId OR m.group.id = :contextId)
     LEFT JOIN AttendanceModel a
         ON a.people = p
        AND a.eventId = :eventId
        AND a.eventType = :eventType
+    LEFT JOIN AttendanceQualityPeople aqp ON aqp.people.id = p.id
+    LEFT JOIN AttendanceQuality at ON at.id = aqp.attendanceQuality.id
+    WHERE p.church.id = m.church.id AND 
+        (
+            :attendanceQuality IS NULL OR at.attendanceQuality = :attendanceQuality
+        )
+    ORDER BY p.lastName, p.firstName
     """)
-    Page<AttendanceProjectionDto> findAttendanceByEventWithDefaults(
+    Page<AttendanceProjectionDto> findAttendanceByEventAndContexIdWithDefaults(
             @Param("eventId") UUID eventId,
             @Param("eventType") TopologyEventType eventType,
+            @Param("contextId") UUID contextId,
+            @Param("attendanceQuality") AttendanceQualityEnum attendanceQuality,
             Pageable pageable
     );
+
+
 
     @Query("""
     SELECT COUNT(p)
@@ -56,15 +69,18 @@ public interface AttendanceRepository extends JpaRepository<AttendanceModel, UUI
 
 
     @Query("""
-    SELECT COUNT(at.id)/COUNT(m.id)
-        FROM Meeting m
-        LEFT JOIN AttendanceModel at
-            ON at.eventId = m.id
-           AND at.people.id = :peopleId
-           AND at.eventType = :eventType
-      WHERE m.scheduledDate BETWEEN :from AND :to
-    """
-    )
+    SELECT
+        CASE
+            WHEN COUNT(m.id) = 0 THEN 0.0
+            ELSE ((COUNT(at.id) * 1.0) / COUNT(m.id)) * 100
+        END
+    FROM Meeting m
+    LEFT JOIN AttendanceModel at
+        ON at.eventId = m.id
+       AND at.people.id = :peopleId
+       AND at.eventType = :eventType
+    WHERE m.scheduledDate BETWEEN :from AND :to
+""")
     Double calculateAttendancePercentage(@Param("peopleId") UUID peopleId,
                                          @Param("eventType") TopologyEventType eventType,
                                          @Param("to") OffsetDateTime to,

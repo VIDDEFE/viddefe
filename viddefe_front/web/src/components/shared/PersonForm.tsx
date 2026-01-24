@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Input } from './Form';
 import DropDown from './DropDown';
-import { useStates } from '../../hooks';
+import { useStates,usePersonTypes } from '../../hooks';
 
 export interface PersonFormData {
   cc: string;
@@ -25,11 +25,6 @@ interface PersonFormProps {
   disabledTypePerson?: boolean;
 }
 
-const TYPE_PERSON_OPTIONS = [
-  { value: '1', label: 'Oveja' },
-  { value: '2', label: 'Voluntario' },
-  { value: '3', label: 'Pastor' },
-];
 
 export function PersonForm({
   value,
@@ -38,9 +33,10 @@ export function PersonForm({
   showTypeSelector = true,
   errors = {},
   disabledTypePerson = false,
-}: PersonFormProps) {
+}: Readonly<PersonFormProps>) {
   const { data: states } = useStates();
-  const [, setSelectedStateId] = useState<number | undefined>(value.stateId || undefined);
+  const [selectedStateId, setSelectedStateId] = useState<number | undefined>(value.stateId || undefined);
+  const { data: personTypes } = usePersonTypes();
 
   useEffect(() => {
     setSelectedStateId(value.stateId || undefined);
@@ -110,7 +106,7 @@ export function PersonForm({
         {showTypeSelector && (
           <DropDown
             label="Tipo de Persona"
-            options={TYPE_PERSON_OPTIONS}
+            options={personTypes?.map((type) => ({ value: String(type.id), label: type.name })) || []}
             value={String(value.typePersonId)||String(3)}
             onChangeValue={(val: string) => handleChange('typePersonId', val)}
             searchKey="label"

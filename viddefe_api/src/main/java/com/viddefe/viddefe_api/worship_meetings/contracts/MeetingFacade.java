@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.contracts;
 
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
@@ -98,7 +99,9 @@ public interface MeetingFacade {
      * @param meetingId ID de la reunión
      * @param eventType tipo de evento
      * @param pageable información de paginación
+     * @param contextId churchId o groupId según el tipo
+     * @param levelOfAttendance nivel de asistencia para filtrar (puede ser null)
      * @return Page de AttendanceDto
      */
-    Page<AttendanceDto> getAttendance(UUID meetingId, TopologyEventType eventType, Pageable pageable);
+    Page<AttendanceDto> getAttendance(UUID meetingId, TopologyEventType eventType, Pageable pageable, UUID contextId, AttendanceQualityEnum levelOfAttendance);
 }

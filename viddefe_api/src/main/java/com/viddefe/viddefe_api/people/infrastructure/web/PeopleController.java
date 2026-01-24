@@ -45,11 +45,11 @@ public class PeopleController {
     public ResponseEntity<ApiResponse<Page<PeopleResDto>>> getPeople(
             Pageable pageable,
             @RequestParam(required = false) Long typePersonId,
-            @RequestParam(required = false)AttendanceQualityEnum attendaceQuality,
+            @RequestParam(required = false)AttendanceQualityEnum attendanceQuality,
             @CookieValue(value = "access_token") String jwtToken
     ){
         UUID churchId = jwtUtil.getChurchId(jwtToken);
-        Page<PeopleResDto> people = peopleService.getAllPeople(pageable, typePersonId, churchId, attendaceQuality);
+        Page<PeopleResDto> people = peopleService.getAllPeople(pageable, typePersonId, churchId, attendanceQuality);
         return ResponseEntity.ok(ApiResponse.ok(people));
     }
 

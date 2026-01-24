@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.GroupMeetingService;
@@ -99,8 +100,8 @@ public class MeetingFacadeImpl implements MeetingFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AttendanceDto> getAttendance(UUID meetingId, TopologyEventType eventType, Pageable pageable) {
-        return attendanceService.getAttendanceByEventId(meetingId, pageable, eventType);
+    public Page<AttendanceDto> getAttendance(UUID meetingId, TopologyEventType eventType, Pageable pageable, UUID contextId, AttendanceQualityEnum levelOfAttendance) {
+        return attendanceService.getAttendanceByEventIdAndContextId(meetingId, pageable, eventType, contextId, levelOfAttendance);
     }
 
 }

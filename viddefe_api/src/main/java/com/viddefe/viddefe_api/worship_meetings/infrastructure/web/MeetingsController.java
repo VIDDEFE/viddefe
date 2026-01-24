@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.worship_meetings.infrastructure.web;
 
 import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingFacade;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
@@ -190,9 +191,13 @@ public class MeetingsController {
     public ResponseEntity<ApiResponse<Page<AttendanceDto>>> getAttendance(
             @PathVariable UUID id,
             @RequestParam TopologyEventType type,
-            Pageable pageable
+            @RequestParam(required = false) UUID groupId,
+            Pageable pageable,
+            @CookieValue("access_token") String accessToken,
+            @RequestParam(required = false) AttendanceQualityEnum levelOfAttendance
     ) {
-        Page<AttendanceDto> response = meetingFacade.getAttendance(id, type, pageable);
+        UUID contextId = resolveContextId(type, groupId, accessToken);
+        Page<AttendanceDto> response = meetingFacade.getAttendance(id, type, pageable, contextId, levelOfAttendance);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

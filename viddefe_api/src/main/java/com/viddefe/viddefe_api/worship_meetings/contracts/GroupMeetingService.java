@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.contracts;
 
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +46,8 @@ public interface GroupMeetingService {
      * @param groupId UUID of the group to which the meeting belongs
      * @param meetingId UUID of the meeting whose attendance is to be retrieved
      * @param pageable Pagination information
+     * @param levelOfAttendance Level of attendance quality to filter by (can be null)
      * @return GroupMeetingAttendanceDto {@link GroupMeetingDetailedDto} containing attendance details
      */
-    Page<AttendanceDto> getGroupMeetingAttendance(UUID groupId, UUID meetingId, Pageable pageable);
+    Page<AttendanceDto> getGroupMeetingAttendance(UUID groupId, UUID meetingId, Pageable pageable, AttendanceQualityEnum levelOfAttendance);
 }
