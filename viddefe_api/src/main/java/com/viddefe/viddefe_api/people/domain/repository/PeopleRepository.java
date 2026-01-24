@@ -55,7 +55,6 @@ public interface PeopleRepository extends JpaRepository<PeopleModel, UUID> {
             Pageable pageable
     );
 
-
     /**
      * Busca persona por ID con todas las relaciones pre-cargadas.
      * Evita N+1 en métodos que acceden a state de la persona

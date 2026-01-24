@@ -23,7 +23,7 @@ public class ChurchDetailedResDto {
     private StatesDto states;
     private PeopleResDto pastor;
     private Date foundationDate;
-    private Long phone;
+    private String phone;
     private String email;
     private Long totalMembers, activeGroups,servicesMonthly, nextServices;
 }

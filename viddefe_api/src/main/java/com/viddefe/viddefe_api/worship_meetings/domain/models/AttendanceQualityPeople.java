@@ -47,4 +47,3 @@ public class AttendanceQualityPeople {
     private TopologyEventType eventType;
 
 }
-

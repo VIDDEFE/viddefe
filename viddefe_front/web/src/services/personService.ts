@@ -8,9 +8,17 @@ export interface PersonType {
 }
 
 // Parámetros extendidos para búsqueda de personas
+/**
+ * Parámetros extendidos para búsqueda de personas
+ * attendanceQuality: Filtra por calidad de asistencia ("HIGH", "MEDIUM", "LOW", "NO_YET")
+ */
 export interface PeopleSearchParams extends PageableRequest {
   typePersonId?: number;
   search?: string; // Búsqueda por nombre, teléfono, etc.
+  /**
+   * Filtra por calidad de asistencia. Valores: "HIGH", "MEDIUM", "LOW", "NO_YET"
+   */
+  attendanceQuality?: 'HIGH' | 'MEDIUM' | 'LOW' | 'NO_YET';
 }
 
 // Helper para construir query string de sort para Spring Boot
@@ -27,6 +35,7 @@ export const personService = {
     if (params?.typePersonId !== undefined) queryParts.push(`typePersonId=${params.typePersonId}`);
     if (params?.search) queryParts.push(`search=${encodeURIComponent(params.search)}`);
     if (params?.sort) queryParts.push(buildSortParam(params.sort));
+    if (params?.attendanceQuality) queryParts.push(`attendanceQuality=${params.attendanceQuality}`);
     const queryParams = queryParts.length > 0 ? `?${queryParts.join('&')}` : '';
     return apiService.get<Pageable<Person>>(`/people${queryParams}`);
   },

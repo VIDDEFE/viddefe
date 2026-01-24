@@ -16,6 +16,7 @@ import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendancePeo
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -30,6 +31,7 @@ public class AttendancePeopleListener {
     private final AttendanceQualityRepository attendanceQualityRepository;
     private final AttendanceQualityPeopleRepository attendanceQualityPeopleRepository;
     private static final Integer MONTHS_AGO = 3;
+    private final MeetingReader meetingReader;
 
     @Async
     @TransactionalEventListener(
@@ -41,20 +43,28 @@ public class AttendancePeopleListener {
         Double percentage = attendanceRepository.calculateAttendancePercentage(
                 people.getId(),
                 event.getEventType(),
-                event.getToday(),
+                event.getToday().plusDays(1L), // Inclusive today to the attendance calculation
                 from
         );
         TopologyEventType eventType = event.getEventType();
         UUID contextId = resolveContextId(event.getMeetingId(), eventType);
         AttendanceQualityEnum quality = determineQuality(percentage);
         AttendanceQuality attendanceQuality = attendanceQualityRepository.findByAttendanceQuality(quality);
-        AttendanceQualityPeople attendanceQualityPeople = attendanceQualityPeopleRepository.findByPeopleId(people.getId())
+        AttendanceQualityPeople attendanceQualityPeople = attendanceQualityPeopleRepository.findByPeopleIdAndContextIdAndEventType(people.getId(), contextId, eventType)
                 .orElseGet(()-> new AttendanceQualityPeople(
                         null,
                         attendanceQuality,
                         people,
                         event.getEventType()
                 ));
+        if(attendanceQualityPeople.getId() != null){
+            // Ya existe, solo actualizar si la calidad ha cambiado
+            if(attendanceQualityPeople.getAttendanceQuality().getAttendanceQuality() == quality){
+                return; // No hay cambio en la calidad, salir del método
+            }else {
+                attendanceQualityPeopleRepository.deleteById(attendanceQualityPeople.getId());
+            }
+        }
         AttendanceQualityPeopleId id = new AttendanceQualityPeopleId(attendanceQuality.getId(),people.getId(), contextId);
         attendanceQualityPeople.setId(id);
         attendanceQualityPeople.setAttendanceQuality(attendanceQuality);
@@ -62,6 +72,7 @@ public class AttendancePeopleListener {
     }
 
     private AttendanceQualityEnum determineQuality(Double percentage){
+        System.out.println("Calculated attendance percentage: " + percentage);
         if(percentage >= AttendanceQualityEnum.HIGH.getValue()){
             return AttendanceQualityEnum.HIGH;
         } else if (percentage >= AttendanceQualityEnum.MEDIUM.getValue()) {
@@ -73,6 +84,10 @@ public class AttendancePeopleListener {
 
     private UUID resolveContextId(UUID eventId, TopologyEventType type) {
         // Lógica para resolver el contextId basado en el eventId y el tipo de evento
-        return eventId;
+        Meeting homeGroupsModel= meetingReader.getById(eventId);
+        if(type == TopologyEventType.GROUP_MEETING){
+            return homeGroupsModel.getGroup().getId();
+        }
+        return homeGroupsModel.getChurch().getId();
     }
 }

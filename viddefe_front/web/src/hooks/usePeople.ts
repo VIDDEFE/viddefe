@@ -5,7 +5,15 @@ import type { Pageable } from '../services/api'
 
 export function usePeople(params?: PeopleSearchParams) {
   return useQuery<Pageable<Person>, Error>({
-    queryKey: ['people', params?.page, params?.size, params?.typePersonId, params?.sort?.field, params?.sort?.direction],
+    queryKey: [
+      'people',
+      params?.page,
+      params?.size,
+      params?.typePersonId,
+      params?.sort?.field,
+      params?.sort?.direction,
+      params?.attendanceQuality,
+    ],
     queryFn: () => personService.getAll(params)
   })
 }

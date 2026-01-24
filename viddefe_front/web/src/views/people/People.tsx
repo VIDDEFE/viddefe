@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { Person } from '../../models';
 import { Button, PageHeader, Table, Modal, Avatar, PersonForm, initialPersonFormData, type PersonFormData, DropDown } from '../../components/shared';
-import { usePeople, usePerson, useUpdatePerson, useDeletePerson, usePersonTypes } from '../../hooks';
+import { usePeople, usePerson, useUpdatePerson, useDeletePerson, usePersonTypes, useMeetingAttendanceLevels } from '../../hooks';
+  // Estado de filtro por calidad de asistencia
 import { authService, type PersonRequest } from '../../services/authService';
 import { formatDate } from '../../utils';
 import CreateUserModal from '../../components/people/CreateUserModal';
@@ -15,6 +16,34 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export default function People() {
   // Estado de paginación
+  const [attendanceQuality, setAttendanceQuality] = useState<string | undefined>(undefined);
+
+  // Mapeo de id a enum para el filtro
+  const attendanceEnumMap: Record<number, string> = {
+    1: 'HIGH',
+    2: 'MEDIUM',
+    3: 'LOW',
+    4: 'NO_YET',
+  };
+
+  // Handler para cambio de nivel de asistencia
+  const handleAttendanceLevelChange = (id: string) => {
+    const numId = Number(id);
+    if (!id || isNaN(numId)) {
+      setAttendanceQuality(undefined);
+    } else {
+      if(numId== 4){
+        setAttendanceQuality('NO_YET');
+        setCurrentPage(0);
+        return;
+      }
+      setAttendanceQuality(attendanceEnumMap[numId]);
+    }
+    setCurrentPage(0);
+  };
+
+  // Hook para obtener niveles de asistencia
+  const { data: attendanceLevels = [] } = useMeetingAttendanceLevels();
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   
@@ -31,7 +60,8 @@ export default function People() {
     page: currentPage, 
     size: pageSize,
     typePersonId: selectedTypeId,
-    sort: sortConfig
+    sort: sortConfig,
+    attendanceQuality: attendanceQuality as any // Puede ser undefined o 'HIGH' | 'MEDIUM' | 'LOW' | 'NO_YET'
   });
   const { hasPermission } = useAppContext();
 
@@ -331,6 +361,7 @@ export default function People() {
           <div className="flex items-center gap-3">
             {/* Filtro por tipo de persona */}
             <div className="w-48">
+              <label className='text-gray-900 text-sm' htmlFor="typePeopleFilter">Filtrar Por Tipo</label>
               <DropDown
                 options={typeOptions}
                 value={selectedTypeId?.toString() ?? ''}
@@ -338,6 +369,24 @@ export default function People() {
                 placeholder="Filtrar por tipo"
                 labelKey="name"
                 valueKey="id"
+              />
+            </div>
+            <div className="w-48">
+              <label className='text-gray-900 text-sm' htmlFor="levelAttendance">Filtrar Por Nivel de Asistencia</label>
+              <DropDown
+              options={[{ id: '', name: 'Todos los niveles' }, ...attendanceLevels.map(level => ({ id: level.id, name: level.name }))]}
+              value={
+                (() => {
+                if (!attendanceQuality) return '';
+                // Busca el id correspondiente al enum seleccionado
+                const found = Object.entries(attendanceEnumMap).find(([, v]) => v === attendanceQuality);
+                return found ? found[0] : '';
+                })()
+              }
+              onChangeValue={handleAttendanceLevelChange}
+              placeholder="Filtrar por nivel de asistencia"
+              labelKey="name"
+              valueKey="id"
               />
             </div>
             {canCreate && <Button variant="primary" onClick={openCreateModal}>+ Nueva Persona</Button>}
