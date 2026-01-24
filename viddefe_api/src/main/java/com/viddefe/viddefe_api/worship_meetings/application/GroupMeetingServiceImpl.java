@@ -4,6 +4,7 @@ import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
@@ -110,11 +111,13 @@ public class GroupMeetingServiceImpl implements GroupMeetingService {
         attendanceDto.setAbsentCount(countAbsent);
         return attendanceDto;
     }
-    public Page<AttendanceDto> getGroupMeetingAttendance(UUID groupId, UUID meetingId, Pageable pageable) {
-        return attendanceService.getAttendanceByEventId(
+    public Page<AttendanceDto> getGroupMeetingAttendance(UUID groupId, UUID meetingId, Pageable pageable, AttendanceQualityEnum levelOfAttendance) {
+        return attendanceService.getAttendanceByEventIdAndContextId(
                 meetingId,
                 pageable,
-                TopologyEventType.GROUP_MEETING
+                TopologyEventType.GROUP_MEETING,
+                groupId,
+                levelOfAttendance
         );
     }
 }

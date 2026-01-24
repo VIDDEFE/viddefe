@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Person, PersonRole } from '../../models';
+import type { Person } from '../../models';
 import { Button, PageHeader, Table, Modal, Avatar, PersonForm, initialPersonFormData, type PersonFormData, DropDown } from '../../components/shared';
 import { usePeople, usePerson, useUpdatePerson, useDeletePerson, usePersonTypes } from '../../hooks';
 import { authService, type PersonRequest } from '../../services/authService';
@@ -201,6 +201,14 @@ export default function People() {
       key: 'firstName' as const, 
       label: 'Nombres',
       render: (_: unknown, person: Person) => `${person.firstName}`
+    },
+    {
+      key: 'levelAttendance' as const,
+      label: 'Nivel de Asistencia',
+      render: (_: unknown, person: Person) => 
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-200 text-blue-700">
+          {person?.attendanceQuality?.name || '-'}
+        </span>
     },
     { 
       key: 'lastName' as const, 
@@ -452,41 +460,51 @@ export default function People() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Cédula</label>
+                  <label htmlFor="cc" className="text-sm font-medium text-neutral-500">Cédula</label>
                   <p className="text-neutral-800">{(personDetails as any)?.cc || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Teléfono</label>
+                  <label htmlFor="phone" className="text-sm font-medium text-neutral-500">Teléfono</label>
                   <p className="text-neutral-800">{personDetails?.phone || selectedPerson.phone || '-'}</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Fecha de Nacimiento</label>
+                  <label htmlFor="birthDate" className="text-sm font-medium text-neutral-500">Fecha de Nacimiento</label>
                   <p className="text-neutral-800">
                     {personDetails?.birthDate ? formatDate(personDetails.birthDate) : '-'}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Departamento</label>
+                  <label htmlFor="state" className="text-sm font-medium text-neutral-500">Departamento</label>
                   <p className="text-neutral-800">{personDetails?.state?.name || selectedPerson.state?.name || '-'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Estado</label>
+                  <label htmlFor="status" className="text-sm font-medium text-neutral-500">Estado</label>
                   <p className="text-neutral-800">
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedPerson.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : selectedPerson.status === 'inactive'
-                        ? 'bg-neutral-100 text-neutral-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {selectedPerson.status === 'active' ? 'Activo' : selectedPerson.status === 'inactive' ? 'Inactivo' : 'Suspendido'}
-                    </span>
+                    {(() => {
+                      let statusClass = '';
+                      let statusLabel = '';
+                      if (selectedPerson.status === 'active') {
+                        statusClass = 'bg-green-100 text-green-800';
+                        statusLabel = 'Activo';
+                      } else if (selectedPerson.status === 'inactive') {
+                        statusClass = 'bg-neutral-100 text-neutral-800';
+                        statusLabel = 'Inactivo';
+                      } else {
+                        statusClass = 'bg-red-100 text-red-800';
+                        statusLabel = 'Suspendido';
+                      }
+                      return (
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
+                          {statusLabel}
+                        </span>
+                      );
+                    })()}
                   </p>
                 </div>
               </div>

@@ -37,16 +37,17 @@ public interface PeopleRepository extends JpaRepository<PeopleModel, UUID> {
         tp.name AS typePersonName,
         s.id AS stateId,
         s.name AS stateName,
-        aq.attendanceQuality AS attendanceQuality
+        aq AS attendanceQuality
     FROM PeopleModel p
     LEFT JOIN p.typePerson tp
     LEFT JOIN p.state s
     LEFT JOIN AttendanceQualityPeople aqp ON aqp.people.id = p.id
-    LEFT JOIN AttendanceQuality aq ON aq.id = aqp.attendanceQuality.id
+    LEFT JOIN aqp.attendanceQuality aq
     WHERE p.church.id = :churchId
       AND (:typePersonId IS NULL OR tp.id = :typePersonId)
       AND (:attendanceQuality IS NULL OR aq.attendanceQuality = :attendanceQuality)
 """)
+
     Page<PeopleRowProjection> findByChurchAndOptionalType(
             UUID churchId,
             Long typePersonId,

@@ -18,4 +18,8 @@ public class AttendanceQualityPeopleId implements Serializable {
 
     @Column(name = "people_id")
     private UUID peopleId;
+
+    @Column(name = "context_id")
+    private UUID contextId;
+
 }

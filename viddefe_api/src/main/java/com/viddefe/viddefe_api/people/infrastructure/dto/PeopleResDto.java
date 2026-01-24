@@ -1,6 +1,7 @@
 package com.viddefe.viddefe_api.people.infrastructure.dto;
 
 import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceQualityDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,5 +27,5 @@ public class PeopleResDto
         private Date birthDate;
         private PeopleTypeDto typePerson;
         private StatesDto state;
-        private String levelAttendance;
+        private AttendanceQualityDto attendanceQuality;
 }

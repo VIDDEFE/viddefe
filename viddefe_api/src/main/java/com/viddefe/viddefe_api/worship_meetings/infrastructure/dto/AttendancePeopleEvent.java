@@ -13,7 +13,6 @@ import java.util.UUID;
 @AllArgsConstructor @NoArgsConstructor
 public class AttendancePeopleEvent {
     private UUID meetingId, peopleId;
-    private UUID contextId;
     private TopologyEventType eventType;
     private OffsetDateTime today;
 }

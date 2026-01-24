@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.worship_meetings.application;
 
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
@@ -51,7 +52,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         AttendancePeopleEvent attendancePeopleEvent = new AttendancePeopleEvent(
                 dto.getEventId(),
                 dto.getPeopleId(),
-                dto.getEventId(),
                 type,
                 now
 
@@ -73,9 +73,10 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable, TopologyEventType type) {
+    public Page<AttendanceDto> getAttendanceByEventIdAndContextId(UUID eventId, Pageable pageable, TopologyEventType type, UUID contextId, AttendanceQualityEnum levelOfAttendance) {
+
         return attendanceRepository
-                .findAttendanceByEventWithDefaults(eventId, type ,pageable)
+                .findAttendanceByEventAndContexIdWithDefaults(eventId, type ,contextId,levelOfAttendance,pageable)
                 .map(AttendanceProjectionDto::toDto);
     }
 

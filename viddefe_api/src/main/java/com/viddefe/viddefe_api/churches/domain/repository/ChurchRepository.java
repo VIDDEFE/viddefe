@@ -56,7 +56,10 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
                     s.id,
                     s.name
                 ),
-               aq.name
+                new com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceQualityDto(
+                    aq.id,
+                    aq.name
+                )
             )
         )
         from ChurchModel c

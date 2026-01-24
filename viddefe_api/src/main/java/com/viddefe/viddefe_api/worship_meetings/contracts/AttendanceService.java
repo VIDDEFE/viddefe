@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.contracts;
 
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
@@ -28,9 +29,12 @@ public interface AttendanceService {
      *
      * @param eventId The ID of the event.
      * @param pageable Pagination information.
+     * @param type The type of attendance event.
+     * @param contextId The context ID (e.g., churchId or groupId).
+     * @param levelOfAttendance The quality level of attendance to filter by (can be null).
      * @return A list of AttendanceDto objects representing the attendance records.
      */
-    Page<AttendanceDto> getAttendanceByEventId(UUID eventId, Pageable pageable, TopologyEventType type);
+    Page<AttendanceDto> getAttendanceByEventIdAndContextId(UUID eventId, Pageable pageable, TopologyEventType type, UUID contextId, AttendanceQualityEnum levelOfAttendance);
 
     /**
      * Counts the total number of people available for attendance.
