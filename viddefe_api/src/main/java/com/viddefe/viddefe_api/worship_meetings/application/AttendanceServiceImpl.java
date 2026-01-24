@@ -9,23 +9,19 @@ import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendancePeopleEvent;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceProjectionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AttendanceServiceImpl implements AttendanceService {
     private final AttendanceRepository attendanceRepository;
-    private final ApplicationEventPublisher publisher;
     private final PeopleReader peopleReader;
 
     @Override
@@ -48,28 +44,13 @@ public class AttendanceServiceImpl implements AttendanceService {
                 AttendanceStatus.PRESENT;
 
         attendanceModel.setStatus(status);
-        OffsetDateTime now = OffsetDateTime.now();
-        AttendancePeopleEvent attendancePeopleEvent = new AttendancePeopleEvent(
-                dto.getEventId(),
-                dto.getPeopleId(),
-                type,
-                now
-
-        );
         if(attendanceModel.getId() != null){
             attendanceRepository.deleteById(attendanceModel.getId());
-            if (this.publisher != null) {
-                publisher.publishEvent(attendancePeopleEvent);
-            }
             return attendanceModel.toDto();
         }
 
-        AttendanceModel saved = attendanceRepository.save(attendanceModel);
 
-        if (this.publisher != null) {
-            publisher.publishEvent(attendancePeopleEvent);
-        }
-        return saved.toDto();
+        return attendanceRepository.save(attendanceModel).toDto();
     }
 
     @Override
