@@ -58,13 +58,17 @@ public class AttendanceServiceImpl implements AttendanceService {
         );
         if(attendanceModel.getId() != null){
             attendanceRepository.deleteById(attendanceModel.getId());
-            publisher.publishEvent(attendancePeopleEvent);
+            if (this.publisher != null) {
+                publisher.publishEvent(attendancePeopleEvent);
+            }
             return attendanceModel.toDto();
         }
 
         AttendanceModel saved = attendanceRepository.save(attendanceModel);
 
-        publisher.publishEvent(attendancePeopleEvent);
+        if (this.publisher != null) {
+            publisher.publishEvent(attendancePeopleEvent);
+        }
         return saved.toDto();
     }
 

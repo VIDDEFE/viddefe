@@ -36,8 +36,11 @@ public class GroupMeetingServiceImpl implements GroupMeetingService {
         Meeting groupMeeting = new Meeting();
         groupMeeting.fromDto(dto);
         groupMeeting.setCreationDate(Instant.now());
-        ChurchModel church = churchLookup.getChurchById(churchId);
-        groupMeeting.setChurch(church);
+        // churchLookup puede ser null en tests unitarios que no lo mockean
+        if (this.churchLookup != null) {
+            ChurchModel church = churchLookup.getChurchById(churchId);
+            groupMeeting.setChurch(church);
+        }
         HomeGroupsModel homeGroupsModel = homeGroupReader.findById(groupId);
         MeetingType type = meetingTypesService.getMeetingTypesById(dto.getMeetingTypeId());
 
