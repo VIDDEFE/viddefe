@@ -32,10 +32,4 @@ public class MeetingReaderImpl implements MeetingReader {
         return meetingRepository.getMetricsAttendanceById(contextId, eventType, startTime, endTime);
     }
 
-    @Override
-    public Page<Meeting> getMeetingsByScheduledDateBetween(UUID contextId, TopologyEventType eventType, OffsetDateTime startTime, OffsetDateTime endTime, Pageable pageable) {
-        return meetingRepository.
-                findByScheduledDateBetweenAndEventType(contextId, eventType, startTime, endTime, pageable);
-    }
-
 }

@@ -2,7 +2,7 @@ package com.viddefe.viddefe_api.worship_meetings.application;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationMeetingEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.notifications.common.RabbitPriority;
+import com.viddefe.viddefe_api.config.rabbit.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunction;
@@ -57,7 +57,6 @@ public class MinistryNotificationJobRoutine {
     @Scheduled(fixedRate = 6000 * 60) // Ejecuta cada hora 6000 ms * 60 = 1 hora. 6000 ms = 1 minuto
     @Async
     public void execute() {
-        System.out.println("Inicio de la rutina de notificaciones ministeriales");
 
 
         Pageable pageable = PageRequest.of(0, BATCH_SIZE);

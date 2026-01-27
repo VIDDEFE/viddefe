@@ -11,11 +11,11 @@ import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationAccountEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.notifications.common.RabbitPriority;
-import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
+import com.viddefe.viddefe_api.config.rabbit.RabbitPriority;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -38,7 +38,7 @@ public class AccountServiceImpl implements AccountService {
     private final PasswordEncoder passwordEncoder;
     private final RolesUserService rolesUserService;
     private final PermissionService permissionService;
-    private final NotificationEventPublisher notificationEventPublisher;
+    private ApplicationEventPublisher applicationEventPublisher;
 
     private static final String TEMPLATE_INVITATION_MESSAGE = "" +
             "Hello {{name}}, welcome to VidDefe! Your credentials are:\n" +
@@ -83,7 +83,7 @@ public class AccountServiceImpl implements AccountService {
         event.setCreatedAt(Instant.now());
         event.setVariables(resolveVariables(event, person, userModel, temporaryPassword));
         event.setTemplate("/emails/invitation.html");
-        notificationEventPublisher.publish(event);
+        applicationEventPublisher.publishEvent(event);
     }
 
     public Map<String, Object> resolveVariables(NotificationEvent event, PeopleModel person, UserModel user, String temporaryPassword) {

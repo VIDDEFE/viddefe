@@ -24,7 +24,7 @@ public interface AttendanceRepository extends JpaRepository<AttendanceModel, UUI
         COALESCE(a.status, com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus.ABSENT)
     )
     FROM PeopleModel p
-    JOIN Meeting m ON m.id = :eventId AND (m.church.id = :contextId OR m.group.id = :contextId)
+    JOIN Meeting m ON m.id = :eventId AND m.church.id = :churchId
     LEFT JOIN AttendanceModel a
         ON a.people = p
        AND a.eventId = :eventId
@@ -37,15 +37,38 @@ public interface AttendanceRepository extends JpaRepository<AttendanceModel, UUI
         )
     ORDER BY p.lastName, p.firstName
     """)
-    Page<AttendanceProjectionDto> findAttendanceByEventAndContexIdWithDefaults(
+    Page<AttendanceProjectionDto> findAttendanceByEventIdAndChurchId(
             @Param("eventId") UUID eventId,
             @Param("eventType") TopologyEventType eventType,
-            @Param("contextId") UUID contextId,
+            @Param("churchId") UUID churchId,
             @Param("attendanceQuality") AttendanceQualityEnum attendanceQuality,
             Pageable pageable
     );
 
-
+    @Query("""
+    SELECT new com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceProjectionDto(
+        p,
+        COALESCE(a.status, com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus.ABSENT)
+    )
+    FROM PeopleModel p
+    JOIN Meeting m ON m.id = :eventId AND m.group.id = :groupId
+    JOIN HomeGroupsPeopleMembers hp ON hp.people.id = p.id AND hp.homeGroup.id = m.group.id
+    LEFT JOIN AttendanceModel a
+        ON a.people = p
+       AND a.eventId = :eventId
+       AND a.eventType = :eventType
+    LEFT JOIN AttendanceQualityPeople aqp ON aqp.people.id = p.id
+    LEFT JOIN AttendanceQuality at ON at.id = aqp.attendanceQuality.id
+    WHERE p.church.id = m.church.id AND (:attendanceQuality IS NULL OR at.attendanceQuality = :attendanceQuality)
+    ORDER BY p.lastName, p.firstName
+    """)
+    Page<AttendanceProjectionDto> findAttendanceByEventIdAndGroupId(
+            @Param("eventId") UUID eventId,
+            @Param("eventType") TopologyEventType eventType,
+            @Param("groupId") UUID groupId,
+            @Param("attendanceQuality") AttendanceQualityEnum attendanceQuality,
+            Pageable pageable
+    );
 
     @Query("""
     SELECT COUNT(p)

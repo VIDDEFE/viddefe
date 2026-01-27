@@ -20,7 +20,7 @@ import java.util.UUID;
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_attendance_quality_people",
-                        columnNames = {"attendance_quality_id", "people_id", "context_id"}
+                        columnNames = {"people_id", "context_id"}
                 )
         }
 )
@@ -32,7 +32,6 @@ public class AttendanceQualityPeople {
     @EmbeddedId
     private AttendanceQualityPeopleId id;
 
-    @MapsId("attendanceQualityId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attendance_quality_id", nullable = false)
     private AttendanceQuality attendanceQuality;

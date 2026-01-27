@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.worship_meetings.domain.models.serializable;
+package com.viddefe.viddefe_api.homeGroups.domain.model.serializable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -11,12 +11,11 @@ import java.util.UUID;
 @EqualsAndHashCode
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-public class AttendanceQualityPeopleId implements Serializable {
+@Builder
+public class HomeGroupPeopleMembersId implements Serializable {
+    @Column(name = "home_group_id")
+    private UUID homeGroupId;
 
     @Column(name = "people_id")
     private UUID peopleId;
-
-    @Column(name = "context_id")
-    private UUID contextId;
-
 }

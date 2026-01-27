@@ -52,7 +52,7 @@ public interface HomeGroupsRepository extends JpaRepository<HomeGroupsModel, UUI
             hg
         FROM HomeGroupsModel hg
         JOIN FETCH RolesStrategiesModel rss ON rss.strategy.id = hg.strategy.id
-        JOIN FETCH RolPeopleStrategiesModel rps ON rps.role.id = rss.id
+        LEFT JOIN FETCH RolPeopleStrategiesModel rps ON rps.role.id = rss.id
         WHERE hg.manager.id = :personId OR rps.person.id = :personId
     """)
     Optional<HomeGroupsModel> getHomeGroupByIntegrantId(@Param("personId") UUID personId);

@@ -231,14 +231,23 @@ export const groupMeetingApi = {
     return response.data;
   },
 
-  getAttendance: async (id: string, pageable?: PageableParams): Promise<PaginatedAttendanceResponse> => {
-    const query = buildAttendanceQueryParams(MeetingType.GROUP_MEETING, pageable);
+  /**
+   * groupId es obligatorio para asistencia de reuniones de grupo
+   */
+  getAttendance: async (id: string, groupId: string, pageable?: PageableParams): Promise<PaginatedAttendanceResponse> => {
+    if (!groupId) throw new Error("El parámetro 'groupId' es obligatorio para reuniones de tipo GROUP_MEETING");
+    // Usar buildQueryParams para incluir contextId
+    const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId, pageable);
     const response = await apiService.get<ApiResponse<PaginatedAttendanceResponse>>(`/meetings/${id}/attendance?${query}`);
     return response.data;
   },
 
-  registerAttendance: async (data: AttendanceRequest): Promise<AttendanceResponse> => {
-    const query = buildAttendanceQueryParams(MeetingType.GROUP_MEETING);
+  /**
+   * groupId es obligatorio para registrar asistencia en reuniones de grupo
+   */
+  registerAttendance: async (data: AttendanceRequest, groupId: string): Promise<AttendanceResponse> => {
+    if (!groupId) throw new Error("El parámetro 'groupId' es obligatorio para reuniones de tipo GROUP_MEETING");
+    const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId);
     const response = await apiService.put<ApiResponse<AttendanceResponse>>(`/meetings/attendance?${query}`, data);
     return response.data;
   },

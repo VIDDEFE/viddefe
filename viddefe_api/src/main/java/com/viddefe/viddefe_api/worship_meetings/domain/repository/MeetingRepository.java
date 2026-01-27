@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
@@ -132,16 +133,15 @@ public interface MeetingRepository extends JpaRepository<Meeting, UUID> {
 
     )
     FROM Meeting m
+    JOIN m.church c
+    JOIN m.group g
     JOIN AttendanceModel at 
         ON at.eventId = m.id
        AND at.eventType = :eventType
-    WHERE m.scheduledDate BETWEEN :startOfTime AND :endOfTime
-      AND (
-            (:eventType = com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType.TEMPLE_WORHSIP
-                AND m.church.id = :contextId)
-         OR (:eventType = com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType.GROUP_MEETING
-                AND m.group.id = :contextId)
-      )
+    WHERE m.scheduledDate BETWEEN :startOfTime AND :endOfTime AND
+  
+      (:contextId = c.id OR :contextId = g.id)
+      
 """)
     MetricsAttendanceDto getMetricsAttendanceById(
             @NotNull UUID contextId,
@@ -151,25 +151,5 @@ public interface MeetingRepository extends JpaRepository<Meeting, UUID> {
     );
 
 
-    @Query("""
-    SELECT m
-    FROM Meeting m
-    JOIN FETCH m.church c
-    JOIN FETCH m.group g
-    WHERE m.scheduledDate BETWEEN :startTime AND :endTime
-      AND (
-            (:eventType = com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType.TEMPLE_WORHSIP
-                AND c.id = :contextId)
-         OR (:eventType = com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType.GROUP_MEETING
-                AND g.id = :contextId)
-      )
-""")
-    Page<Meeting> findByScheduledDateBetweenAndEventType(
-            @Param("contextId") UUID contextId,
-            @Param("eventType") TopologyEventType eventType,
-            @Param("startTime") OffsetDateTime startTime,
-            @Param("endTime") OffsetDateTime endTime,
-            Pageable pageable
-    );
 }
 

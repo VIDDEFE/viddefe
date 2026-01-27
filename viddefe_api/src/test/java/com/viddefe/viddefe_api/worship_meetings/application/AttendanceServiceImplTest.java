@@ -250,7 +250,7 @@ class AttendanceServiceImplTest {
             AttendanceProjectionDto projection = new AttendanceProjectionDto(person, AttendanceStatus.PRESENT);
             Page<AttendanceProjectionDto> projectionPage = new PageImpl<>(List.of(projection));
 
-            when(attendanceRepository.findAttendanceByEventAndContexIdWithDefaults(
+            when(attendanceRepository.findAttendanceByEventIdAndChurchId(
                     eventId, TopologyEventType.TEMPLE_WORHSIP,contextId, attendanceQualityEnum, pageable ))
                     .thenReturn(projectionPage);
 
@@ -267,7 +267,7 @@ class AttendanceServiceImplTest {
         void getAttendanceByEventId_WhenNoAttendances_ShouldReturnEmptyPage() {
             // Arrange
             Pageable pageable = PageRequest.of(0, 10);
-            when(attendanceRepository.findAttendanceByEventAndContexIdWithDefaults(
+            when(attendanceRepository.findAttendanceByEventIdAndChurchId(
                     eventId, TopologyEventType.TEMPLE_WORHSIP, contextId,attendanceQualityEnum,pageable))
                     .thenReturn(Page.empty());
 
@@ -283,7 +283,7 @@ class AttendanceServiceImplTest {
         void getAttendanceByEventId_ShouldUseTempleWorshipEventType() {
             // Arrange
             Pageable pageable = PageRequest.of(0, 10);
-            when(attendanceRepository.findAttendanceByEventAndContexIdWithDefaults(
+            when(attendanceRepository.findAttendanceByEventIdAndChurchId(
                     eq(eventId), eq(TopologyEventType.TEMPLE_WORHSIP),eq(contextId), eq(attendanceQualityEnum), eq(pageable)))
                     .thenReturn(Page.empty());
 
@@ -291,7 +291,7 @@ class AttendanceServiceImplTest {
             attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId,attendanceQualityEnum);
 
             // Assert
-            verify(attendanceRepository).findAttendanceByEventAndContexIdWithDefaults(
+            verify(attendanceRepository).findAttendanceByEventIdAndChurchId(
                     eventId, TopologyEventType.TEMPLE_WORHSIP,contextId, attendanceQualityEnum,pageable);
         }
 
@@ -300,7 +300,7 @@ class AttendanceServiceImplTest {
         void getAttendanceByEventId_ShouldRespectPagination() {
             // Arrange
             Pageable pageable = PageRequest.of(2, 5);
-            when(attendanceRepository.findAttendanceByEventAndContexIdWithDefaults(
+            when(attendanceRepository.findAttendanceByEventIdAndChurchId(
                     eventId, TopologyEventType.TEMPLE_WORHSIP,contextId,attendanceQualityEnum, pageable))
                     .thenReturn(Page.empty());
 
@@ -308,7 +308,7 @@ class AttendanceServiceImplTest {
             attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId, attendanceQualityEnum);
 
             // Assert
-            verify(attendanceRepository).findAttendanceByEventAndContexIdWithDefaults(
+            verify(attendanceRepository).findAttendanceByEventIdAndChurchId(
                     eventId, TopologyEventType.TEMPLE_WORHSIP,contextId, attendanceQualityEnum,pageable);
         }
     }

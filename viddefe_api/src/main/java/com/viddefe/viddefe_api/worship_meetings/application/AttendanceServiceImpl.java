@@ -6,12 +6,16 @@ import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityE
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingReader;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceProjectionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.PeopleAttendanceEventDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,8 +25,11 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class AttendanceServiceImpl implements AttendanceService {
+
     private final AttendanceRepository attendanceRepository;
     private final PeopleReader peopleReader;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private final MeetingReader meetingReader;
 
     @Override
     public AttendanceDto updateAttendance(CreateAttendanceDto dto, TopologyEventType type) {
@@ -44,21 +51,33 @@ public class AttendanceServiceImpl implements AttendanceService {
                 AttendanceStatus.PRESENT;
 
         attendanceModel.setStatus(status);
+        Meeting meeting = meetingReader.getById(dto.getEventId());
+        UUID contextId = resolveContextId(meeting, type);
+        PeopleAttendanceEventDto peopleAttendanceEventDto = PeopleAttendanceEventDto.builder()
+                .contextId(contextId)
+                .meetingId(meeting.getId())
+                .eventType(type)
+                .build();
         if(attendanceModel.getId() != null){
             attendanceRepository.deleteById(attendanceModel.getId());
+            applicationEventPublisher.publishEvent(peopleAttendanceEventDto);
             return attendanceModel.toDto();
         }
-
-
-        return attendanceRepository.save(attendanceModel).toDto();
+         AttendanceModel saved = attendanceRepository.save(attendanceModel);
+        applicationEventPublisher.publishEvent(peopleAttendanceEventDto);
+        return saved.toDto();
     }
 
     @Override
     public Page<AttendanceDto> getAttendanceByEventIdAndContextId(UUID eventId, Pageable pageable, TopologyEventType type, UUID contextId, AttendanceQualityEnum levelOfAttendance) {
+        return resolveAttendancePage(
+                eventId,
+                type,
+                contextId,
+                levelOfAttendance,
+                pageable
+        );
 
-        return attendanceRepository
-                .findAttendanceByEventAndContexIdWithDefaults(eventId, type ,contextId,levelOfAttendance,pageable)
-                .map(AttendanceProjectionDto::toDto);
     }
 
     @Override
@@ -77,6 +96,42 @@ public class AttendanceServiceImpl implements AttendanceService {
                 eventType,
                 AttendanceStatus.PRESENT
         );
+    }
+
+    private UUID resolveContextId(Meeting meeting, TopologyEventType type) {
+        return switch (type) {
+            case TEMPLE_WORHSIP -> meeting.getChurch().getId();
+            case GROUP_MEETING -> meeting.getGroup().getId();
+            default -> throw new IllegalArgumentException("Unsupported TopologyEventType: " + type);
+        };
+    }
+
+    private Page<AttendanceDto> resolveAttendancePage(
+            UUID eventId,
+            TopologyEventType eventType,
+            UUID contextId,
+            AttendanceQualityEnum attendanceQuality,
+            Pageable pageable
+    ) {
+        if (eventType == TopologyEventType.TEMPLE_WORHSIP) {
+            return attendanceRepository.findAttendanceByEventIdAndChurchId(
+                    eventId,
+                    eventType,
+                    contextId,
+                    attendanceQuality,
+                    pageable
+            ).map(AttendanceProjectionDto::toDto);
+        } else if (eventType == TopologyEventType.GROUP_MEETING) {
+            return attendanceRepository.findAttendanceByEventIdAndGroupId(
+                    eventId,
+                    eventType,
+                    contextId,
+                    attendanceQuality,
+                    pageable
+            ).map(AttendanceProjectionDto::toDto);
+        } else {
+            throw new IllegalArgumentException("Unsupported TopologyEventType: " + eventType);
+        }
     }
 
 }

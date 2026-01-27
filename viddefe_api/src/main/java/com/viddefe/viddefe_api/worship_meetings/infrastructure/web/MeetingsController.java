@@ -212,7 +212,7 @@ public class MeetingsController {
             case GROUP_MEETING -> {
                 if (contextId == null) {
                     throw new IllegalArgumentException(
-                            "El parámetro 'contextId' es obligatorio para reuniones de tipo GROUP_MEETING"
+                            "El parámetro 'groupId' es obligatorio para reuniones de tipo: Reuniones de Grupo"
                     );
                 }
                 yield contextId;
