@@ -1,36 +1,225 @@
-import { useState, useCallback, useMemo } from 'react';
+  // Add member modal state
+ 
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  useMyHomeGroup, 
-  useAssignPeopleToRole,
-  useRemovePeopleFromRole,
-  useMeetings,
-  useMeetingTypes,
-  useCreateMeeting,
-  useUpdateMeeting,
-  useDeleteMeeting,
-  useMeetingAttendance,
-  useRegisterMeetingAttendance
-} from '../../hooks';
-import { Card, Button, PageHeader, Table } from '../../components/shared';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
+import type { Pageable } from '../../services/api';
+import { useMyHomeGroup } from '../../hooks/useHomeGroups';
+import { useGroupMembers } from '../../hooks/useGroupMembers';
+import { useMeetings, useMeetingTypes, useCreateMeeting, useUpdateMeeting, useDeleteMeeting, useMeetingAttendance, useRegisterMeetingAttendance } from '../../hooks/useMeetings';
+import { Table, Button, Card, PageHeader } from '../../components/shared';
+import { FiGrid, FiUser, FiUsers, FiMapPin, FiEye, FiEdit2, FiTrash2, FiCalendar, FiPlus } from 'react-icons/fi';
 import RoleTree from '../../components/groups/RoleTree';
 import RolePeopleAssignmentModal from '../../components/groups/RolePeopleAssignmentModal';
 import MeetingFormModal from '../../components/groups/MeetingFormModal';
 import MeetingViewModal from '../../components/groups/MeetingViewModal';
 import MeetingDeleteModal from '../../components/groups/MeetingDeleteModal';
 import MeetingAttendanceModal from '../../components/groups/MeetingAttendanceModal';
-import { FiMapPin, FiUser, FiGrid, FiUsers, FiPlus, FiCalendar, FiEye, FiEdit2, FiTrash2, FiUserCheck } from 'react-icons/fi';
-import type { RoleStrategyNode, Meeting, CreateMeetingDto, UpdateMeetingDto } from '../../models';
 import { formatDateForDisplay } from '../../utils/helpers';
+import type { RoleStrategyNode, Meeting, CreateMeetingDto, UpdateMeetingDto,Person } from '../../models';
+
+type MembersTableProps = {
+  groupId: string;
+  membersData?: Pageable<Person>;
+  isLoading: boolean;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+};
+
+function MembersTable({ groupId, membersData, isLoading, page, pageSize, onPageChange, onPageSizeChange }: MembersTableProps) {
+  const qc = useQueryClient();
+  const removeMember = useMutation({
+    mutationFn: (personId: string) =>
+      typeof groupId === 'string' && groupId
+        ? import('../../services/groupService').then(m => m.groupService.removeMember(groupId, personId))
+        : Promise.reject(new Error('No groupId')),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['groupMembers', groupId] })
+  });
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
+  const [peoplePage, setPeoplePage] = useState(0);
+  const [peoplePageSize, setPeoplePageSize] = useState(10);
+  const [peopleData, setPeopleData] = useState<Pageable<Member> | null>(null);
+  const [isLoadingPeople, setIsLoadingPeople] = useState(false);
+
+  // Mutation to add member
+  const addMember = useMutation({
+    mutationFn: (personId: string) =>
+      typeof groupId === 'string' && groupId
+        ? import('../../services/groupService').then(m => m.groupService.addMember(groupId, personId))
+        : Promise.reject(new Error('No groupId')),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['groupMembers', groupId] });
+      setAddModalOpen(false);
+      setSelectedPersonId(null);
+      setPeoplePage(0);
+      setPeopleData(null);
+    }
+  });
+
+  // Fetch people not in group (paginated)
+  const fetchPeople = useCallback(async (page: number, size: number) => {
+    setIsLoadingPeople(true);
+    const mod = await import('../../services/personService');
+    // Backend should support filtering people NOT in group
+    const res = await mod.personService.getAll({ page, size, excludeGroupId: groupId });
+    setPeopleData(res);
+    setIsLoadingPeople(false);
+  }, [groupId]);
+
+  // Open modal and fetch first page
+  const handleOpenAddModal = () => {
+    setAddModalOpen(true);
+    setPeoplePage(0);
+    setSelectedPersonId(null);
+    fetchPeople(0, peoplePageSize);
+  };
+
+  // Pagination handlers
+  const handlePeoplePageChange = (newPage: number) => {
+    setPeoplePage(newPage);
+    fetchPeople(newPage, peoplePageSize);
+  };
+  const handlePeoplePageSizeChange = (newSize: number) => {
+    setPeoplePageSize(newSize);
+    setPeoplePage(0);
+    fetchPeople(0, newSize);
+  };
+
+  // Add member submit
+  const handleAddMember = () => {
+    if (selectedPersonId) {
+      addMember.mutate(selectedPersonId);
+    }
+  };
+
+  const columns = [
+    {
+      key: 'firstName' as const,
+      label: 'Nombre',
+      render: (_: any, m: Member) => (
+        <span className="flex items-center gap-2">
+          {m.avatar ? (
+            <img src={m.avatar} alt={m.firstName} className="w-6 h-6 rounded-full object-cover" />
+          ) : (
+            <span className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-xs">
+              {m.firstName?.[0]}{m.lastName?.[0]}
+            </span>
+          )}
+          <span>{m.firstName} {m.lastName}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'phone' as const,
+      label: 'Teléfono',
+      render: (v: any) => v || <span className="text-neutral-400">-</span>,
+    },
+    {
+      key: 'id' as const,
+      label: 'Acciones',
+      render: (_: any, m: Member) => (
+        <button
+          className="text-red-600 hover:underline text-xs ml-2"
+          onClick={() => removeMember.mutate(m.id)}
+          disabled={removeMember.isPending}
+        >
+          Quitar
+        </button>
+      ),
+    },
+  ];
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-semibold text-neutral-700">Miembros</span>
+        <Button size="sm" variant="primary" onClick={handleOpenAddModal}>
+          <FiPlus className="inline mr-1" /> Agregar miembro
+        </Button>
+      </div>
+      <Table
+        data={membersData?.content || []}
+        columns={columns}
+        loading={isLoading}
+        pagination={{
+          mode: 'manual',
+          currentPage: page,
+          totalPages: membersData?.totalPages ?? 0,
+          totalElements: membersData?.totalElements ?? 0,
+          pageSize: pageSize,
+          onPageChange,
+          onPageSizeChange,
+        }}
+      />
+      {/* Add Member Modal */}
+      {addModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Agregar miembro al grupo</h3>
+            <div className="mb-4">
+              {isLoadingPeople ? (
+                <div className="text-center text-neutral-500 py-4">Cargando personas...</div>
+              ) : peopleData && peopleData.content.length === 0 ? (
+                <div className="text-center text-neutral-400 py-4">No hay personas disponibles</div>
+              ) : (
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  value={selectedPersonId || ''}
+                  onChange={e => setSelectedPersonId(e.target.value)}
+                >
+                  <option value="" disabled>Selecciona una persona...</option>
+                  {peopleData?.content.map(person => (
+                    <option key={person.id} value={person.id}>
+                      {person.firstName} {person.lastName} {person.phone ? `(${person.phone})` : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+            {/* Pagination controls */}
+            {peopleData && peopleData.totalPages > 1 && (
+              <div className="flex justify-between items-center mb-4">
+                <Button size="xs" variant="secondary" onClick={() => handlePeoplePageChange(Math.max(peoplePage - 1, 0))} disabled={peoplePage === 0 || isLoadingPeople}>
+                  Anterior
+                </Button>
+                <span className="text-xs text-neutral-500">
+                  Página {peoplePage + 1} de {peopleData.totalPages}
+                </span>
+                <Button size="xs" variant="secondary" onClick={() => handlePeoplePageChange(Math.min(peoplePage + 1, peopleData.totalPages - 1))} disabled={peoplePage >= peopleData.totalPages - 1 || isLoadingPeople}>
+                  Siguiente
+                </Button>
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" size="sm" onClick={() => setAddModalOpen(false)} disabled={addMember.isPending}>
+                Cancelar
+              </Button>
+              <Button variant="primary" size="sm" onClick={handleAddMember} disabled={!selectedPersonId || addMember.isPending}>
+                {addMember.isPending ? 'Agregando...' : 'Agregar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function MyGroup() {
   const navigate = useNavigate();
   const { data, isLoading, error } = useMyHomeGroup();
 
-  // Hooks de mutación para asignación de personas
+  // Group ID
   const groupId = data?.homeGroup?.id || '';
-  const assignPeopleMutation = useAssignPeopleToRole(groupId);
-  const removePeopleMutation = useRemovePeopleFromRole(groupId);
+  const [membersPage, setMembersPage] = useState(0);
+  const [membersPageSize, setMembersPageSize] = useState(10);
+  const {
+    data: membersData,
+    isLoading: isLoadingMembers
+  } = useGroupMembers(groupId, { page: membersPage, size: membersPageSize });
 
   // Estado para modal de asignación de personas
   const [peopleModal, setPeopleModal] = useState<{
@@ -104,27 +293,13 @@ export default function MyGroup() {
     });
   }, []);
 
-  // Asignar personas a un rol
-  const handleAssignPeople = useCallback((personIds: string[]) => {
-    if (peopleModal.role && personIds.length > 0) {
-      assignPeopleMutation.mutate(
-        {
-          roleId: peopleModal.role.id,
-          peopleIds: personIds,
-        },
-        {
-          onSuccess: () => {
-            handleClosePeopleModal();
-          },
-        }
-      );
-    }
-  }, [peopleModal.role, assignPeopleMutation, handleClosePeopleModal]);
+  // Asignar personas a un rol (stub)
+  const handleAssignPeople = useCallback((_personIds: string[]) => {
+    handleClosePeopleModal();
+  }, [handleClosePeopleModal]);
 
-  // Remover persona de un rol (desde el badge o modal)
-  const handleRemovePerson = useCallback((roleId: string, personId: string) => {
-    removePeopleMutation.mutate({ roleId, peopleIds: [personId] });
-  }, [removePeopleMutation]);
+  // Remover persona de un rol (stub)
+  const handleRemovePerson = useCallback((_roleId: string, _personId: string) => {}, []);
 
   // ========== MEETINGS HANDLERS ==========
   
@@ -351,7 +526,6 @@ export default function MyGroup() {
               <FiGrid className="text-primary-600" />
               Información General
             </h3>
-
             <div className="space-y-4">
               {/* Nombre */}
               <div>
@@ -360,7 +534,6 @@ export default function MyGroup() {
                 </span>
                 <p className="text-neutral-800 font-medium mt-1">{homeGroup.name}</p>
               </div>
-
               {/* Descripción */}
               {homeGroup.description && (
                 <div>
@@ -372,7 +545,6 @@ export default function MyGroup() {
                   </p>
                 </div>
               )}
-
               {/* Ubicación */}
               <div>
                 <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
@@ -393,16 +565,31 @@ export default function MyGroup() {
                   Ver en Google Maps →
                 </a>
               </div>
+              {/* Miembros del grupo */}
+              <div>
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
+                  Miembros
+                </span>
+                <div className="mt-2">
+                  <MembersTable
+                    groupId={groupId}
+                    membersData={membersData as Pageable<Member> | undefined}
+                    isLoading={isLoadingMembers}
+                    page={membersPage}
+                    pageSize={membersPageSize}
+                    onPageChange={setMembersPage}
+                    onPageSizeChange={setMembersPageSize}
+                  />
+                </div>
+              </div>
             </div>
           </Card>
-
           {/* Líder */}
           <Card>
             <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
               <FiUser className="text-primary-600" />
               Líder del Grupo
             </h3>
-
             {homeGroup.manager ? (
               <div className="flex items-center gap-3">
                 {homeGroup.manager.avatar ? (
@@ -432,13 +619,11 @@ export default function MyGroup() {
               </p>
             )}
           </Card>
-
           {/* Estrategia */}
           <Card>
             <h3 className="text-lg font-semibold text-neutral-800 mb-4">
               Estrategia
             </h3>
-
             {strategy ? (
               <div className="inline-flex items-center px-4 py-2 bg-violet-50 border border-violet-200 rounded-lg">
                 <span className="w-3 h-3 bg-violet-500 rounded-full mr-3" />
@@ -451,7 +636,6 @@ export default function MyGroup() {
             )}
           </Card>
         </div>
-
         {/* Columna derecha: Jerarquía de roles (2 columnas) */}
         <div className="lg:col-span-2">
           <Card className="h-full">
@@ -465,7 +649,6 @@ export default function MyGroup() {
                 </p>
               )}
             </div>
-
             {/* Info sobre gestión de personas */}
             {strategy && (
               <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -474,7 +657,6 @@ export default function MyGroup() {
                 </p>
               </div>
             )}
-
             <div className="border border-neutral-200 rounded-lg p-4 bg-neutral-50/50 min-h-75">
               <RoleTree
                 hierarchy={hierarchy}
@@ -488,7 +670,6 @@ export default function MyGroup() {
                 onRemovePerson={strategy ? handleRemovePerson : undefined}
               />
             </div>
-
             {/* Leyenda */}
             {hierarchy && hierarchy.length > 0 && (
               <div className="mt-4 pt-4 border-t border-neutral-200">
@@ -502,54 +683,40 @@ export default function MyGroup() {
                     <span className="w-3 h-3 border-l-2 border-violet-500" />
                     <span>Nivel 2</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 border-l-2 border-blue-500" />
-                    <span>Nivel 3</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 border-l-2 border-emerald-500" />
-                    <span>Nivel 4+</span>
-                  </div>
                 </div>
               </div>
             )}
+            {/* Reuniones */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                <FiCalendar className="text-primary-600" />
+                Reuniones
+              </h3>
+              <Button variant="primary" onClick={handleOpenCreateMeeting}>
+                <span className="flex items-center gap-2">
+                  <FiPlus size={16} />
+                  Nueva Reunión
+                </span>
+              </Button>
+            </div>
+            <Table<(typeof meetingsTableData)[0]>
+              data={meetingsTableData}
+              columns={meetingColumns}
+              loading={isLoadingMeetings && meetingsTableData.length === 0}
+              viewMode={meetingViewMode}
+              onViewModeChange={setMeetingViewMode}
+              pagination={{
+                mode: 'manual',
+                currentPage: meetingPage,
+                totalPages: meetingsData?.totalPages ?? 0,
+                totalElements: meetingsData?.totalElements ?? 0,
+                pageSize: meetingPageSize,
+                onPageChange: setMeetingPage,
+                onPageSizeChange: setMeetingPageSize,
+              }}
+            />
           </Card>
         </div>
-      </div>
-
-      {/* ========== SECCIÓN DE REUNIONES ========== */}
-      <div className="mt-6 animate-fadeIn">
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
-              <FiCalendar className="text-primary-600" />
-              Reuniones
-            </h3>
-            <Button variant="primary" onClick={handleOpenCreateMeeting}>
-              <span className="flex items-center gap-2">
-                <FiPlus size={16} />
-                Nueva Reunión
-              </span>
-            </Button>
-          </div>
-
-          <Table<(typeof meetingsTableData)[0]>
-            data={meetingsTableData}
-            columns={meetingColumns}
-            loading={isLoadingMeetings && meetingsTableData.length === 0}
-            viewMode={meetingViewMode}
-            onViewModeChange={setMeetingViewMode}
-            pagination={{
-              mode: 'manual',
-              currentPage: meetingPage,
-              totalPages: meetingsData?.totalPages ?? 0,
-              totalElements: meetingsData?.totalElements ?? 0,
-              pageSize: meetingPageSize,
-              onPageChange: setMeetingPage,
-              onPageSizeChange: setMeetingPageSize,
-            }}
-          />
-        </Card>
       </div>
 
       {/* ========== MODALES ==========/ */}
@@ -565,7 +732,7 @@ export default function MyGroup() {
           }
         }}
         onClose={handleClosePeopleModal}
-        isSaving={assignPeopleMutation.isPending || removePeopleMutation.isPending}
+        isSaving={false}
       />
       {/* Modal de formulario de reunión (crear/editar) */}
       <MeetingFormModal

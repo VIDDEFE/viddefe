@@ -22,7 +22,6 @@ import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunct
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -35,7 +34,6 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     private final MinistryFunctionRepository ministryFunctionRepository;
     private final MinistryFunctionTypeReader ministryFunctionTypeReader;
     private final PeopleReader peopleReader;
-    private final MeetingService meetingService;
     private final NotificationEventPublisher notificatorPublisher;
     private final MeetingReader meetingReader;
     private static final String TEMPLATE_ASSIGNED = """
@@ -142,7 +140,6 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     private void sendNotification(PeopleResDto person, Meeting meeting, MinistryFunctionTypes role, String template) {
         MeetingDto meetingDto = meeting.toDto();
         NotificationMeetingEvent event = new NotificationMeetingEvent();
-        System.out.println("MEETING: " + meeting.getId().toString());
         event.setMeetingId(meeting.getId());
         event.setCreatedAt(Instant.now());
         event.setPersonId(person.getId());
@@ -157,7 +154,6 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
                 )
         );
         event.setChannels(Channels.WHATSAPP);
-        System.out.println("EVENNT ENVENTID: "+event.getMeetingId().toString());
         notificatorPublisher.publish(event);
     }
 

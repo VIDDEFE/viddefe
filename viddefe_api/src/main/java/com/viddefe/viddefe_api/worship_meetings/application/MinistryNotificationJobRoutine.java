@@ -68,10 +68,7 @@ public class MinistryNotificationJobRoutine {
             page = ministryFunctionRepository
                     .findUpcomingMinistryFunctions(now,pageable);
 
-            System.out.println(page.getTotalPages());
-
             if (page.isEmpty()) {
-                System.out.println("No hay notificaciones pendientes en este rango de tiempo.");
                 return;
             }
 
@@ -144,7 +141,6 @@ public class MinistryNotificationJobRoutine {
             variables.put("groupName", function.getMeeting().getGroup().getName());
         }
         variables.put("churchName", function.getMeeting().getChurch().getName());
-        System.out.println("Variables para la notificación: " + variables);
         return variables;
     }
 

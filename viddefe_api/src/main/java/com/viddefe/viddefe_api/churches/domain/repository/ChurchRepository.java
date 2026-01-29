@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.churches.domain.repository;
 
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -105,4 +106,25 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
             BigDecimal eastLng
     );
 
+    @Query("""
+    SELECT 
+        c.id AS entityId,
+        COUNT(p.id) AS totalPeople
+    FROM ChurchModel c
+    JOIN PeopleModel p ON p.church.id = c.id
+    WHERE c.parentChurch.id = :churchId
+    GROUP BY c.id
+""")
+    List<EntityIdWithTotalPeople> findAllChildrenIdsWithTotalPeopleByChurchId(UUID churchId);
+
+    @Query("""
+        SELECT 
+            c.id AS entityId,
+            COUNT(p.id) AS totalPeople
+        FROM ChurchModel c
+        JOIN PeopleModel p ON p.church.id = c.id
+        WHERE c.id = :churchId
+        GROUP BY c.id
+    """)
+    EntityIdWithTotalPeople findChurchIdWithTotalPeopleByChurchId(UUID churchId);
 }

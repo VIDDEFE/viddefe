@@ -4,12 +4,10 @@ import com.viddefe.viddefe_api.auth.Infrastructure.dto.PermissionSeedRequest;
 import com.viddefe.viddefe_api.auth.contracts.PermissionEnum;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
 import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
-import com.viddefe.viddefe_api.auth.domain.model.UserModel;
 import com.viddefe.viddefe_api.auth.domain.repository.PermissionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +28,6 @@ public class PermissionServiceImpl implements PermissionService {
 
             boolean exists = permissionRepository.existsByName(permission.getName());
             if (exists) continue;
-            System.out.println("Seeding permission: " + permission.getName() + " from source: " + request.source());
             PermissionModel model = new PermissionModel();
             model.setName(permission.getName());
             permissionRepository.save(model);

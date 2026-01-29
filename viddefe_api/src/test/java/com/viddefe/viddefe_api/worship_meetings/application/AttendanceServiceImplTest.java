@@ -7,6 +7,7 @@ import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityE
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceProjectionDto;
@@ -59,6 +60,7 @@ class AttendanceServiceImplTest {
     private PeopleModel person;
     private CreateAttendanceDto createDto;
     private AttendanceQualityEnum attendanceQualityEnum;
+    private Meeting meeting;
 
     private PeopleModel createPeopleModel(UUID id, String firstName, String lastName) {
         PeopleModel people = new PeopleModel();
@@ -75,6 +77,13 @@ class AttendanceServiceImplTest {
         return people;
     }
 
+    private Meeting createMeeting() {
+        Meeting meeting = new Meeting();
+        meeting.setId(eventId);
+        meeting.setName("Sunday Service");
+        return meeting;
+    }
+
     @BeforeEach
     void setUp() throws Exception {
         eventId = UUID.randomUUID();
@@ -84,6 +93,7 @@ class AttendanceServiceImplTest {
         attendanceQualityEnum = AttendanceQualityEnum.HIGH;
 
         person = createPeopleModel(peopleId, "Juan", "Pérez");
+        meeting = createMeeting();
 
         createDto = createAttendanceDto(peopleId, eventId);
     }
@@ -105,7 +115,7 @@ class AttendanceServiceImplTest {
         return new AttendanceModel(
                 id,
                 person,
-                eventId,
+                meeting,
                 TopologyEventType.TEMPLE_WORHSIP,
                 status,
                 true

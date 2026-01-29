@@ -35,13 +35,15 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AttendanceDto updateAttendance(CreateAttendanceDto dto, TopologyEventType type) {
         PeopleModel person = peopleReader.getPeopleById(dto.getPeopleId());
         boolean isNewAttendee;
-        isNewAttendee = countAttendanceByPeopleId(person.getId(), type) == 0;
+        Meeting meeting = meetingReader.getById(dto.getEventId());
+        UUID contextId = resolveContextId(meeting, type);
+        isNewAttendee = countAttendanceByPeopleId(person.getId(),contextId , type) == 0;
         AttendanceModel attendanceModel = attendanceRepository.findByPeopleIdAndEventId
                 (dto.getPeopleId(), dto.getEventId())
                 .orElseGet(()-> new AttendanceModel(
                         null,
                         person,
-                        dto.getEventId(),
+                        meeting,
                         type,
                         null,
                         isNewAttendee
@@ -51,8 +53,6 @@ public class AttendanceServiceImpl implements AttendanceService {
                 AttendanceStatus.PRESENT;
 
         attendanceModel.setStatus(status);
-        Meeting meeting = meetingReader.getById(dto.getEventId());
-        UUID contextId = resolveContextId(meeting, type);
         PeopleAttendanceEventDto peopleAttendanceEventDto = PeopleAttendanceEventDto.builder()
                 .contextId(contextId)
                 .meetingId(meeting.getId())
@@ -90,12 +90,28 @@ public class AttendanceServiceImpl implements AttendanceService {
         return attendanceRepository.countByEventIdWithDefaults(eventId, eventType, status);
     }
 
-    private Long countAttendanceByPeopleId(UUID peopleId, TopologyEventType eventType) {
-        return attendanceRepository.countByEventIdWithDefaults(
-                peopleId,
-                eventType,
-                AttendanceStatus.PRESENT
-        );
+    /**
+     * Counts the total attendance records for a given person in a specific context and event type.
+     *
+     * @param peopleId  The UUID of the person whose attendance is to be counted.
+     * @param eventType The type of event (e.g., TEMPLE_WORHSIP, GROUP_MEETING).
+     * @return The total number of attendance records for the specified person.
+     */
+    private Long countAttendanceByPeopleId(UUID peopleId,UUID contextId, TopologyEventType eventType) {
+
+        return switch (eventType) {
+            case TEMPLE_WORHSIP -> attendanceRepository.countTotalWorshipAttendancesByPeopleIdAndContextIdAndEventType(
+                    peopleId,
+                    contextId,
+                    eventType
+            );
+            case GROUP_MEETING -> attendanceRepository.countTotalGroupsAttendancesByPeopleIdAndContextIdAndEventType(
+                    peopleId,
+                    contextId,
+                    eventType
+            );
+            default -> throw new IllegalArgumentException("Unsupported TopologyEventType: " + eventType);
+        };
     }
 
     private UUID resolveContextId(Meeting meeting, TopologyEventType type) {

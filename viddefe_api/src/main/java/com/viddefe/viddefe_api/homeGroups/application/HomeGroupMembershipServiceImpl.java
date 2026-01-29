@@ -49,7 +49,7 @@ public class HomeGroupMembershipServiceImpl implements HomeGroupMemberShipServic
     }
 
     @Override
-    public Void removeMemberFromHomeGroup(UUID homeGroupId, UUID peopleId) {
+    public void removeMemberFromHomeGroup(UUID homeGroupId, UUID peopleId) {
         HomeGroupPeopleMembersId memberId = HomeGroupPeopleMembersId
                 .builder()
                 .homeGroupId(homeGroupId)
@@ -59,11 +59,13 @@ public class HomeGroupMembershipServiceImpl implements HomeGroupMemberShipServic
             throw  new EntityNotFoundException("Miembro no encontrado en el grupo");
         }
         homeGroupMembersRepository.deleteById(memberId);
-        return null;
     }
 
     @Override
     public Page<PeopleResDto> getMembersInHomeGroup(UUID homeGroupId, Pageable pageable) {
+        if(pageable==null || pageable.isUnpaged()){
+            throw new IllegalArgumentException("El paginado no puede ser nulo");
+        }
         return homeGroupMembersRepository.findMembersByHomeGroupId(homeGroupId, pageable)
                 .map(PeopleModel::toDto);
     }

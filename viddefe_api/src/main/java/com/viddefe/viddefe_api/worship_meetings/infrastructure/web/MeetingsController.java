@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -198,6 +199,24 @@ public class MeetingsController {
     ) {
         UUID contextId = resolveContextId(type, groupId, accessToken);
         Page<AttendanceDto> response = meetingFacade.getAttendance(id, type, pageable, contextId, levelOfAttendance);
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @GetMapping("/metrics")
+    public ResponseEntity<ApiResponse<MetricsAttendanceDto>> getMetricsAttendance(
+            @RequestParam TopologyEventType type,
+            @RequestParam(required = false) UUID contextId,
+            @RequestParam OffsetDateTime startTime,
+            @RequestParam OffsetDateTime endTime,
+            @CookieValue("access_token") String accessToken
+    ) {
+        UUID resolvedContextId = resolveContextId(type, contextId, accessToken);
+        MetricsAttendanceDto response = meetingFacade.getMetricsAttendance(
+                resolvedContextId,
+                type,
+                startTime,
+                endTime
+        );
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 

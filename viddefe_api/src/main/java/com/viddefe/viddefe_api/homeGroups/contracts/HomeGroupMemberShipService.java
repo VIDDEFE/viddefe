@@ -8,6 +8,6 @@ import java.util.UUID;
 
 public interface HomeGroupMemberShipService {
     PeopleResDto addMemberToHomeGroup(UUID homeGroupId, UUID peopleId);
-    Void removeMemberFromHomeGroup(UUID homeGroupId, UUID peopleId);
+    void removeMemberFromHomeGroup(UUID homeGroupId, UUID peopleId);
     Page<PeopleResDto> getMembersInHomeGroup(UUID homeGroupId, Pageable pageable);
 }

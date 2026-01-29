@@ -6,6 +6,7 @@ import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class HomeGroupsMembersController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<PeopleResDto>>> getMembersInHomeGroup(
             @PathVariable UUID groupId,
-            @RequestParam Pageable pageable
+            @PageableDefault(size = 20 ) Pageable pageable
     ) {
         Page<PeopleResDto> members = homeGroupMemberShipService.getMembersInHomeGroup(groupId, pageable);
         return ResponseEntity.ok(ApiResponse.ok(members));
