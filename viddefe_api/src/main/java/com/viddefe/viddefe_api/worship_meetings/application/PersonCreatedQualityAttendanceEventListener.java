@@ -10,14 +10,11 @@ import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceQualityP
 import com.viddefe.viddefe_api.worship_meetings.domain.models.serializable.AttendanceQualityPeopleId;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceQualityPeopleRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.PersonCreatedQualityAttendanceEvent;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-
-import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -33,7 +30,7 @@ public class PersonCreatedQualityAttendanceEventListener {
     public void handlePersonCreatedQualityAttendanceEvent(PersonCreatedQualityAttendanceEvent event) {
         AttendanceQuality attendanceQuality = attendanceQualityReader.findByAttendanceQualityEnum(AttendanceQualityEnum.NO_YET);
         PeopleModel people = peopleReader.getPeopleById(event.getPersonId());
-        AttendanceQualityPeopleId id = new AttendanceQualityPeopleId(attendanceQuality.getId(),people.getId(), event.getChurchId());
+        AttendanceQualityPeopleId id = new AttendanceQualityPeopleId(people.getId(), event.getChurchId());
         AttendanceQualityPeople attendanceQualityPeople = new AttendanceQualityPeople(
                 id,
                 attendanceQuality,

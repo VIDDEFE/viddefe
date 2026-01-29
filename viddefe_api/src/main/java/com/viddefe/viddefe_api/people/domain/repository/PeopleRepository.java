@@ -4,6 +4,7 @@ import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleRowProjection;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,12 +18,13 @@ public interface PeopleRepository extends JpaRepository<PeopleModel, UUID> {
     Optional<PeopleModel> findByCcAndTypePersonAndChurchIsNull(String cc, PeopleTypeModel typePerson);
 
     /**
-     * Buscar personas por iglesia y tipo con relaciones pre-cargadas.
-     * Evita N+1 en PeopleServiceImpl.getAllPeople() al llamar toDto()
-     * @param churchId ID de la iglesia
-     * @param typePersonId ID del tipo de persona (opcional)
+     * Search people by church ID with optional typePersonId and attendanceQuality filter.
+     * Avoids N+1 by pre-loading state and typePerson.
+     * @param contextId ID of the church or groupId
+     * @param typePersonId ID of the type of person (nullable)
+     * @param attendanceQuality Attendance quality filter (nullable)
      * @param pageable Paginación
-     * @return Página de personas con state y typePerson pre-cargados
+     * @return Page of PeopleRowProjection {@link PeopleRowProjection}
      */
     @Query("""
     SELECT
@@ -43,13 +45,13 @@ public interface PeopleRepository extends JpaRepository<PeopleModel, UUID> {
     LEFT JOIN p.state s
     LEFT JOIN AttendanceQualityPeople aqp ON aqp.people.id = p.id
     LEFT JOIN aqp.attendanceQuality aq
-    WHERE p.church.id = :churchId
+    WHERE p.church.id = :contextId
       AND (:typePersonId IS NULL OR tp.id = :typePersonId)
       AND (:attendanceQuality IS NULL OR aq.attendanceQuality = :attendanceQuality)
 """)
 
     Page<PeopleRowProjection> findByChurchAndOptionalType(
-            UUID churchId,
+            UUID contextId,
             Long typePersonId,
             AttendanceQualityEnum attendanceQuality,
             Pageable pageable

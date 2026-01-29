@@ -75,7 +75,6 @@ public class AuthMeUseCase implements AuthMeService {
 
     @Override
     public String getContactByPersonId(UUID personId) throws InterruptedException {
-        System.out.println("Getting contact for personId: " + personId);
         UserModel user = userRepository.findByPeopleId(personId).orElseThrow(
                 () -> new EntityNotFoundException("User not found for personId: " + personId)
         );

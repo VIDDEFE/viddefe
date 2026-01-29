@@ -18,11 +18,11 @@ public interface PeopleService {
      */
     PeopleResDto createPeople(PeopleDTO dto);
     /**
-     * Obtiene una lista paginada de todas las personas.
+     * Get a paginated list of people with optional filters.
      * @param pageable
-     * @param personTypeId Filtro opcional por tipo de persona
-     * @param churchId Filtro obligatorio por iglesia
-     * @param attendanceQuality Filtro opcional por calidad de asistencia
+     * @param personTypeId Opcional filter by person type ID
+     * @param churchId ID of the church (non-null)
+     * @param attendanceQuality Filter by attendance quality enum
      * @return
      */
     Page<PeopleResDto> getAllPeople(Pageable pageable, Long personTypeId, UUID  churchId, AttendanceQualityEnum attendanceQuality);

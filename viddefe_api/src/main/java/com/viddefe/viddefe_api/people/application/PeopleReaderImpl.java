@@ -5,9 +5,12 @@ import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
 import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +50,7 @@ public class PeopleReaderImpl implements PeopleReader {
         PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.getLabel());
         return peopleRepository.findByCcAndTypePersonAndChurchIsNull(cc, pastorType);
     }
-    
+
     @Override
     public boolean existsPastorByCcWithoutChurch(String cc) {
         PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.getLabel());
@@ -68,5 +71,4 @@ public class PeopleReaderImpl implements PeopleReader {
                     );
                 });
     }
-
 }

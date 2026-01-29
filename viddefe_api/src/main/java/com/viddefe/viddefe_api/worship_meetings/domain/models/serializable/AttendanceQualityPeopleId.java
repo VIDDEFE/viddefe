@@ -13,9 +13,6 @@ import java.util.UUID;
 @NoArgsConstructor @AllArgsConstructor
 public class AttendanceQualityPeopleId implements Serializable {
 
-    @Column(name = "attendance_quality_id")
-    private Long attendanceQualityId;
-
     @Column(name = "people_id")
     private UUID peopleId;
 

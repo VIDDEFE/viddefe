@@ -1,7 +1,6 @@
 package com.viddefe.viddefe_api.notifications.Infrastructure.dto;
 
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.notifications.common.RabbitPriority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,7 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
 import java.util.Map;
 
 @AllArgsConstructor @NoArgsConstructor

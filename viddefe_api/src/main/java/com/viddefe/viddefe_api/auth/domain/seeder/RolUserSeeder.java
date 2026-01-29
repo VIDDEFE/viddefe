@@ -13,16 +13,13 @@ public class RolUserSeeder {
 
     @PostConstruct
     public void seed() {
-        if (rolUserRepository.count() == 0) {
-            RolUserModel admin = new RolUserModel();
-            admin.setName("ADMIN");
-            rolUserRepository.save(admin);
+        if (rolUserRepository.count() != 0) return;
+        RolUserModel admin = new RolUserModel();
+        admin.setName("ADMIN");
+        rolUserRepository.save(admin);
 
-            RolUserModel user = new RolUserModel();
-            user.setName("USER");
-            rolUserRepository.save(user);
-        } else {
-            System.out.println("Rol users already exist - seeder");
-        }
+        RolUserModel user = new RolUserModel();
+        user.setName("USER");
+        rolUserRepository.save(user);
     }
 }

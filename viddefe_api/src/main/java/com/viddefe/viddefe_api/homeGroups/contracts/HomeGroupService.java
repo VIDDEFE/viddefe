@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.homeGroups.contracts;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateHomeGroupsDto;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDTO;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDetailDto;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -60,10 +61,10 @@ public interface HomeGroupService {
 
     /**
      * Get a home group by the ID of its integrant.
-     * @param leaderId UUID of the integrant whose home group is to be retrieved
+     * @param integrantId UUID of the integrant whose home group is to be retrieved
      * @return HomeGroupsDetailDto {@link HomeGroupsDetailDto} of the retrieved home group
      */
-    HomeGroupsDetailDto getHomeGroupByIntegrantId(UUID leaderId);
+    HomeGroupsDetailDto getHomeGroupByIntegrantId(UUID integrantId);
 
 }
 

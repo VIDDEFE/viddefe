@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -201,6 +202,24 @@ public class MeetingsController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @GetMapping("/metrics")
+    public ResponseEntity<ApiResponse<MetricsAttendanceDto>> getMetricsAttendance(
+            @RequestParam TopologyEventType type,
+            @RequestParam(required = false) UUID contextId,
+            @RequestParam OffsetDateTime startTime,
+            @RequestParam OffsetDateTime endTime,
+            @CookieValue("access_token") String accessToken
+    ) {
+        UUID resolvedContextId = resolveContextId(type, contextId, accessToken);
+        MetricsAttendanceDto response = meetingFacade.getMetricsAttendance(
+                resolvedContextId,
+                type,
+                startTime,
+                endTime
+        );
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
     /**
      * Resuelve el contextId según el tipo de evento.
      * Para TEMPLE_WORHSIP: usa churchId del JWT.
@@ -212,7 +231,7 @@ public class MeetingsController {
             case GROUP_MEETING -> {
                 if (contextId == null) {
                     throw new IllegalArgumentException(
-                            "El parámetro 'contextId' es obligatorio para reuniones de tipo GROUP_MEETING"
+                            "El parámetro 'groupId' es obligatorio para reuniones de tipo: Reuniones de Grupo"
                     );
                 }
                 yield contextId;

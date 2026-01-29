@@ -1,7 +1,6 @@
-package com.viddefe.viddefe_api.notifications.config;
+package com.viddefe.viddefe_api.config.rabbit;
 
 import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
-import com.viddefe.viddefe_api.notifications.common.RabbitQueues;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -44,6 +43,16 @@ public class RabbitConfig {
         );
     }
 
+    @Bean
+    public DirectExchange attendanceExchange() {
+        return new DirectExchange(
+                RabbitQueues.ATTENDANCE_EXCHANGE,
+                true,
+                false
+        );
+    }
+
+
     /* ===============================
      *  Queues
      * =============================== */
@@ -65,6 +74,14 @@ public class RabbitConfig {
     @Bean
     public Queue ministryNotificationsQueue() {
         return QueueBuilder.durable(RabbitQueues.MINISTRY_QUEUE)
+                .withArgument("x-max-priority", 10)
+                .build();
+    }
+
+    @Bean
+    public Queue attendanceQualityQueue() {
+        return QueueBuilder
+                .durable(RabbitQueues.ATTENDANCE_QUALITY_QUEUE)
                 .withArgument("x-max-priority", 10)
                 .build();
     }
@@ -105,4 +122,16 @@ public class RabbitConfig {
                 .to(notificationsExchange)
                 .with(NotificationTypeEnum.MINISTRY_FUNCTION_REMINDER.routingKey());
     }
+
+    @Bean
+    public Binding attendanceQualityBinding(
+            Queue attendanceQualityQueue,
+            DirectExchange attendanceExchange
+    ) {
+        return BindingBuilder
+                .bind(attendanceQualityQueue)
+                .to(attendanceExchange)
+                .with(AttendanceRoutingKey.RECALCULATE_ATTENDANCE_QUALITY.routingKey());
+    }
+
 }

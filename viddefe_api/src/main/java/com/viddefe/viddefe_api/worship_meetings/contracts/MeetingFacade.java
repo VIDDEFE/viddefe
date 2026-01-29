@@ -2,13 +2,11 @@ package com.viddefe.viddefe_api.worship_meetings.contracts;
 
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -104,4 +102,7 @@ public interface MeetingFacade {
      * @return Page de AttendanceDto
      */
     Page<AttendanceDto> getAttendance(UUID meetingId, TopologyEventType eventType, Pageable pageable, UUID contextId, AttendanceQualityEnum levelOfAttendance);
+
+    MetricsAttendanceDto getMetricsAttendance(UUID contextId, TopologyEventType eventType,
+                                              OffsetDateTime startTime, OffsetDateTime endTime);
 }

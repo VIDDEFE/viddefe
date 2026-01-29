@@ -161,26 +161,26 @@ export const groupMeetingService = {
 
   /**
    * Obtiene la asistencia de una reunión paginada
-   * GET /meetings/{id}/attendance?type=GROUP_MEETING
+   * GET /meetings/{id}/attendance?type=GROUP_MEETING&groupId={groupId}
    */
-  getAttendance: async (id: string, params?: PageableRequest): Promise<Pageable<MeetingAttendance>> => {
-    const query = new URLSearchParams({ type: MeetingType.GROUP_MEETING });
-    
+  getAttendance: async (groupId: string, id: string, params?: PageableRequest): Promise<Pageable<MeetingAttendance>> => {
+    if (!groupId) throw new Error("El parámetro 'groupId' es obligatorio para reuniones de tipo GROUP_MEETING");
+    const query = new URLSearchParams({ type: MeetingType.GROUP_MEETING, groupId: groupId });
     if (params?.page !== undefined) query.append('page', String(params.page));
     if (params?.size !== undefined) query.append('size', String(params.size));
     if (params?.sort) query.append('sort', `${params.sort.field},${params.sort.direction}`);
-    
     const response = await apiService.get<Pageable<MeetingAttendance>>(`/meetings/${id}/attendance?${query.toString()}`);
     return response;
   },
 
   /**
    * Registra o cambia asistencia de una persona
-   * PUT /meetings/attendance?type=GROUP_MEETING
+   * PUT /meetings/attendance?type=GROUP_MEETING&contextId={groupId}
    */
-  registerAttendance: async (data: RegisterMeetingAttendanceDto): Promise<MeetingAttendance> => {
-    const query = new URLSearchParams({ type: MeetingType.GROUP_MEETING });
-    const response = await apiService.put<MeetingAttendance>(`/meetings/attendance?${query.toString()}`, data);
+  registerAttendance: async (groupId: string, meetingId: string, data: RegisterMeetingAttendanceDto): Promise<MeetingAttendance> => {
+    if (!groupId) throw new Error("El parámetro 'groupId' es obligatorio para reuniones de tipo GROUP_MEETING");
+    const query = new URLSearchParams({ type: MeetingType.GROUP_MEETING, contextId: groupId });
+    const response = await apiService.put<MeetingAttendance>(`/meetings/attendance?${query.toString()}`, { ...data, eventId: meetingId });
     return response;
   },
 };

@@ -6,11 +6,14 @@ import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupService;
 import com.viddefe.viddefe_api.homeGroups.contracts.RolesStrategiesService;
 import com.viddefe.viddefe_api.homeGroups.contracts.StrategyReader;
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
+import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsPeopleMembers;
 import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
+import com.viddefe.viddefe_api.homeGroups.domain.model.serializable.HomeGroupPeopleMembersId;
 import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupsRepository;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.*;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -121,8 +124,8 @@ public class HomeGroupServiceImpl implements HomeGroupService {
     }
 
     @Override
-    public HomeGroupsDetailDto getHomeGroupByIntegrantId(UUID leaderId) {
-        HomeGroupsDTO homeGroupsDTO = homeGroupsRepository.getHomeGroupByIntegrantId(leaderId)
+    public HomeGroupsDetailDto getHomeGroupByIntegrantId(UUID integrantId) {
+        HomeGroupsDTO homeGroupsDTO = homeGroupsRepository.getHomeGroupByIntegrantId(integrantId)
                 .orElseThrow(() -> new EntityNotFoundException("No pertence a ningún grupo"))
                 .toDto();
         List<RolesStrategiesWithPeopleDto> hierarchy = rolesStrategiesService.getTreeRolesWithPeople(homeGroupsDTO.getStrategy().getId());
@@ -132,4 +135,5 @@ public class HomeGroupServiceImpl implements HomeGroupService {
         dto.setHierarchy(hierarchy);
         return dto;
     }
+
 }
