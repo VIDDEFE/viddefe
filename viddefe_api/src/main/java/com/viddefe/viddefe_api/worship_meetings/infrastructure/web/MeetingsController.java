@@ -7,6 +7,7 @@ import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingFacade;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -206,7 +207,7 @@ public class MeetingsController {
     public ResponseEntity<ApiResponse<MetricsAttendanceDto>> getMetricsAttendance(
             @RequestParam TopologyEventType type,
             @RequestParam(required = false) UUID contextId,
-            @RequestParam OffsetDateTime startTime,
+            @RequestParam @PastOrPresent OffsetDateTime startTime,
             @RequestParam OffsetDateTime endTime,
             @CookieValue("access_token") String accessToken
     ) {

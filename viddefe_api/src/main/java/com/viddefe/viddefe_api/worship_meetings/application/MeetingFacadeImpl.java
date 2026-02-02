@@ -146,6 +146,7 @@ public class MeetingFacadeImpl implements MeetingFacade {
                         homeGroupReader.findAllIdsWithTotalPeopleByChurchId(churchId)
                 ).orElse(List.of());
 
+
         List<EntityIdWithTotalPeople> childrenIdsWithTotalPeople =
                 Optional.ofNullable(
                         churchLookup.findChildrenIdsWithTotalPeopleChurchIdsByChurchId(churchId)
@@ -175,7 +176,6 @@ public class MeetingFacadeImpl implements MeetingFacade {
                                 EntityIdWithTotalPeople::getEntityId,
                                 EntityIdWithTotalPeople::getTotalPeople
                         ));
-
         long churchTotalPeople = churchIdWithTotalPeople.getTotalPeople();
 
         // ================== CHURCH METRICS ==================

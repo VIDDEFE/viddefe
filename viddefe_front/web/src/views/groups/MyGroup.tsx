@@ -1,13 +1,10 @@
-  // Add member modal state
- 
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
-import type { Pageable } from '../../services/api';
 import { useMyHomeGroup } from '../../hooks/useHomeGroups';
 import { useGroupMembers } from '../../hooks/useGroupMembers';
 import { useMeetings, useMeetingTypes, useCreateMeeting, useUpdateMeeting, useDeleteMeeting, useMeetingAttendance, useRegisterMeetingAttendance } from '../../hooks/useMeetings';
 import { Table, Button, Card, PageHeader } from '../../components/shared';
+import MembersTable from '../../components/groups/MembersTable';
 import { FiGrid, FiUser, FiUsers, FiMapPin, FiEye, FiEdit2, FiTrash2, FiCalendar, FiPlus } from 'react-icons/fi';
 import RoleTree from '../../components/groups/RoleTree';
 import RolePeopleAssignmentModal from '../../components/groups/RolePeopleAssignmentModal';
@@ -16,197 +13,7 @@ import MeetingViewModal from '../../components/groups/MeetingViewModal';
 import MeetingDeleteModal from '../../components/groups/MeetingDeleteModal';
 import MeetingAttendanceModal from '../../components/groups/MeetingAttendanceModal';
 import { formatDateForDisplay } from '../../utils/helpers';
-import type { RoleStrategyNode, Meeting, CreateMeetingDto, UpdateMeetingDto,Person } from '../../models';
-
-type MembersTableProps = {
-  groupId: string;
-  membersData?: Pageable<Person>;
-  isLoading: boolean;
-  page: number;
-  pageSize: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-};
-
-function MembersTable({ groupId, membersData, isLoading, page, pageSize, onPageChange, onPageSizeChange }: MembersTableProps) {
-  const qc = useQueryClient();
-  const removeMember = useMutation({
-    mutationFn: (personId: string) =>
-      typeof groupId === 'string' && groupId
-        ? import('../../services/groupService').then(m => m.groupService.removeMember(groupId, personId))
-        : Promise.reject(new Error('No groupId')),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['groupMembers', groupId] })
-  });
-  const [addModalOpen, setAddModalOpen] = useState(false);
-  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
-  const [peoplePage, setPeoplePage] = useState(0);
-  const [peoplePageSize, setPeoplePageSize] = useState(10);
-  const [peopleData, setPeopleData] = useState<Pageable<Member> | null>(null);
-  const [isLoadingPeople, setIsLoadingPeople] = useState(false);
-
-  // Mutation to add member
-  const addMember = useMutation({
-    mutationFn: (personId: string) =>
-      typeof groupId === 'string' && groupId
-        ? import('../../services/groupService').then(m => m.groupService.addMember(groupId, personId))
-        : Promise.reject(new Error('No groupId')),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['groupMembers', groupId] });
-      setAddModalOpen(false);
-      setSelectedPersonId(null);
-      setPeoplePage(0);
-      setPeopleData(null);
-    }
-  });
-
-  // Fetch people not in group (paginated)
-  const fetchPeople = useCallback(async (page: number, size: number) => {
-    setIsLoadingPeople(true);
-    const mod = await import('../../services/personService');
-    // Backend should support filtering people NOT in group
-    const res = await mod.personService.getAll({ page, size, excludeGroupId: groupId });
-    setPeopleData(res);
-    setIsLoadingPeople(false);
-  }, [groupId]);
-
-  // Open modal and fetch first page
-  const handleOpenAddModal = () => {
-    setAddModalOpen(true);
-    setPeoplePage(0);
-    setSelectedPersonId(null);
-    fetchPeople(0, peoplePageSize);
-  };
-
-  // Pagination handlers
-  const handlePeoplePageChange = (newPage: number) => {
-    setPeoplePage(newPage);
-    fetchPeople(newPage, peoplePageSize);
-  };
-  const handlePeoplePageSizeChange = (newSize: number) => {
-    setPeoplePageSize(newSize);
-    setPeoplePage(0);
-    fetchPeople(0, newSize);
-  };
-
-  // Add member submit
-  const handleAddMember = () => {
-    if (selectedPersonId) {
-      addMember.mutate(selectedPersonId);
-    }
-  };
-
-  const columns = [
-    {
-      key: 'firstName' as const,
-      label: 'Nombre',
-      render: (_: any, m: Member) => (
-        <span className="flex items-center gap-2">
-          {m.avatar ? (
-            <img src={m.avatar} alt={m.firstName} className="w-6 h-6 rounded-full object-cover" />
-          ) : (
-            <span className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-xs">
-              {m.firstName?.[0]}{m.lastName?.[0]}
-            </span>
-          )}
-          <span>{m.firstName} {m.lastName}</span>
-        </span>
-      ),
-    },
-    {
-      key: 'phone' as const,
-      label: 'Teléfono',
-      render: (v: any) => v || <span className="text-neutral-400">-</span>,
-    },
-    {
-      key: 'id' as const,
-      label: 'Acciones',
-      render: (_: any, m: Member) => (
-        <button
-          className="text-red-600 hover:underline text-xs ml-2"
-          onClick={() => removeMember.mutate(m.id)}
-          disabled={removeMember.isPending}
-        >
-          Quitar
-        </button>
-      ),
-    },
-  ];
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="font-semibold text-neutral-700">Miembros</span>
-        <Button size="sm" variant="primary" onClick={handleOpenAddModal}>
-          <FiPlus className="inline mr-1" /> Agregar miembro
-        </Button>
-      </div>
-      <Table
-        data={membersData?.content || []}
-        columns={columns}
-        loading={isLoading}
-        pagination={{
-          mode: 'manual',
-          currentPage: page,
-          totalPages: membersData?.totalPages ?? 0,
-          totalElements: membersData?.totalElements ?? 0,
-          pageSize: pageSize,
-          onPageChange,
-          onPageSizeChange,
-        }}
-      />
-      {/* Add Member Modal */}
-      {addModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Agregar miembro al grupo</h3>
-            <div className="mb-4">
-              {isLoadingPeople ? (
-                <div className="text-center text-neutral-500 py-4">Cargando personas...</div>
-              ) : peopleData && peopleData.content.length === 0 ? (
-                <div className="text-center text-neutral-400 py-4">No hay personas disponibles</div>
-              ) : (
-                <select
-                  className="w-full border rounded px-3 py-2"
-                  value={selectedPersonId || ''}
-                  onChange={e => setSelectedPersonId(e.target.value)}
-                >
-                  <option value="" disabled>Selecciona una persona...</option>
-                  {peopleData?.content.map(person => (
-                    <option key={person.id} value={person.id}>
-                      {person.firstName} {person.lastName} {person.phone ? `(${person.phone})` : ''}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-            {/* Pagination controls */}
-            {peopleData && peopleData.totalPages > 1 && (
-              <div className="flex justify-between items-center mb-4">
-                <Button size="xs" variant="secondary" onClick={() => handlePeoplePageChange(Math.max(peoplePage - 1, 0))} disabled={peoplePage === 0 || isLoadingPeople}>
-                  Anterior
-                </Button>
-                <span className="text-xs text-neutral-500">
-                  Página {peoplePage + 1} de {peopleData.totalPages}
-                </span>
-                <Button size="xs" variant="secondary" onClick={() => handlePeoplePageChange(Math.min(peoplePage + 1, peopleData.totalPages - 1))} disabled={peoplePage >= peopleData.totalPages - 1 || isLoadingPeople}>
-                  Siguiente
-                </Button>
-              </div>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button variant="secondary" size="sm" onClick={() => setAddModalOpen(false)} disabled={addMember.isPending}>
-                Cancelar
-              </Button>
-              <Button variant="primary" size="sm" onClick={handleAddMember} disabled={!selectedPersonId || addMember.isPending}>
-                {addMember.isPending ? 'Agregando...' : 'Agregar'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+import type { RoleStrategyNode, Meeting, CreateMeetingDto, UpdateMeetingDto } from '../../models';
 
 export default function MyGroup() {
   const navigate = useNavigate();
@@ -573,12 +380,13 @@ export default function MyGroup() {
                 <div className="mt-2">
                   <MembersTable
                     groupId={groupId}
-                    membersData={membersData as Pageable<Member> | undefined}
+                    membersData={membersData as any}
                     isLoading={isLoadingMembers}
                     page={membersPage}
                     pageSize={membersPageSize}
                     onPageChange={setMembersPage}
                     onPageSizeChange={setMembersPageSize}
+                    editable={true}
                   />
                 </div>
               </div>
