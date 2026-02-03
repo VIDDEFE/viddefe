@@ -1,11 +1,14 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
 import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
+import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
+import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingReader;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceRepository;
@@ -22,6 +25,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -47,6 +51,12 @@ class AttendanceServiceImplTest {
     @Mock
     private PeopleReader peopleReader;
 
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    @Mock
+    private MeetingReader meetingReader;
+
     @InjectMocks
     private AttendanceServiceImpl attendanceService;
 
@@ -61,6 +71,8 @@ class AttendanceServiceImplTest {
     private CreateAttendanceDto createDto;
     private AttendanceQualityEnum attendanceQualityEnum;
     private Meeting meeting;
+    private ChurchModel church;
+    private HomeGroupsModel homeGroup;
 
     private PeopleModel createPeopleModel(UUID id, String firstName, String lastName) {
         PeopleModel people = new PeopleModel();
@@ -81,6 +93,8 @@ class AttendanceServiceImplTest {
         Meeting meeting = new Meeting();
         meeting.setId(eventId);
         meeting.setName("Sunday Service");
+        meeting.setChurch(church);
+        meeting.setGroup(homeGroup);
         return meeting;
     }
 
@@ -91,6 +105,15 @@ class AttendanceServiceImplTest {
         attendanceId = UUID.randomUUID();
         contextId = UUID.randomUUID();
         attendanceQualityEnum = AttendanceQualityEnum.HIGH;
+
+        // Crear church y homeGroup antes de crear el meeting
+        church = new ChurchModel();
+        church.setId(contextId);
+        church.setName("Test Church");
+
+        homeGroup = new HomeGroupsModel();
+        homeGroup.setId(UUID.randomUUID());
+        homeGroup.setName("Test Group");
 
         person = createPeopleModel(peopleId, "Juan", "Pérez");
         meeting = createMeeting();
@@ -130,6 +153,7 @@ class AttendanceServiceImplTest {
         @DisplayName("Debe crear nueva asistencia cuando no existe registro previo")
         void updateAttendance_WhenNoExistingRecord_ShouldCreateNewAttendance() {
             // Arrange
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.empty());
@@ -155,6 +179,7 @@ class AttendanceServiceImplTest {
             // Arrange
             AttendanceModel existingModel = createAttendanceModel(attendanceId, AttendanceStatus.PRESENT);
 
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.of(existingModel));
@@ -176,6 +201,7 @@ class AttendanceServiceImplTest {
         @DisplayName("Debe asignar tipo de evento correcto - TEMPLE_WORSHIP")
         void updateAttendance_WithTempleWorship_ShouldSetCorrectEventType() {
             // Arrange
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.empty());
@@ -194,6 +220,7 @@ class AttendanceServiceImplTest {
         @DisplayName("Debe asignar tipo de evento correcto - GROUP_MEETING")
         void updateAttendance_WithGroupMeeting_ShouldSetCorrectEventType() {
             // Arrange
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.empty());
@@ -212,6 +239,7 @@ class AttendanceServiceImplTest {
         @DisplayName("Debe buscar persona correctamente")
         void updateAttendance_ShouldLookupPersonCorrectly() {
             // Arrange
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.empty());
@@ -233,6 +261,7 @@ class AttendanceServiceImplTest {
             // Arrange
             AttendanceModel existingModel = createAttendanceModel(attendanceId, AttendanceStatus.PRESENT);
 
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.of(existingModel));

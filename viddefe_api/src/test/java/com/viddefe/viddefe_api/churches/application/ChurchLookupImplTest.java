@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.churches.application;
 
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.domain.repository.ChurchRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -75,7 +76,7 @@ class ChurchLookupImplTest {
 
             // When/Then
             assertThatThrownBy(() -> churchLookup.getChurchById(churchId))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining("Church not found");
         }
 
