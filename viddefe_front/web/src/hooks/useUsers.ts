@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { 
   userService, 
   type InvitationRequest,
-  type PermissionResponse,
   AVAILABLE_PERMISSIONS,
   PERMISSION_MAP,
   type Permission,

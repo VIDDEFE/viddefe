@@ -28,7 +28,7 @@ export interface Church extends BaseEntity {
   cityId: number;
   phone: string;
   email: string;
-  pastor: string;
+  pastor?: string;
   pastorId?: string;
   foundationDate?: string;
   memberCount: number;
@@ -400,4 +400,31 @@ export interface CreateMinistryFunctionDto {
 export interface UpdateMinistryFunctionDto {
   peopleId: string;
   roleId: number;
+}
+
+// ============================================================================
+// METRICS (Métricas de Asistencia)
+// ============================================================================
+
+/**
+ * Métricas base que aplica a todos los tipos de reunión
+ */
+export interface BaseMetrics {
+  newAttendees: number;
+  totalPeopleAttended: number;
+  totalPeople: number;
+  attendanceRate: number;
+  absenceRate: number;
+  totalMeetings: number;
+  averageAttendancePerMeeting: number;
+}
+
+/**
+ * Métricas adicionales para worship/temple worship
+ * Incluye desglose entre métricas de grupos y métricas de iglesia
+ */
+export interface WorshipMetrics extends BaseMetrics {
+  totalGroups: number;
+  groupMetrics: BaseMetrics;
+  churchMetrics: BaseMetrics;
 }

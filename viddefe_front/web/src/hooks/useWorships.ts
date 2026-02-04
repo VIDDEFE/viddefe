@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tansta
 import { worshipService, type RegisterAttendanceDto } from '../services/worshipService';
 import type { Worship, WorshipDetail, CreateWorshipDto, UpdateWorshipDto } from '../models';
 import type { Pageable, PageableRequest } from '../services/api';
-import type { MeetingType } from '../services';
 
 /**
  * Hook para obtener todos los cultos con paginación
@@ -31,7 +30,7 @@ export function useWorshipMeeting(id?: string) {
  * Hook para obtener todos los tipos de culto
  */
 export function useWorshipMeetingTypes() {
-  return useQuery<MeetingType[], Error>({
+  return useQuery({
     queryKey: ['worshipTypes'],
     queryFn: () => worshipService.getTypes(),
     staleTime: 5 * 60 * 1000, // 5 minutos - los tipos no cambian frecuentemente

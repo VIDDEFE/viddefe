@@ -1,11 +1,13 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMyHomeGroup } from '../../hooks/useHomeGroups';
+import { useGroupMetrics } from '../../hooks';
 import { useGroupMembers } from '../../hooks/useGroupMembers';
 import { useMeetings, useMeetingTypes, useCreateMeeting, useUpdateMeeting, useDeleteMeeting, useMeetingAttendance, useRegisterMeetingAttendance } from '../../hooks/useMeetings';
 import { Table, Button, Card, PageHeader } from '../../components/shared';
 import MembersTable from '../../components/groups/MembersTable';
 import { FiGrid, FiUser, FiUsers, FiMapPin, FiEye, FiEdit2, FiTrash2, FiCalendar, FiPlus } from 'react-icons/fi';
+import { MdChurch } from 'react-icons/md';
 import RoleTree from '../../components/groups/RoleTree';
 import RolePeopleAssignmentModal from '../../components/groups/RolePeopleAssignmentModal';
 import MeetingFormModal from '../../components/groups/MeetingFormModal';
@@ -21,6 +23,42 @@ export default function MyGroup() {
 
   // Group ID
   const groupId = data?.homeGroup?.id || '';
+  
+  // State para las fechas
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>(() => {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    // Formatear fechas para input type="date"
+    const formatDateForInput = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    return {
+      start: formatDateForInput(thirtyDaysAgo),
+      end: formatDateForInput(now),
+    };
+  });
+
+  // Formatear fechas en ISO con timezone para API
+  const formatDateWithTz = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const offset = -date.getTimezoneOffset();
+    const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+    const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, '0');
+    const sign = offset >= 0 ? '+' : '-';
+    return `${dateStr}T00:00:00${sign}${offsetHours}:${offsetMinutes}`;
+  };
+  
+  const startTime = formatDateWithTz(dateRange.start);
+  const endTime = formatDateWithTz(dateRange.end);
+  
+  // Obtener métricas del grupo
+  const { data: groupMetrics } = useGroupMetrics(groupId, startTime, endTime);
+  
   const [membersPage, setMembersPage] = useState(0);
   const [membersPageSize, setMembersPageSize] = useState(10);
   const {
@@ -324,6 +362,75 @@ export default function MyGroup() {
         }
       />
 
+      {/* Date Range Selector */}
+      <Card className="p-5 sm:p-6 mb-6">
+        <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+          <FiCalendar size={20} />
+          Rango de Fechas para Métricas
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Fecha Inicio
+            </label>
+            <input
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Fecha Fin
+            </label>
+            <input
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Stats based on Metrics */}
+      {groupMetrics && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+          <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+            <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-green-500">
+              <FiUsers size={28} />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Asistentes</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics.totalPeople}</p>
+          </Card>
+
+          <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+            <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-blue-500">
+              <FiCalendar size={28} />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Reuniones Este Período</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics.totalMeetings}</p>
+          </Card>
+
+          <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+            <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-amber-500">
+              <FiUsers size={28} />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Asist. Promedio</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics.averageAttendancePerMeeting.toFixed(1)}</p>
+          </Card>
+
+          <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+            <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-yellow-500">
+              <MdChurch size={28} />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Tasa de Asistencia</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{Math.round(groupMetrics.attendanceRate)}%</p>
+          </Card>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
         {/* Columna izquierda: Info básica + Estrategia */}
         <div className="space-y-6">
@@ -443,6 +550,47 @@ export default function MyGroup() {
               </p>
             )}
           </Card>
+
+          {/* Group Metrics */}
+          {groupMetrics && (
+            <Card>
+              <h3 className="text-lg font-semibold text-neutral-800 mb-4">
+                Métricas de {homeGroup?.name} ({dateRange.start} a {dateRange.end})
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                  <span className="text-sm text-primary-700">Total Reuniones</span>
+                  <span className="text-lg font-bold text-primary-800">
+                    {groupMetrics.totalMeetings}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                  <span className="text-sm text-primary-700">Asistentes</span>
+                  <span className="text-lg font-bold text-primary-800">
+                    {groupMetrics.totalPeople}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                  <span className="text-sm text-primary-700">Asist. Promedio</span>
+                  <span className="text-lg font-bold text-primary-800">
+                    {groupMetrics.averageAttendancePerMeeting.toFixed(1)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                  <span className="text-sm text-primary-700">Tasa de Asistencia</span>
+                  <span className="text-lg font-bold text-green-600">
+                    {Math.round(groupMetrics.attendanceRate)}%
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-primary-700">Tasa de Inasistencia</span>
+                  <span className="text-lg font-bold text-primary-800">
+                    {Math.round(groupMetrics.absenceRate)}%
+                  </span>
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
         {/* Columna derecha: Jerarquía de roles (2 columnas) */}
         <div className="lg:col-span-2">

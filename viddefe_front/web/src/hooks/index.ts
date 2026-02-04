@@ -13,6 +13,7 @@ export * from './useWorships';
 export * from './useOfferings';
 export * from './useMeetings';
 export * from './useMinistryFunctions';
+export * from './useMetrics';
 
 // Meetings (Group)
 export {

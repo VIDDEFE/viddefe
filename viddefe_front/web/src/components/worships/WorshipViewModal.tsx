@@ -67,7 +67,7 @@ export default function WorshipViewModal({
             </label>
             <p className="text-neutral-700 mt-1">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                {worship.worshipType?.name}
+                {worship.type?.name}
               </span>
             </p>
           </div>

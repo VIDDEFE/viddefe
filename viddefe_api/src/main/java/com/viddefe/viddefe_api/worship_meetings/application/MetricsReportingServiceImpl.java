@@ -197,6 +197,11 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
                                 .mapToLong(MetricsAttendanceDto::getNewAttendees)
                                 .sum()
                 )
+                .totalPeople(
+                        metricsAttendances.stream()
+                                .mapToLong(MetricsAttendanceDto::getTotalPeople)
+                                .sum()
+                )
                 .totalPeopleAttended(
                         metricsAttendances.stream()
                                 .mapToLong(MetricsAttendanceDto::getTotalPeopleAttended)

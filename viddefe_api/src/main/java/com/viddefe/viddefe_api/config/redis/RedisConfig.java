@@ -15,10 +15,15 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 /**
- * Configuración central de Redis para la aplicación.
+ * Configuración de Redis para la aplicación.
  *
- * Define la conexión a Redis y la serialización de datos.
- * Utiliza JSON para los valores y String para las claves.
+ * Responsabilidades:
+ * - Conexión a Redis (Lettuce)
+ * - ObjectMapper exclusivo para Redis serialization (con polymorphic typing)
+ * - RedisTemplate configurado con serializers específicos
+ *
+ * Nota: El ObjectMapper global para Spring MVC está en JacksonConfig.
+ * Este ObjectMapper solo se usa dentro de RedisTemplate.
  */
 @Configuration
 public class RedisConfig {
@@ -47,7 +52,15 @@ public class RedisConfig {
     }
 
     /**
-     * ObjectMapper configurado para Redis con soporte de tipos y Java Time.
+     * ObjectMapper exclusivo para Redis serialization.
+     *
+     * IMPORTANTE: Este mapper solo se inyecta en RedisTemplate.
+     * NO se usa para @RequestBody / REST API.
+     *
+     * Características:
+     * - activateDefaultTyping: Añade @class para polimorfismo
+     * - JavaTimeModule: Soporte de fechas
+     * - NO @Primary: Spring MVC usa el mapper de JacksonConfig
      */
     @Bean("redisObjectMapper")
     public ObjectMapper redisObjectMapper() {
@@ -63,7 +76,10 @@ public class RedisConfig {
     }
 
     /**
-     * Template principal de Redis para operaciones genéricas.
+     * Template de Redis configurado con serialización JSON con polymorphic typing.
+     *
+     * Usa el redisObjectMapper que tiene activateDefaultTyping.
+     * Esto permite almacenar objetos polimórficos en Redis.
      */
     @Bean
     public RedisTemplate<String, Object> redisTemplate(
@@ -75,7 +91,7 @@ public class RedisConfig {
         // Key as String
         template.setKeySerializer(new StringRedisSerializer());
 
-        // Value as JSON with type info
+        // Value as JSON with type info (using redisObjectMapper)
         GenericJackson2JsonRedisSerializer jsonSerializer =
                 new GenericJackson2JsonRedisSerializer(redisObjectMapper());
         template.setValueSerializer(jsonSerializer);

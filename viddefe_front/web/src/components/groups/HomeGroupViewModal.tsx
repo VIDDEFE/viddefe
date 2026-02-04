@@ -79,12 +79,12 @@ export default function HomeGroupViewModal({
               Responsable
             </label>
             <p className="text-neutral-700 mt-1">
-              {group.leader ? (
+              {group.manager ? (
                 <span className="inline-flex items-center gap-2">
                   <span className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-800 font-medium text-sm">
-                    {group.leader.firstName?.[0]}{group.leader.lastName?.[0]}
+                    {group.manager.firstName?.[0]}{group.manager.lastName?.[0]}
                   </span>
-                  {group.leader.firstName} {group.leader.lastName}
+                  {group.manager.firstName} {group.manager.lastName}
                 </span>
               ) : (
                 <span className="text-neutral-400">Sin responsable asignado</span>

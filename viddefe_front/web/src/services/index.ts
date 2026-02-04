@@ -12,3 +12,4 @@ export * from './offeringService';
 export * from './meetingService';
 export * from './groupMeetingService';
 export * from './ministryFunctionService';
+export * from './metricsService';

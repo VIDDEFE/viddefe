@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { HomeGroup } from '../../models';
+import type { HomeGroup, Person } from '../../models';
 import { Button, PageHeader, Table } from '../../components/shared';
 import {
   HomeGroupFormModal,
@@ -21,7 +21,7 @@ import {
 } from '../../hooks';
 
 import { useAppContext } from '../../context/AppContext';
-import type { SortConfig } from '../../services/api';
+import type { SortConfig, Pageable } from '../../services/api';
 import { GroupPermission } from '../../services/userService';
 import { FiSettings, FiList, FiMap } from 'react-icons/fi';
 
@@ -39,9 +39,9 @@ export default function Groups() {
   const [membersPage, setMembersPage] = useState(0);
   const [membersPageSize, setMembersPageSize] = useState(10);
   const {
-    data: membersData,
-    isLoading: isLoadingMembers
-  } = useGroupMembers(selectedGroup?.id, { page: membersPage, size: membersPageSize });
+    data: membersData
+  } = useGroupMembers(selectedGroup?.id, { page: membersPage, size: membersPageSize }) as { data: Pageable<Person> | undefined };
+  const { isLoading: isLoadingMembers } = useGroupMembers(selectedGroup?.id, { page: membersPage, size: membersPageSize });
 
   // Permisos de grupos
   const canCreate = hasPermission(GroupPermission.CREATE);
@@ -423,8 +423,8 @@ export default function Groups() {
               pagination={{
                 mode: 'manual',
                 currentPage: membersPage,
-                totalPages: membersData?.totalPages ?? 0,
-                totalElements: membersData?.totalElements ?? 0,
+                totalPages: (membersData as any)?.totalPages ?? 0,
+                totalElements: (membersData as any)?.totalElements ?? 0,
                 pageSize: membersPageSize,
                 onPageChange: setMembersPage,
                 onPageSizeChange: setMembersPageSize,

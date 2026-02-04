@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.worship_meetings.infrastructure.redis;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MetricsAttendanceDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -29,6 +30,7 @@ public class MetricsRedisAdapter {
         );
     }
 
+    @Async
     public void saveMetrics(TopologyEventType eventType, UUID contextId, MetricsAttendanceDto metrics, Duration ttl) {
         String key = resolveKey(eventType, contextId);
         redisTemplate.opsForValue().set(key, metrics, ttl);

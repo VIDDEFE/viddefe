@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Input } from './Form';
 import DropDown from './DropDown';
 import { useStates,usePersonTypes } from '../../hooks';
@@ -35,12 +34,7 @@ export function PersonForm({
   disabledTypePerson = false,
 }: Readonly<PersonFormProps>) {
   const { data: states } = useStates();
-  const [selectedStateId, setSelectedStateId] = useState<number | undefined>(value.stateId || undefined);
   const { data: personTypes } = usePersonTypes();
-
-  useEffect(() => {
-    setSelectedStateId(value.stateId || undefined);
-  }, [value.stateId]);
 
   const handleChange = (field: keyof PersonFormData, fieldValue: string | number) => {
     const processedValue = field === 'stateId' || field === 'typePersonId' 
@@ -122,7 +116,6 @@ export function PersonForm({
           value={value.stateId ? String(value.stateId) : ''}
           onChangeValue={(val: string) => {
             const id = val ? Number(val) : 0;
-            setSelectedStateId(id);
             handleChange('stateId', id);
           }}
           searchKey="label"

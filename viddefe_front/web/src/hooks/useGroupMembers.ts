@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { groupService } from '../services/groupService';
 import type { PageableRequest } from '../services/api';
 
@@ -10,6 +10,6 @@ export function useGroupMembers(groupId?: string, params?: PageableRequest) {
     queryKey: ['groupMembers', groupId, params?.page, params?.size, params?.sort],
     queryFn: () => groupService.getMembers(groupId!, params),
     enabled: !!groupId,
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 }
