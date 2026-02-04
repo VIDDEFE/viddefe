@@ -4,10 +4,7 @@ import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
-import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
-import com.viddefe.viddefe_api.worship_meetings.contracts.GroupMeetingService;
-import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingFacade;
-import com.viddefe.viddefe_api.worship_meetings.contracts.WorshipService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.*;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -42,9 +39,7 @@ public class MeetingFacadeImpl implements MeetingFacade {
     private final WorshipService worshipService;
     private final GroupMeetingService groupMeetingService;
     private final AttendanceService attendanceService;
-    private final MeetingRepository meetingRepository;
-    private final ChurchLookup churchLookup;
-    private final HomeGroupReader homeGroupReader;
+    private final MetricsReportingService metricsReportingService;
 
     // ==================== CREATE ====================
 
@@ -115,188 +110,18 @@ public class MeetingFacadeImpl implements MeetingFacade {
     }
 
     /**
-     * @param contextId
-     * @param eventType
-     * @param startTime
-     * @param endTime
-     * @return
+     * @param contextId The ID of the context (e.g., church or group)
+     * @param eventType The type of topology event {@link TopologyEventType}
+     * @param startTime The start time for the metrics retrieval
+     * @param endTime The end time for the metrics retrieval
+     * @return MetricsAttendanceDto containing attendance metrics {@link MetricsAttendanceDto}
      */
     @Override
     public MetricsAttendanceDto getMetricsAttendance(UUID contextId, TopologyEventType eventType, OffsetDateTime startTime, OffsetDateTime endTime) {
        return resolveMetricsByEventType(contextId, eventType, startTime, endTime);
     }
 
-
     private MetricsAttendanceDto resolveMetricsByEventType(UUID contextId, TopologyEventType eventType, OffsetDateTime startTime, OffsetDateTime endTime) {
-        return switch (eventType) {
-            case TEMPLE_WORHSIP -> getMetricsWorshipAttendanceById(contextId,
-                    startTime, endTime);
-            case GROUP_MEETING -> getMetricsGroupAttendanceById(contextId, startTime, endTime);
-            default -> throw new IllegalArgumentException("Unsupported TopologyEventType: " + eventType);
-        };
+        return metricsReportingService.getAttendanceMetrics(contextId, eventType, startTime, endTime);
     }
-
-    private MetricsAttendanceDto getMetricsWorshipAttendanceById(
-            UUID churchId,
-            OffsetDateTime startTime,
-            OffsetDateTime endTime
-    ) {
-        List<EntityIdWithTotalPeople> groupIdWithTotalPeople =
-                Optional.ofNullable(
-                        homeGroupReader.findAllIdsWithTotalPeopleByChurchId(churchId)
-                ).orElse(List.of());
-
-
-        List<EntityIdWithTotalPeople> childrenIdsWithTotalPeople =
-                Optional.ofNullable(
-                        churchLookup.findChildrenIdsWithTotalPeopleChurchIdsByChurchId(churchId)
-                ).orElse(List.of());
-
-        EntityIdWithTotalPeople churchIdWithTotalPeople =
-                churchLookup.findChurchIdWithTotalPeopleByChurchId(churchId);
-
-        List<UUID> groupIds = groupIdWithTotalPeople.stream()
-                .map(EntityIdWithTotalPeople::getEntityId)
-                .toList();
-
-        List<UUID> childrenChurchIds = childrenIdsWithTotalPeople.stream()
-                .map(EntityIdWithTotalPeople::getEntityId)
-                .toList();
-
-        Map<UUID, Long> groupTotalPeopleMap =
-                groupIdWithTotalPeople.stream()
-                        .collect(Collectors.toMap(
-                                EntityIdWithTotalPeople::getEntityId,
-                                EntityIdWithTotalPeople::getTotalPeople
-                        ));
-
-        Map<UUID, Long> childrenChurchTotalPeopleMap =
-                childrenIdsWithTotalPeople.stream()
-                        .collect(Collectors.toMap(
-                                EntityIdWithTotalPeople::getEntityId,
-                                EntityIdWithTotalPeople::getTotalPeople
-                        ));
-        long churchTotalPeople = churchIdWithTotalPeople.getTotalPeople();
-
-        // ================== CHURCH METRICS ==================
-        MetricsAttendanceDto churchMetrics =
-                meetingRepository
-                        .getMetricsWorshipAttendanceByInId(
-                                List.of(churchId),
-                                TopologyEventType.TEMPLE_WORHSIP,
-                                startTime,
-                                endTime
-                        )
-                        .stream()
-                        .map(row -> buildFromProjection(row, churchTotalPeople))
-                        .findFirst()
-                        .orElseGet(() -> MetricsAttendanceDto.builder()
-                                .newAttendees(0L)
-                                .attendanceRate(0.0)
-                                .absenceRate(0.0)
-                                .totalMeetings(0L)
-                                .averageAttendancePerMeeting(0.0)
-                                .build()
-                        );
-
-        // ================== GROUP METRICS ==================
-        List<MetricsAttendanceDto> groupsMetrics =
-                groupIds.isEmpty()
-                        ? List.of()
-                        : meetingRepository
-                        .getMetricsGroupAttendanceByInId(
-                                groupIds,
-                                TopologyEventType.GROUP_MEETING,
-                                startTime,
-                                endTime
-                        )
-                        .stream()
-                        .map(row ->
-                                buildFromProjection(
-                                        row,
-                                        groupTotalPeopleMap.getOrDefault(row.getId(), 0L)
-                                )
-                        )
-                        .toList();
-
-        // ================== CHILD CHURCH METRICS ==================
-        List<MetricsAttendanceDto> churchesMetrics =
-                childrenChurchIds.isEmpty()
-                        ? List.of()
-                        : meetingRepository
-                        .getMetricsWorshipAttendanceByInId(
-                                childrenChurchIds,
-                                TopologyEventType.TEMPLE_WORHSIP,
-                                startTime,
-                                endTime
-                        )
-                        .stream()
-                        .map(row ->
-                                buildFromProjection(
-                                        row,
-                                        childrenChurchTotalPeopleMap.getOrDefault(row.getId(), 0L)
-                                )
-                        )
-                        .toList();
-
-        // ================== FINAL DTO ==================
-        return ChurchMetricsDto.builder()
-                .totalGroups(groupIds.size())
-                .newAttendees(churchMetrics.getNewAttendees())
-                .groupMetrics(groupsMetrics)
-                .churchMetrics(churchesMetrics)
-                .attendanceRate(churchMetrics.getAttendanceRate())
-                .absenceRate(churchMetrics.getAbsenceRate())
-                .totalMeetings(churchMetrics.getTotalMeetings())
-                .averageAttendancePerMeeting(churchMetrics.getAverageAttendancePerMeeting())
-                .totalPeopleAttended(churchMetrics.getTotalPeopleAttended())
-                .totalPeople(churchTotalPeople)
-                .build();
-    }
-
-    private MetricsAttendanceDto getMetricsGroupAttendanceById(
-            UUID groupId,
-            OffsetDateTime startTime,
-            OffsetDateTime endTime
-    ) {
-        Long totalPeople =
-                homeGroupReader.findTotalPeopleByGroupId(groupId);
-
-        return meetingRepository.getMetricsGroupAttendanceByInId(
-                        List.of(groupId),
-                        TopologyEventType.GROUP_MEETING,
-                        startTime,
-                        endTime
-                )
-                .stream()
-                .map(row -> buildFromProjection(row, totalPeople))
-                .findFirst()
-                .orElse(null);
-    }
-
-
-    private MetricsAttendanceDto buildFromProjection(MetricAttendanceProjectionRow row, Long totalPeople) {
-        long totalAttended = Optional.ofNullable(row.getTotalPeopleAttended()).orElse(0L);
-        long newAttendees  = Optional.ofNullable(row.getTotalNewAttendees()).orElse(0L);
-
-        double attendanceRate =
-                totalPeople == 0 ? 0.0 :
-                        (row.getTotalPeopleAttended() / (double) totalPeople) * 100.0;
-        double absenceRate = 100.0 - attendanceRate;
-
-        double averageAttendancePerMeeting =
-                row.getTotalMeetings() == 0 ? 0.0 :
-                        row.getTotalPeopleAttended() / (double) row.getTotalMeetings();
-
-        return MetricsAttendanceDto.builder()
-                .newAttendees(newAttendees)
-                .totalPeopleAttended(totalAttended)
-                .totalMeetings(row.getTotalMeetings())
-                .averageAttendancePerMeeting(averageAttendancePerMeeting)
-                .attendanceRate(attendanceRate)
-                .absenceRate(absenceRate)
-                .totalPeople(totalPeople)
-                .build();
-    }
-
 }
