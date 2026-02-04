@@ -10,5 +10,5 @@ import java.util.List;
 @AllArgsConstructor @NoArgsConstructor
 public class ChurchMetricsDto extends  MetricsAttendanceDto {
     private Integer totalGroups;
-    private List<MetricsAttendanceDto> groupMetrics, churchMetrics;
+    private MetricsAttendanceDto groupMetrics, churchMetrics;
 }

@@ -1,18 +1,23 @@
-package com.viddefe.viddefe_api.worship_meetings.application;
+package com.viddefe.viddefe_api.worship_meetings.infrastructure.redis;
 
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MetricsAttendanceDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+/**
+ * Redis adapter for storing and retrieving metrics using the cache-aside pattern.
+ * This is a localized, technical cache specific to metrics computation.
+ * NOT a generic cache abstraction.
+ */
+@Component
 @RequiredArgsConstructor
-public class MetricsRedisService {
+public class MetricsRedisAdapter {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
@@ -22,10 +27,9 @@ public class MetricsRedisService {
                 eventType.name(),
                 contextId
         );
-
     }
 
-    public void saveMetrics(TopologyEventType eventType, UUID contextId , MetricsAttendanceDto metrics, Duration ttl) {
+    public void saveMetrics(TopologyEventType eventType, UUID contextId, MetricsAttendanceDto metrics, Duration ttl) {
         String key = resolveKey(eventType, contextId);
         redisTemplate.opsForValue().set(key, metrics, ttl);
     }
@@ -44,7 +48,6 @@ public class MetricsRedisService {
         return Optional.empty();
     }
 
-
     public void deleteMetrics(TopologyEventType eventType, UUID contextId) {
         String key = resolveKey(eventType, contextId);
         redisTemplate.delete(key);
@@ -55,3 +58,4 @@ public class MetricsRedisService {
         return redisTemplate.hasKey(key);
     }
 }
+

@@ -40,11 +40,23 @@ public class AccountServiceImpl implements AccountService {
     private final PermissionService permissionService;
     private final NotificationEventPublisher notificationEventPublisher;
 
-    private static final String TEMPLATE_INVITATION_MESSAGE = "" +
-            "Hello {{name}}, welcome to VidDefe! Your credentials are:\n" +
-            "Username: {{username}}\n" +
-            "Password: {{password}}\n" +
-            "Please change your password after logging in.";
+    /**
+     * Temporary one-time password.
+     * - Generated randomly
+     * - Valid for a short period
+     * - Must be changed on first login
+     * - Never reused
+     */
+    private static final String TEMPLATE_INVITATION_MESSAGE = """
+    Hello {{name}}, welcome to VidDefe!
+    
+    Your account has been created.
+    
+    Username: {{username}}
+    Temporary password (one-time): {{password}}
+    
+    You will be required to change this password immediately after logging in.
+    """;
 
     @Override
     public void invite(InvitationDto dtp, UUID churchId) {

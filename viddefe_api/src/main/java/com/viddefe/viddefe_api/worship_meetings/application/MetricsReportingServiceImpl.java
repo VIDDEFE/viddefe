@@ -9,6 +9,7 @@ import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.ChurchMetrics
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MetricAttendanceProjectionRow;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MetricsAttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.redis.MetricsRedisAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,14 +27,17 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
     private final MeetingRepository meetingRepository;
     private final HomeGroupReader homeGroupReader;
     private final ChurchLookup churchLookup;
-    private final MetricsRedisService metricsRedisService;
-    private final static Integer MINUTES_CACHE = 20;
+    private final MetricsRedisAdapter metricsRedisAdapter;
+    private final static Integer MINUTES_CACHE = 15;
+    TopologyEventType templeType = TopologyEventType.TEMPLE_WORHSIP;
+    TopologyEventType groupType = TopologyEventType.GROUP_MEETING;
 
     private MetricsAttendanceDto buildingChurchMetrics(
             UUID churchId,
             OffsetDateTime startTime,
             OffsetDateTime endTime
     ) {
+
         List<EntityIdWithTotalPeople> groupIdWithTotalPeople =
                 Optional.ofNullable(
                         homeGroupReader.findAllIdsWithTotalPeopleByChurchId(churchId)
@@ -76,12 +80,14 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
                 meetingRepository
                         .getMetricsWorshipAttendanceByInId(
                                 List.of(churchId),
-                                TopologyEventType.TEMPLE_WORHSIP,
+                                templeType,
                                 startTime,
                                 endTime
                         )
                         .stream()
-                        .map(row -> buildFromProjection(row, churchTotalPeople))
+                        .map(
+                                row ->
+                                        buildFromProjection(templeType,row, churchTotalPeople))
                         .findFirst()
                         .orElseGet(() -> MetricsAttendanceDto.builder()
                                 .newAttendees(0L)
@@ -99,13 +105,14 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
                         : meetingRepository
                         .getMetricsGroupAttendanceByInId(
                                 groupIds,
-                                TopologyEventType.GROUP_MEETING,
+                                groupType,
                                 startTime,
                                 endTime
                         )
                         .stream()
                         .map(row ->
                                 buildFromProjection(
+                                        groupType,
                                         row,
                                         groupTotalPeopleMap.getOrDefault(row.getId(), 0L)
                                 )
@@ -119,25 +126,32 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
                         : meetingRepository
                         .getMetricsWorshipAttendanceByInId(
                                 childrenChurchIds,
-                                TopologyEventType.TEMPLE_WORHSIP,
+                                templeType,
                                 startTime,
                                 endTime
                         )
                         .stream()
                         .map(row ->
                                 buildFromProjection(
+                                        templeType,
                                         row,
                                         childrenChurchTotalPeopleMap.getOrDefault(row.getId(), 0L)
                                 )
                         )
                         .toList();
 
+        MetricsAttendanceDto groupedMetric =
+                buildFromListOfMetrics(groupsMetrics);
+
+        MetricsAttendanceDto churchesMetric =
+                buildFromListOfMetrics(churchesMetrics);
+
         // ================== FINAL DTO ==================
         return ChurchMetricsDto.builder()
                 .totalGroups(groupIds.size())
                 .newAttendees(churchMetrics.getNewAttendees())
-                .groupMetrics(groupsMetrics)
-                .churchMetrics(churchesMetrics)
+                .groupMetrics(groupedMetric)
+                .churchMetrics(churchesMetric)
                 .attendanceRate(churchMetrics.getAttendanceRate())
                 .absenceRate(churchMetrics.getAbsenceRate())
                 .totalMeetings(churchMetrics.getTotalMeetings())
@@ -157,18 +171,64 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
 
         return meetingRepository.getMetricsGroupAttendanceByInId(
                         List.of(groupId),
-                        TopologyEventType.GROUP_MEETING,
+                        groupType,
                         startTime,
                         endTime
                 )
                 .stream()
-                .map(row -> buildFromProjection(row, totalPeople))
+                .map(
+                        row ->
+                                buildFromProjection(groupType,row, totalPeople
+                                ))
                 .findFirst()
                 .orElse(null);
     }
 
+    /**
+     * Aggregates a list of MetricsAttendanceDto into a single MetricsAttendanceDto by summing and averaging relevant fields.
+     *
+     * @param metricsAttendances List of {@link MetricsAttendanceDto} to aggregate.
+     * @return Aggregated {@link MetricsAttendanceDto}.
+     */
+    private MetricsAttendanceDto buildFromListOfMetrics(List<MetricsAttendanceDto> metricsAttendances) {
+        return MetricsAttendanceDto.builder()
+                .newAttendees(
+                        metricsAttendances.stream()
+                                .mapToLong(MetricsAttendanceDto::getNewAttendees)
+                                .sum()
+                )
+                .totalPeopleAttended(
+                        metricsAttendances.stream()
+                                .mapToLong(MetricsAttendanceDto::getTotalPeopleAttended)
+                                .sum()
+                )
+                .totalMeetings(
+                        metricsAttendances.stream()
+                                .mapToLong(MetricsAttendanceDto::getTotalMeetings)
+                                .sum()
+                )
+                .averageAttendancePerMeeting(
+                        metricsAttendances.stream()
+                                .mapToDouble(MetricsAttendanceDto::getAverageAttendancePerMeeting)
+                                .average()
+                                .orElse(0.0)
+                )
+                .attendanceRate(
+                        metricsAttendances.stream()
+                                .mapToDouble(MetricsAttendanceDto::getAttendanceRate)
+                                .average()
+                                .orElse(0.0)
+                )
+                .absenceRate(
+                        metricsAttendances.stream()
+                                .mapToDouble(MetricsAttendanceDto::getAbsenceRate)
+                                .average()
+                                .orElse(0.0)
+                )
+                .build();
+    }
 
-    private MetricsAttendanceDto buildFromProjection(MetricAttendanceProjectionRow row, Long totalPeople) {
+    private MetricsAttendanceDto buildFromProjection(TopologyEventType eventType,MetricAttendanceProjectionRow row, Long totalPeople) {
         long totalAttended = Optional.ofNullable(row.getTotalPeopleAttended()).orElse(0L);
         long newAttendees  = Optional.ofNullable(row.getTotalNewAttendees()).orElse(0L);
 
@@ -181,7 +241,7 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
                 row.getTotalMeetings() == 0 ? 0.0 :
                         row.getTotalPeopleAttended() / (double) row.getTotalMeetings();
 
-        return MetricsAttendanceDto.builder()
+        MetricsAttendanceDto result = MetricsAttendanceDto.builder()
                 .newAttendees(newAttendees)
                 .totalPeopleAttended(totalAttended)
                 .totalMeetings(row.getTotalMeetings())
@@ -190,6 +250,13 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
                 .absenceRate(absenceRate)
                 .totalPeople(totalPeople)
                 .build();
+        metricsRedisAdapter.saveMetrics(
+                eventType,
+                row.getId(),
+                result,
+                Duration.ofMinutes(MINUTES_CACHE)
+        );
+        return result;
     }
 
     /**
@@ -205,13 +272,12 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
             OffsetDateTime startTime,
             OffsetDateTime endTime
     ) {
-        TopologyEventType eventType = TopologyEventType.TEMPLE_WORHSIP;
-        MetricsAttendanceDto metricsWorship = metricsRedisService.getMetrics(eventType, churchId)
+        MetricsAttendanceDto metricsWorship = metricsRedisAdapter.getMetrics(templeType, churchId)
                 .orElseGet(
                         () -> buildingChurchMetrics(churchId, startTime, endTime)
                 );
-        metricsRedisService.saveMetrics(
-                eventType,
+        metricsRedisAdapter.saveMetrics(
+                templeType,
                 churchId,
                 metricsWorship,
                 Duration.ofMinutes(MINUTES_CACHE)
@@ -232,13 +298,12 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
             OffsetDateTime startTime,
             OffsetDateTime endTime
     ) {
-        TopologyEventType eventType = TopologyEventType.GROUP_MEETING;
-        MetricsAttendanceDto groupMetrics = metricsRedisService.getMetrics(eventType, groupId)
+        MetricsAttendanceDto groupMetrics = metricsRedisAdapter.getMetrics(groupType, groupId)
                 .orElseGet(
                         () -> buildingGroupMetrics(groupId, startTime, endTime)
                 );
-        metricsRedisService.saveMetrics(
-                eventType,
+        metricsRedisAdapter.saveMetrics(
+                groupType,
                 groupId,
                 groupMetrics,
                 Duration.ofMinutes(MINUTES_CACHE)
