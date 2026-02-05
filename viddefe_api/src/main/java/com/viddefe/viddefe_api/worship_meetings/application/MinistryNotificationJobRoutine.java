@@ -15,10 +15,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +28,7 @@ public class MinistryNotificationJobRoutine {
     private final MinistryFunctionRepository ministryFunctionRepository;
     private static final ForkJoinPool PUBLISH_POOL = new ForkJoinPool(10);
     private static final Integer DAYS_BEFORE_MEETING = 1;
-    private static final Integer HOURS_BEFORE_MEETING = 1; // 1 hora
+    private static final Integer HOURS_BEFORE_MEETING = 5; // 5 hours before meeting
     private final String TEMPLATE_GROUP_MEETING = """
         Hola {{name}} 👋
         Te recordamos que tienes una función ministerial asignada para la próxima reunión de grupo {{groupName}} en la iglesia {{churchName}}.
@@ -54,20 +51,20 @@ public class MinistryNotificationJobRoutine {
         """;
     private final NotificationEventPublisher notificationEventPublisher;
 
-    @Scheduled(fixedRate = 6000 * 60) // Ejecuta cada hora 6000 ms * 60 = 1 hora. 6000 ms = 1 minuto
+    @Scheduled(fixedRate = 6000 * 20 ) // Ejecuta cada hora 6000 ms * 20 = 20 minutes. 6000 ms = 1 minuto
     @Async
     public void execute() {
-
-
         Pageable pageable = PageRequest.of(0, BATCH_SIZE);
         Page<MinistryFunction> page;
 
-        OffsetDateTime now = OffsetDateTime.now();
+        ZonedDateTime now =
+                ZonedDateTime.now(ZoneId.of("America/Bogota"));
 
+        OffsetDateTime beforeDateTime =
+                now.minusMonths(3).toOffsetDateTime();
         do {
             page = ministryFunctionRepository
-                    .findUpcomingMinistryFunctions(now,pageable);
-
+                    .findUpcomingMinistryFunctions(now.toOffsetDateTime(),beforeDateTime,pageable);
             if (page.isEmpty()) {
                 return;
             }
@@ -80,7 +77,6 @@ public class MinistryNotificationJobRoutine {
     }
 
     private boolean isReminderDue(MinistryFunction function) {
-
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime scheduledDate = function.getMeeting().getScheduledDate();
 
@@ -109,7 +105,6 @@ public class MinistryNotificationJobRoutine {
 
             return !lastSentDay.equals(today);
         }
-
         return true;
     }
 

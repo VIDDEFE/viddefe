@@ -73,10 +73,9 @@ public interface HomeGroupsRepository extends JpaRepository<HomeGroupsModel, UUI
 
     @Query("""
         SELECT
-            COUNT(p.id)
+            COUNT(hpm.people)
         FROM HomeGroupsModel hg
-        LEFT JOIN HomeGroupsPeopleMembers hpm ON hpm.homeGroup.id = hg.id
-        LEFT JOIN PeopleModel p ON p.id = hpm.people.id
+        JOIN HomeGroupsPeopleMembers hpm ON hpm.homeGroup.id = hg.id
         WHERE hg.id = :groupId
     """)
     Long findTotalPeopleByGroupId(UUID groupId);

@@ -42,8 +42,8 @@ export default function MyChurch() {
   const startTime = formatDateWithTz(dateRange.start);
   const endTime = formatDateWithTz(dateRange.end);
   
-  // Obtener métricas de cultos de mi iglesia
-  const { data: worshipMetrics } = useWorshipMetrics(myChurch?.id, startTime, endTime);
+  // Obtener métricas de cultos de mi iglesia (sin contextId, es mi iglesia)
+  const { data: worshipMetrics } = useWorshipMetrics(myChurch?.id, startTime, endTime, false);
 
   if (isLoading) {
     return (
@@ -203,7 +203,7 @@ export default function MyChurch() {
                   <div className="flex justify-between items-center border-b border-primary-100 pb-3">
                     <span className="text-sm sm:text-base text-primary-700">Asistencia Promedio</span>
                     <span className="text-lg sm:text-xl font-bold text-primary-800">
-                      {worshipMetrics.averageAttendancePerMeeting.toFixed(1)}
+                      {(worshipMetrics.averageAttendancePerMeeting || 0).toFixed(1)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -266,7 +266,7 @@ export default function MyChurch() {
                     <div className="flex justify-between items-center border-b border-primary-100 pb-3">
                       <span className="text-sm sm:text-base text-primary-700">Asist. Promedio Grupos</span>
                       <span className="text-lg sm:text-xl font-bold text-primary-800">
-                        {worshipMetrics.groupMetrics.averageAttendancePerMeeting.toFixed(1)}
+                        {(worshipMetrics.groupMetrics.averageAttendancePerMeeting || 0).toFixed(1)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">

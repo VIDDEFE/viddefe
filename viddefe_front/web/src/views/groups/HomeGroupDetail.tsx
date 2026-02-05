@@ -150,7 +150,7 @@ export default function HomeGroupDetail() {
               <FiUsers size={28} />
             </div>
             <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Asistentes</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics.totalPeople}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics?.totalPeople || 0}</p>
           </Card>
 
           <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
@@ -158,7 +158,7 @@ export default function HomeGroupDetail() {
               <FiCalendar size={28} />
             </div>
             <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Reuniones Este Período</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics.totalMeetings}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics?.totalMeetings || 0}</p>
           </Card>
 
           <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
@@ -166,7 +166,7 @@ export default function HomeGroupDetail() {
               <FiUsers size={28} />
             </div>
             <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Asist. Promedio</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics.averageAttendancePerMeeting.toFixed(1)}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{(groupMetrics?.averageAttendancePerMeeting || 0).toFixed(1)}</p>
           </Card>
 
           <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
@@ -174,7 +174,7 @@ export default function HomeGroupDetail() {
               <MdChurch size={28} />
             </div>
             <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Tasa de Asistencia</h3>
-            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{Math.round(groupMetrics.attendanceRate)}%</p>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{Math.round(groupMetrics?.attendanceRate || 0)}%</p>
           </Card>
         </div>
       )}

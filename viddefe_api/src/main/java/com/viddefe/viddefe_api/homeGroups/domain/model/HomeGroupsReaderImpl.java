@@ -27,8 +27,7 @@ public class HomeGroupsReaderImpl implements HomeGroupReader {
      */
     @Override
     public List<EntityIdWithTotalPeople> findAllIdsWithTotalPeopleByChurchId(UUID churchId) {
-        List<EntityIdWithTotalPeople> result = homeGroupsRepository.findAllIdsWithTotalPeopleByChurchId(churchId);
-        return result != null ? result : List.of();
+        return homeGroupsRepository.findAllIdsWithTotalPeopleByChurchId(churchId);
     }
 
     /**

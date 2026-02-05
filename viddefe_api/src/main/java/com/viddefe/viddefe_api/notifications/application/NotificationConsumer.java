@@ -37,7 +37,7 @@ public class NotificationConsumer {
     public void consumeMinistry(NotificationEvent event) {
 
         log.info("Starting MINISTRY notification processing");
-
+        System.out.println("MINISTRY NOTIFICATION PROCESSING");
         printDataEvent(event);
 
         PeopleResDto person =

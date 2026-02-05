@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,25 +23,30 @@ public class MetricsRedisAdapter {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private String resolveKey(TopologyEventType eventType, UUID contextId) {
+    private String resolveKey(TopologyEventType eventType, UUID contextId, OffsetDateTime startTime, OffsetDateTime endTime) {
         return String.format(
-                "viddefe:metrics:%s:%s",
+                "viddefe:metrics:%s:%s:%s:%s",
                 eventType.name(),
-                contextId
+                contextId,
+                startTime.toString(),
+                endTime.toString()
         );
     }
 
     @Async
-    public void saveMetrics(TopologyEventType eventType, UUID contextId, MetricsAttendanceDto metrics, Duration ttl) {
-        String key = resolveKey(eventType, contextId);
+    public void saveMetrics(TopologyEventType eventType, UUID contextId, MetricsAttendanceDto metrics, Duration ttl,
+                            OffsetDateTime startTime, OffsetDateTime endTime) {
+        String key = resolveKey(eventType, contextId, startTime, endTime);
         redisTemplate.opsForValue().set(key, metrics, ttl);
     }
 
     public Optional<MetricsAttendanceDto> getMetrics(
             TopologyEventType eventType,
-            UUID contextId
+            UUID contextId,
+            OffsetDateTime startTime,
+            OffsetDateTime endTime
     ) {
-        String key = resolveKey(eventType, contextId);
+        String key = resolveKey(eventType, contextId, startTime, endTime);
         Object val = redisTemplate.opsForValue().get(key);
 
         if (val instanceof MetricsAttendanceDto metrics) {
@@ -50,14 +56,24 @@ public class MetricsRedisAdapter {
         return Optional.empty();
     }
 
-    public void deleteMetrics(TopologyEventType eventType, UUID contextId) {
-        String key = resolveKey(eventType, contextId);
+    public void deleteMetrics(TopologyEventType eventType, UUID contextId,
+    OffsetDateTime startTime, OffsetDateTime endTime) {
+        String key = resolveKey(eventType, contextId, startTime, endTime);
         redisTemplate.delete(key);
     }
 
-    public boolean exists(TopologyEventType eventType, UUID contextId) {
-        String key = resolveKey(eventType, contextId);
+    public boolean exists(TopologyEventType eventType, UUID contextId, OffsetDateTime startTime, OffsetDateTime endTime) {
+        String key = resolveKey(eventType, contextId, startTime, endTime);
         return redisTemplate.hasKey(key);
+    }
+
+    public boolean exitsInAnyRangeOfDate(TopologyEventType eventType, UUID contextId) {
+        String key = String.format(
+                "viddefe:metrics:%s:%s:*",
+                eventType.name(),
+                contextId
+        );
+        return !redisTemplate.keys(key).isEmpty();
     }
 }
 

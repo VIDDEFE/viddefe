@@ -211,7 +211,12 @@ public class MeetingsController {
             @RequestParam OffsetDateTime endTime,
             @CookieValue("access_token") String accessToken
     ) {
-        UUID resolvedContextId = resolveContextId(type, contextId, accessToken);
+        //In this case we resolve contextId only for TEMPLE_WORHSIP, for GROUP_MEETING it must be provided
+        //Because the resolverContextId if I send TEMPLE_WORHSIP it will always take churchId from JWT
+        //But in this case we want to allow both options
+        UUID resolvedContextId = contextId != null ? contextId : jwtUtil.getChurchId(accessToken);
+        System.out.println("Fetching metrics for contextId: " + resolvedContextId);
+        System.out.println("Fetching for event type: " + type);
         MetricsAttendanceDto response = meetingFacade.getMetricsAttendance(
                 resolvedContextId,
                 type,
