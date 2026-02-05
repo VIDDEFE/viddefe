@@ -31,8 +31,9 @@ public class AttendanceModel {
     @JoinColumn(name = "people_id")
     private PeopleModel people;
 
-    @Column(name = "event_id", nullable = false)
-    private UUID eventId;
+    @ManyToOne
+    @JoinColumn(name = "event_id", nullable = false)
+    private Meeting eventId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false)

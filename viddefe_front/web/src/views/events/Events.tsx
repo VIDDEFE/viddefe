@@ -30,6 +30,7 @@ export default function Events() {
           endTime: formData.endTime || '17:00',
           location: formData.location || '',
           organizer: formData.organizer || '1',
+          attendees: formData.attendees || [],
           maxCapacity: formData.maxCapacity || 100,
           status: (formData.status as any) || 'planned',
         },
@@ -73,7 +74,7 @@ export default function Events() {
         onClose={() => setIsModalOpen(false)}
         actions={
           <div className="flex gap-2">
-            <Button variant="primary" onClick={handleAddEvent} disabled={createEvent.isLoading}>
+            <Button variant="primary" onClick={handleAddEvent} disabled={createEvent.isPending}>
               Guardar
             </Button>
             <Button variant="secondary" onClick={() => setIsModalOpen(false)}>

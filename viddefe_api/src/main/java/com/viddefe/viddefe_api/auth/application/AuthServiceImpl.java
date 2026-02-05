@@ -14,7 +14,6 @@ import com.viddefe.viddefe_api.auth.domain.model.UserPermissions;
 import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
 import com.viddefe.viddefe_api.churches.contracts.ChurchService;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
-import com.viddefe.viddefe_api.common.exception.CustomExceptions;
 import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.contracts.PeopleWriter;

@@ -3,11 +3,9 @@ package com.viddefe.viddefe_api.notifications.application;
 import com.viddefe.viddefe_api.auth.contracts.AuthMeService;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationMeetingEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.factory.NotificatorFactory;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
-import com.viddefe.viddefe_api.notifications.common.RabbitQueues;
+import com.viddefe.viddefe_api.config.rabbit.RabbitQueues;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
@@ -39,7 +37,7 @@ public class NotificationConsumer {
     public void consumeMinistry(NotificationEvent event) {
 
         log.info("Starting MINISTRY notification processing");
-
+        System.out.println("MINISTRY NOTIFICATION PROCESSING");
         printDataEvent(event);
 
         PeopleResDto person =

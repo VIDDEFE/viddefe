@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.homeGroups.domain.repository;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDetailDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -52,9 +53,30 @@ public interface HomeGroupsRepository extends JpaRepository<HomeGroupsModel, UUI
             hg
         FROM HomeGroupsModel hg
         JOIN FETCH RolesStrategiesModel rss ON rss.strategy.id = hg.strategy.id
-        JOIN FETCH RolPeopleStrategiesModel rps ON rps.role.id = rss.id
+        LEFT JOIN FETCH RolPeopleStrategiesModel rps ON rps.role.id = rss.id
         WHERE hg.manager.id = :personId OR rps.person.id = :personId
     """)
     Optional<HomeGroupsModel> getHomeGroupByIntegrantId(@Param("personId") UUID personId);
 
+    @Query("""
+        SELECT
+            hg.id AS entityId,
+            COUNT(p.id) AS totalPeople
+        FROM HomeGroupsModel hg
+        LEFT JOIN HomeGroupsPeopleMembers hpm ON hpm.homeGroup.id = hg.id
+        LEFT JOIN PeopleModel p ON p.id = hpm.people.id
+        WHERE hg.church.id = :churchId
+        GROUP BY hg.id
+    """)
+    List<EntityIdWithTotalPeople> findAllIdsWithTotalPeopleByChurchId(
+            @Param("churchId") UUID churchId);
+
+    @Query("""
+        SELECT
+            COUNT(hpm.people)
+        FROM HomeGroupsModel hg
+        JOIN HomeGroupsPeopleMembers hpm ON hpm.homeGroup.id = hg.id
+        WHERE hg.id = :groupId
+    """)
+    Long findTotalPeopleByGroupId(UUID groupId);
 }

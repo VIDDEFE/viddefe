@@ -1,12 +1,15 @@
 package com.viddefe.viddefe_api.notifications.application;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
-import com.viddefe.viddefe_api.notifications.common.RabbitQueues;
+import com.viddefe.viddefe_api.config.rabbit.RabbitQueues;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * EventNotification is responsible for handling event notifications.
@@ -19,6 +22,10 @@ public class NotificationEventPublisherImpl implements NotificationEventPublishe
 
     private final RabbitTemplate rabbitTemplate;
 
+    @Async
+    @TransactionalEventListener(
+            phase = TransactionPhase.AFTER_COMMIT
+    )
     @Override
     public void publish(NotificationEvent event) {
 

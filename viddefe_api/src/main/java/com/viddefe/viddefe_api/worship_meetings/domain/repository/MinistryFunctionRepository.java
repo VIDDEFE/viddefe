@@ -27,15 +27,14 @@ public interface MinistryFunctionRepository extends JpaRepository<MinistryFuncti
     @Query("""
     SELECT mf
     FROM MinistryFunction mf
-    JOIN mf.meeting m
-    WHERE m.scheduledDate > :now
+    JOIN FETCH mf.meeting m
+    WHERE m.scheduledDate BETWEEN :from AND :now
 """)
     Page<MinistryFunction> findUpcomingMinistryFunctions(
             @Param("now") OffsetDateTime now,
+            @Param("from") OffsetDateTime beforeDateTime,
             Pageable pageable
     );
-
-
 
     Optional<MinistryFunction> findByMeetingIdAndPeopleId(UUID meetingId, UUID peopleId);
 }

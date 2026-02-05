@@ -181,4 +181,74 @@ class PeopleReaderImplTest {
             assertThat(result).isFalse();
         }
     }
+
+    @Nested
+    @DisplayName("getPeopleByIds")
+    class GetPeopleByIds {
+
+        @Test
+        @DisplayName("Should return list of people when found")
+        void shouldReturnListOfPeopleWhenFound() {
+            // Given
+            PeopleModel person2 = new PeopleModel();
+            person2.setId(UUID.randomUUID());
+            person2.setFirstName("Jane");
+            person2.setLastName("Doe");
+
+            java.util.List<UUID> ids = java.util.List.of(personId, person2.getId());
+            when(peopleRepository.findAllById(ids)).thenReturn(java.util.List.of(person, person2));
+
+            // When
+            java.util.List<PeopleModel> result = peopleReader.getPeopleByIds(ids);
+
+            // Then
+            assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no people found")
+        void shouldReturnEmptyListWhenNoneFound() {
+            // Given
+            java.util.List<UUID> ids = java.util.List.of(UUID.randomUUID());
+            when(peopleRepository.findAllById(ids)).thenReturn(java.util.List.of());
+
+            // When
+            java.util.List<PeopleModel> result = peopleReader.getPeopleByIds(ids);
+
+            // Then
+            assertThat(result).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("verifyPersonExistsByCcAndChurchId")
+    class VerifyPersonExistsByCcAndChurchId {
+
+        @Test
+        @DisplayName("Should not throw when person does not exist")
+        void shouldNotThrowWhenPersonDoesNotExist() {
+            // Given
+            String cc = "123456789";
+            UUID churchId = UUID.randomUUID();
+            when(peopleRepository.findByCcAndChurchId(cc, churchId)).thenReturn(Optional.empty());
+
+            // When/Then
+            org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+                    peopleReader.verifyPersonExistsByCcAndChurchId(cc, churchId));
+        }
+
+        @Test
+        @DisplayName("Should throw when person exists")
+        void shouldThrowWhenPersonExists() {
+            // Given
+            String cc = "123456789";
+            UUID churchId = UUID.randomUUID();
+            when(peopleRepository.findByCcAndChurchId(cc, churchId)).thenReturn(Optional.of(person));
+
+            // When/Then
+            assertThatThrownBy(() -> peopleReader.verifyPersonExistsByCcAndChurchId(cc, churchId))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("ya existe en la iglesia");
+        }
+    }
 }

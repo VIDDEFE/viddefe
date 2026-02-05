@@ -11,7 +11,7 @@ import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationAccountEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.notifications.common.RabbitPriority;
+import com.viddefe.viddefe_api.config.rabbit.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
@@ -40,11 +40,23 @@ public class AccountServiceImpl implements AccountService {
     private final PermissionService permissionService;
     private final NotificationEventPublisher notificationEventPublisher;
 
-    private static final String TEMPLATE_INVITATION_MESSAGE = "" +
-            "Hello {{name}}, welcome to VidDefe! Your credentials are:\n" +
-            "Username: {{username}}\n" +
-            "Password: {{password}}\n" +
-            "Please change your password after logging in.";
+    /**
+     * Temporary one-time password.
+     * - Generated randomly
+     * - Valid for a short period
+     * - Must be changed on first login
+     * - Never reused
+     */
+    private static final String TEMPLATE_INVITATION_MESSAGE = """
+    Hello {{name}}, welcome to VidDefe!
+    
+    Your account has been created.
+    
+    Username: {{username}}
+    Temporary password (one-time): {{password}}
+    
+    You will be required to change this password immediately after logging in.
+    """;
 
     @Override
     public void invite(InvitationDto dtp, UUID churchId) {

@@ -4,25 +4,6 @@ import { MdChurch } from 'react-icons/md';
 import { formatDateForDisplay } from '../../utils/helpers';
 import type { ChurchDetail, ChurchPastor } from '../../models';
 
-interface StatCardProps {
-  readonly title: string;
-  readonly value: number | string;
-  readonly icon: React.ReactNode;
-  readonly bgColor: string;
-}
-
-function StatCard({ title, value, icon, bgColor }: StatCardProps) {
-  return (
-    <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
-      <div className={`text-2xl sm:text-3xl p-3 rounded-lg text-white ${bgColor}`}>
-        {icon}
-      </div>
-      <h3 className="text-base sm:text-lg font-semibold text-neutral-900">{title}</h3>
-      <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{value}</p>
-    </Card>
-  );
-}
-
 interface QuickAction {
   icon: React.ReactNode;
   label: string;
@@ -53,14 +34,6 @@ export default function ChurchDetailLayout({
     return 'Sin pastor asignado';
   };
 
-  // Stats con datos de la iglesia
-  const stats = [
-    { title: 'Total Miembros', value: church.memberCount ?? 0, icon: <FiUsers size={28} />, bgColor: 'bg-green-500' },
-    { title: 'Grupos Activos', value: 0, icon: <FiHome size={28} />, bgColor: 'bg-violet-500' },
-    { title: 'Servicios Este Mes', value: 0, icon: <FiCalendar size={28} />, bgColor: 'bg-blue-500' },
-    { title: 'Eventos Próximos', value: 0, icon: <FiCalendar size={28} />, bgColor: 'bg-amber-500' },
-  ];
-
   // Acciones por defecto (deshabilitadas para vistas de solo lectura)
   const defaultQuickActions: QuickAction[] = [
     { icon: <FiUsers size={16} />, label: 'Ver Miembros', onClick: () => {}, disabled: true },
@@ -73,18 +46,6 @@ export default function ChurchDetailLayout({
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <StatCard
-            key={stat.title}
-            title={stat.title}
-            value={stat.value}
-            icon={stat.icon}
-            bgColor={stat.bgColor}
-          />
-        ))}
-      </div>
 
       {/* Información detallada */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -7,7 +7,6 @@ import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
 import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +46,7 @@ public class PeopleReaderImpl implements PeopleReader {
         PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.getLabel());
         return peopleRepository.findByCcAndTypePersonAndChurchIsNull(cc, pastorType);
     }
-    
+
     @Override
     public boolean existsPastorByCcWithoutChurch(String cc) {
         PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.getLabel());
@@ -68,5 +67,4 @@ public class PeopleReaderImpl implements PeopleReader {
                     );
                 });
     }
-
 }

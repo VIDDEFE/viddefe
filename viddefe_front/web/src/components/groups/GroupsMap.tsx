@@ -66,7 +66,6 @@ export default function GroupsMap({
   // Hook para obtener grupos cercanos según los bounds del mapa
   const { 
     data: groups = [], 
-    isLoading, 
     isFetching,
     refetch,
     error 
@@ -311,17 +310,17 @@ export default function GroupsMap({
             )}
 
             {/* Responsable */}
-            {selectedGroup.leader && (
+            {selectedGroup.manager && (
               <div>
                 <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider">
                   Responsable
                 </span>
                 <p className="text-sm text-neutral-800 mt-1 flex items-center gap-2">
                   <span className="w-6 h-6 bg-violet-100 rounded-full flex items-center justify-center text-xs font-semibold text-violet-700">
-                    {selectedGroup.leader.firstName[0]}
-                    {selectedGroup.leader.lastName[0]}
+                    {selectedGroup.manager.firstName[0]}
+                    {selectedGroup.manager.lastName[0]}
                   </span>
-                  {selectedGroup.leader.firstName} {selectedGroup.leader.lastName}
+                  {selectedGroup.manager.firstName} {selectedGroup.manager.lastName}
                 </p>
               </div>
             )}

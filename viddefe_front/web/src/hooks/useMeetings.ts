@@ -85,10 +85,11 @@ export function useDeleteMeeting(groupId?: string) {
 /**
  * Hook para obtener la asistencia de una reunión paginada
  */
+
 export function useMeetingAttendance(groupId?: string, meetingId?: string, params?: PageableRequest) {
   return useQuery<Pageable<MeetingAttendance>, Error>({
     queryKey: ['meetingAttendance', groupId, meetingId, params?.page, params?.size],
-    queryFn: () => groupMeetingService.getAttendance(meetingId!, params),
+    queryFn: () => groupMeetingService.getAttendance(groupId!, meetingId!, params),
     enabled: !!groupId && !!meetingId,
     placeholderData: keepPreviousData,
   });
@@ -101,7 +102,7 @@ export function useRegisterMeetingAttendance(groupId?: string, meetingId?: strin
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: RegisterMeetingAttendanceDto) => groupMeetingService.registerAttendance(data),
+    mutationFn: (data: RegisterMeetingAttendanceDto) => groupMeetingService.registerAttendance(groupId!, meetingId!, data),
 
     // Actualización optimista
     onMutate: async (data) => {

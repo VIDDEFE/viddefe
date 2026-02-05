@@ -44,7 +44,6 @@ const PaginatedPersonDropdown = memo(function PaginatedPersonDropdown({
   selectedIds,
   excludeIds,
   onToggle,
-  isMultiple = false,
   placeholder = "Seleccionar personas...",
 }: PaginatedPersonDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);

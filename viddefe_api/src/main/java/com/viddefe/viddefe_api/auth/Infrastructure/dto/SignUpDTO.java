@@ -18,8 +18,8 @@ public class SignUpDTO {
     @NotBlank(message = "The password is empty")
     @Size(min = 8, max = 20, message = "The password must be between 8 and 20 characters")
     @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&._-])[A-Za-z\\d@$!%*?&._-]+$",
-            message = "The password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+            regexp = "^(?=.*[a-z])(?=.*\\d).+$",
+            message = "The password must contain at least one lowercase letter and one number"
     )
     private String password;
     private Long roleId;

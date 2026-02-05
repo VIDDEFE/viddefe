@@ -78,15 +78,7 @@ export interface PaginatedResponse<T> {
   empty: boolean;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  status: number;
-  message: string;
-  errorCode?: string;
-  data: T;
-  metadata?: Record<string, string>;
-  timestamp: string;
-}
+// ApiResponse se exporta desde api.ts, no duplicar aquí
 
 // ============================================================================
 // TYPES - Meeting Request/Response
@@ -189,28 +181,24 @@ function formatDateWithOffset(date: Date): string {
 // ============================================================================
 
 export const worshipApi = {
-  getAll: async (pageable?: PageableParams): Promise<MeetingResponse[]> => {
+  getAll: (pageable?: PageableParams) => {
     const query = buildQueryParams(MeetingType.TEMPLE_WORSHIP, undefined, pageable);
-    const response = await apiService.get<ApiResponse<MeetingResponse[]>>(`/meetings?${query}`);
-    return response.data;
+    return apiService.get<MeetingResponse[]>(`/meetings?${query}`);
   },
 
-  getById: async (id: string): Promise<MeetingResponse> => {
+  getById: (id: string) => {
     const query = buildQueryParams(MeetingType.TEMPLE_WORSHIP);
-    const response = await apiService.get<ApiResponse<MeetingResponse>>(`/meetings/${id}?${query}`);
-    return response.data;
+    return apiService.get<MeetingResponse>(`/meetings/${id}?${query}`);
   },
 
-  getAttendance: async (id: string, pageable?: PageableParams): Promise<PaginatedAttendanceResponse> => {
+  getAttendance: (id: string, pageable?: PageableParams) => {
     const query = buildAttendanceQueryParams(MeetingType.TEMPLE_WORSHIP, pageable);
-    const response = await apiService.get<ApiResponse<PaginatedAttendanceResponse>>(`/meetings/${id}/attendance?${query}`);
-    return response.data;
+    return apiService.get<PaginatedAttendanceResponse>(`/meetings/${id}/attendance?${query}`);
   },
 
-  registerAttendance: async (data: AttendanceRequest): Promise<AttendanceResponse> => {
+  registerAttendance: (data: AttendanceRequest) => {
     const query = buildAttendanceQueryParams(MeetingType.TEMPLE_WORSHIP);
-    const response = await apiService.put<ApiResponse<AttendanceResponse>>(`/meetings/attendance?${query}`, data);
-    return response.data;
+    return apiService.put<AttendanceResponse>(`/meetings/attendance?${query}`, data);
   },
 };
 
@@ -219,28 +207,33 @@ export const worshipApi = {
 // ============================================================================
 
 export const groupMeetingApi = {
-  getAll: async (groupId: string, pageable?: PageableParams): Promise<MeetingResponse[]> => {
+  getAll: (groupId: string, pageable?: PageableParams) => {
     const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId, pageable);
-    const response = await apiService.get<ApiResponse<MeetingResponse[]>>(`/meetings?${query}`);
-    return response.data;
+    return apiService.get<MeetingResponse[]>(`/meetings?${query}`);
   },
 
-  getById: async (id: string, groupId: string): Promise<MeetingResponse> => {
+  getById: (id: string, groupId: string) => {
     const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId);
-    const response = await apiService.get<ApiResponse<MeetingResponse>>(`/meetings/${id}?${query}`);
-    return response.data;
+    return apiService.get<MeetingResponse>(`/meetings/${id}?${query}`);
   },
 
-  getAttendance: async (id: string, pageable?: PageableParams): Promise<PaginatedAttendanceResponse> => {
-    const query = buildAttendanceQueryParams(MeetingType.GROUP_MEETING, pageable);
-    const response = await apiService.get<ApiResponse<PaginatedAttendanceResponse>>(`/meetings/${id}/attendance?${query}`);
-    return response.data;
+  /**
+   * groupId es obligatorio para asistencia de reuniones de grupo
+   */
+  getAttendance: (id: string, groupId: string, pageable?: PageableParams) => {
+    if (!groupId) throw new Error("El parámetro 'groupId' es obligatorio para reuniones de tipo GROUP_MEETING");
+    // Usar buildQueryParams para incluir contextId
+    const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId, pageable);
+    return apiService.get<PaginatedAttendanceResponse>(`/meetings/${id}/attendance?${query}`);
   },
 
-  registerAttendance: async (data: AttendanceRequest): Promise<AttendanceResponse> => {
-    const query = buildAttendanceQueryParams(MeetingType.GROUP_MEETING);
-    const response = await apiService.put<ApiResponse<AttendanceResponse>>(`/meetings/attendance?${query}`, data);
-    return response.data;
+  /**
+   * groupId es obligatorio para registrar asistencia en reuniones de grupo
+   */
+  registerAttendance: (data: AttendanceRequest, groupId: string) => {
+    if (!groupId) throw new Error("El parámetro 'groupId' es obligatorio para reuniones de tipo GROUP_MEETING");
+    const query = buildQueryParams(MeetingType.GROUP_MEETING, groupId);
+    return apiService.put<AttendanceResponse>(`/meetings/attendance?${query}`, data);
   },
 };
 

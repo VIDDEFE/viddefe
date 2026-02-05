@@ -293,7 +293,7 @@ export default function Table<T extends { id: string }>({
   const renderDesktopTable = () => (
     <div className="overflow-x-auto overflow-y-auto max-h-[60vh] flex-1">
       <table className="w-full border-collapse min-w-max">
-        <thead className="from-primary-50 to-primary-100 border-b-2 border-primary-300 sticky top-0 bg-white z-10">
+        <thead className="from-primary-50 to-primary-100 border-b-2 border-primary-300 sticky top-0 bg-white z-0">
           <tr>
             {columns.map(col => {
               const isSortable = col.sortable !== false && sorting;

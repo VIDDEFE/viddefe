@@ -1,5 +1,5 @@
 import { useAppContext } from '../../context/AppContext';
-import { FiLogOut, FiChevronDown, FiUser, FiSettings } from 'react-icons/fi';
+import { FiLogOut, FiChevronDown, FiUser } from 'react-icons/fi';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Avatar } from '../shared';

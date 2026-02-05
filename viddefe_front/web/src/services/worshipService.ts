@@ -1,11 +1,12 @@
 import { apiService, type PageableRequest, type Pageable } from './api';
-import { MeetingType } from './meetingService';
+import { MeetingType as MeetingTypeEnum } from './meetingService';
 import type { 
   Worship, 
   WorshipDetail, 
   CreateWorshipDto, 
   UpdateWorshipDto,
-  WorshipAttendance 
+  WorshipAttendance,
+  MeetingType 
 } from '../models';
 import { validateDatePayload } from '../utils/helpers';
 
@@ -45,7 +46,7 @@ export const worshipService = {
    * GET /meetings?type=TEMPLE_WORHSIP
    */
   getAll: async (params?: PageableRequest): Promise<Pageable<Worship>> => {
-    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const query = new URLSearchParams({ type: MeetingTypeEnum.TEMPLE_WORSHIP });
     
     if (params?.page !== undefined) query.append('page', String(params.page));
     if (params?.size !== undefined) query.append('size', String(params.size));
@@ -60,7 +61,7 @@ export const worshipService = {
    * GET /meetings/{id}?type=TEMPLE_WORHSIP
    */
   getById: async (id: string): Promise<WorshipDetail> => {
-    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const query = new URLSearchParams({ type: MeetingTypeEnum.TEMPLE_WORSHIP });
     const response = await apiService.get<WorshipDetail>(`/meetings/${id}?${query.toString()}`);
     return response;
   },
@@ -73,7 +74,7 @@ export const worshipService = {
    * IMPORTANTE: scheduledDate DEBE incluir timezone (ej: "2026-01-15T10:00:00-05:00")
    */
   create: async (data: CreateWorshipDto): Promise<Worship> => {
-    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const query = new URLSearchParams({ type: MeetingTypeEnum.TEMPLE_WORSHIP });
     
     // Validar que scheduledDate tenga timezone (requerido por el backend)
     validateDatePayload(data.scheduledDate, 'scheduledDate');
@@ -98,7 +99,7 @@ export const worshipService = {
    * IMPORTANTE: scheduledDate DEBE incluir timezone si se provee
    */
   update: async (id: string, data: UpdateWorshipDto): Promise<Worship> => {
-    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const query = new URLSearchParams({ type: MeetingTypeEnum.TEMPLE_WORSHIP });
     
     // Validar que scheduledDate tenga timezone si se proporciona
     if (data.scheduledDate) {
@@ -122,7 +123,7 @@ export const worshipService = {
    * DELETE /meetings/{id}?type=TEMPLE_WORHSIP
    */
   delete: async (id: string): Promise<void> => {
-    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const query = new URLSearchParams({ type: MeetingTypeEnum.TEMPLE_WORSHIP });
     await apiService.delete(`/meetings/${id}?${query.toString()}`);
   },
 
@@ -140,7 +141,7 @@ export const worshipService = {
    * GET /meetings/{id}/attendance?type=TEMPLE_WORHSIP
    */
   getAttendance: async (id: string, params?: PageableRequest): Promise<Pageable<WorshipAttendance>> => {
-    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const query = new URLSearchParams({ type: MeetingTypeEnum.TEMPLE_WORSHIP });
     
     if (params?.page !== undefined) query.append('page', String(params.page));
     if (params?.size !== undefined) query.append('size', String(params.size));
@@ -155,7 +156,7 @@ export const worshipService = {
    * PUT /meetings/attendance?type=TEMPLE_WORHSIP
    */
   registerAttendance: async (data: RegisterAttendanceDto): Promise<WorshipAttendance> => {
-    const query = new URLSearchParams({ type: MeetingType.TEMPLE_WORSHIP });
+    const query = new URLSearchParams({ type: MeetingTypeEnum.TEMPLE_WORSHIP });
     const response = await apiService.put<WorshipAttendance>(`/meetings/attendance?${query.toString()}`, data);
     return response;
   },
