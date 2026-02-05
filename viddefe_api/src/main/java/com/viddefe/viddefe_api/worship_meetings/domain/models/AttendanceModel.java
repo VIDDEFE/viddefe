@@ -1,6 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.models;
 
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
@@ -31,16 +31,19 @@ public class AttendanceModel {
     @JoinColumn(name = "people_id")
     private PeopleModel people;
 
-    @Column(name = "event_id", nullable = false)
-    private UUID eventId;
+    @ManyToOne
+    @JoinColumn(name = "event_id", nullable = false)
+    private Meeting eventId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false)
-    private AttendanceEventType eventType;
+    private TopologyEventType eventType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AttendanceStatus status;
+
+    private Boolean isNewAttendee;
 
     public AttendanceDto toDto() {
         AttendanceDto attendanceDto = new AttendanceDto();

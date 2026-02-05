@@ -15,9 +15,7 @@ import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -138,7 +136,8 @@ public class ChurchServiceImpl implements ChurchService {
                 pastor.toDto(),
                 church.getFoundationDate(),
                 church.getPhone(),
-                church.getEmail()
+                church.getEmail(),
+                0L,0L,0L,0L
         );
     }
 

@@ -1,25 +1,24 @@
-import { Form, Input, TextArea, FormGroup } from '../shared';
+import { Form, Input, TextArea } from '../shared';
 import DropDown from '../shared/DropDown';
-import type { WorshipType } from '../../models';
-
+import type { MeetingType } from '../../models';
 export interface WorshipFormData {
   name: string;
   description: string;
   scheduledDate: string;
-  worshipTypeId: number | '';
+  meetingTypeId: number | '';
 }
 
 export const initialWorshipFormData: WorshipFormData = {
   name: '',
   description: '',
   scheduledDate: '',
-  worshipTypeId: '',
+  meetingTypeId: '',
 };
 
 interface WorshipFormProps {
   value: WorshipFormData;
   onChange: (patch: Partial<WorshipFormData>) => void;
-  worshipTypes?: WorshipType[];
+  worshipTypes?: MeetingType[];
   errors?: Partial<Record<keyof WorshipFormData, string>>;
 }
 
@@ -68,16 +67,16 @@ export default function WorshipForm({
       <DropDown
         label="Tipo de Culto"
         options={worshipTypeOptions}
-        value={value.worshipTypeId === '' ? '' : String(value.worshipTypeId)}
+        value={value.meetingTypeId === '' ? '' : String(value.meetingTypeId)}
         onChangeValue={(val) =>
           onChange({
-            worshipTypeId: val ? Number(val) : '',
+            meetingTypeId: val ? Number(val) : '',
           })
         }
         placeholder="Seleccionar tipo de culto..."
         labelKey="name"
         valueKey="id"
-        error={errors.worshipTypeId}
+        error={errors.meetingTypeId}
       />
     </Form>
   );

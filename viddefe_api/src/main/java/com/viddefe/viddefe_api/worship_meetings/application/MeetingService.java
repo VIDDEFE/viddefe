@@ -1,14 +1,13 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
 import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingTypeEnum;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -49,8 +48,10 @@ public class MeetingService {
     /**
      * Obtiene una reunión por ID sin relaciones cargadas.
      */
-    public Optional<Meeting> findById(UUID id) {
-        return repository.findById(id);
+    public Meeting findById(UUID id) {
+        return repository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Meeting not found with id: " + id)
+        );
     }
 
     /**
@@ -62,18 +63,19 @@ public class MeetingService {
     }
 
     /**
-     * Obtiene todas las reuniones de un contexto paginadas.
+     * Obtiene reuniones de adoración (worship) por churchId con paginación.
      */
-    public Page<Meeting> findByContextId(UUID contextId, Pageable pageable) {
-        return repository.findByContextId(contextId, pageable);
+    public Page<Meeting> findWorshipMeetingByChurchId(UUID churchId, Pageable pageable) {
+        return repository.findByChurchIdAndGroupIsNull(churchId, pageable);
     }
 
     /**
-     * Verifica si existe conflicto de reunión (misma iglesia/grupo, tipo y fecha).
+     * Obtiene reuniones de grupo por churchId y groupId con paginación.
      */
-    public boolean existsConflict(UUID contextId, Long typeId, OffsetDateTime scheduledDate) {
-        return repository.existsByContextIdAndTypeIdAndScheduledDate(contextId, typeId, scheduledDate);
+    public Page<Meeting> findGroupMeetingByGroupId(UUID groupId, Pageable pageable) {
+        return repository.findByGroupId(groupId, pageable);
     }
+
 
     /**
      * Elimina una reunión.

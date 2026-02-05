@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.churches.domain.repository;
 
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -48,10 +49,17 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
                 pastor.phone,
                 pastor.avatar,
                 cast(pastor.birthDate as java.sql.Date),
-                pastor.typePerson,
+                new com.viddefe.viddefe_api.people.infrastructure.dto.PeopleTypeDto(
+                    pastor.typePerson.id,
+                    pastor.typePerson.name
+                ),
                 new com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto(
                     s.id,
                     s.name
+                ),
+                new com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceQualityDto(
+                    aq.id,
+                    aq.name
                 )
             )
         )
@@ -60,6 +68,8 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
             join ci.states s
             left join ChurchPastor cp on cp.church = c
             left join cp.pastor pastor
+            left join AttendanceQualityPeople aqp on aqp.people = pastor
+            left join AttendanceQuality aq on aq.id = aqp.attendanceQuality.id
         where (
             (:parentChurchId is null and c.parentChurch is null)
             or
@@ -96,4 +106,25 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
             BigDecimal eastLng
     );
 
+    @Query("""
+    SELECT 
+        c.id AS entityId,
+        COUNT(p.id) AS totalPeople
+    FROM ChurchModel c
+    JOIN PeopleModel p ON p.church.id = c.id
+    WHERE c.parentChurch.id = :churchId
+    GROUP BY c.id
+""")
+    List<EntityIdWithTotalPeople> findAllChildrenIdsWithTotalPeopleByChurchId(UUID churchId);
+
+    @Query("""
+        SELECT 
+            c.id AS entityId,
+            COUNT(p.id) AS totalPeople
+        FROM ChurchModel c
+        JOIN PeopleModel p ON p.church.id = c.id
+        WHERE c.id = :churchId
+        GROUP BY c.id
+    """)
+    EntityIdWithTotalPeople findChurchIdWithTotalPeopleByChurchId(UUID churchId);
 }

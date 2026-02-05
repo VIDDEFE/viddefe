@@ -1,9 +1,16 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceQualityReader;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.GroupMeetingTypes;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceQuality;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.TopologyMeetingModel;
+import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingTypeRepository;
+import com.viddefe.viddefe_api.worship_meetings.domain.repository.TopologyMeetingRepository;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceQualityDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingTypeDto;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,17 +19,29 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class MeetingTypeServiceImpl implements MeetingTypesService {
-    private final TypesWorshipMeetingReaderImpl typesWorshipMeetingReader;
-    private final GroupMeetingTypeReaderImpl groupMeetingTypeReader;
+    private final MeetingTypeRepository meetingTypeConfigRepository;
+    private final TopologyMeetingRepository topologyMeetingRepository;
+    private final AttendanceQualityReader attendanceQualityReader;
+
     @Override
-    public List<MeetingTypeDto> getAllWorshipMeetingTypes() {
-        return typesWorshipMeetingReader.getAllWorshipMeetingTypes().stream()
-                .map(WorshipMeetingTypes::toDto).toList();
+    public List<MeetingTypeDto> getAllMeetingByTopologyEventTypes(TopologyEventType topologyEventType) {
+        TopologyMeetingModel topologyMeetingModel = topologyMeetingRepository.findByType(topologyEventType)
+                .orElseThrow(() -> new EntityNotFoundException("Topology Meeting with type " + topologyEventType + " not found"));
+        return topologyMeetingModel.getMeetingTypes()
+                .stream().map(MeetingType::toDto).toList();
     }
 
     @Override
-    public List<MeetingTypeDto> getAllGroupMeetingTypes() {
-        return groupMeetingTypeReader.getAllGroupMeetingTypes().stream()
-                .map(GroupMeetingTypes::toDto).toList();
+    public MeetingType getMeetingTypesById(Long id) {
+        return meetingTypeConfigRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Meeting Type with id " + id + " not found")
+        );
+    }
+
+    @Override
+    public List<AttendanceQualityDto> getAttendanceLevels() {
+        return attendanceQualityReader.getAllAttendanceQualities().stream().map(
+                AttendanceQuality::toDto
+        ).toList();
     }
 }

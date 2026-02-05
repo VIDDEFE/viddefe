@@ -1,191 +1,51 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMyChurch, useChurchChildren, useStates, useCities, useCreateChildrenChurch, useUpdateChurch, useDeleteChurch, useChurch } from '../../hooks';
-import { useAppContext } from '../../context/AppContext';
-import { Card, Button, PageHeader, Table } from '../../components/shared';
-import ChurchFormModal from '../../components/churches/ChurchFormModal';
-import ChurchViewModal from '../../components/churches/ChurchViewModal';
-import ChurchDeleteModal from '../../components/churches/ChurchDeleteModal';
-import ChurchesMap from '../../components/churches/ChurchesMap';
-import { type ChurchFormData, initialChurchFormData } from '../../components/churches/ChurchForm';
-import { FiMapPin, FiPhone, FiMail, FiUser, FiCalendar, FiMap, FiList, FiUsers, FiHome } from 'react-icons/fi';
-import { ChurchPermission } from '../../services/userService';
-import type { ChurchSummary, PersonSummary } from '../../models';
-import type { SortConfig } from '../../services/api';
-import { formatDateForDisplay } from '../../utils/helpers';
-
-type ModalMode = 'create' | 'edit' | 'view' | 'delete' | null;
-type ViewMode = 'table' | 'map';
-
-const DEFAULT_PAGE_SIZE = 10;
+import { useMyChurch, useWorshipMetrics } from '../../hooks';
+import { Button, PageHeader, Card } from '../../components/shared';
+import ChurchDetailLayout from '../../components/churches/ChurchDetailLayout';
+import { FiUsers, FiHome, FiCalendar } from 'react-icons/fi';
+import { MdChurch } from 'react-icons/md';
 
 export default function MyChurch() {
   const navigate = useNavigate();
-  const { data: myChurch, isLoading: isLoadingMyChurch, error } = useMyChurch();
-  const { hasPermission } = useAppContext();
+  const { data: myChurch, isLoading, error } = useMyChurch();
 
-  // Permisos de iglesias
-  const canCreate = hasPermission(ChurchPermission.ADD);
-  const canView = hasPermission(ChurchPermission.VIEW);
-  const canEdit = hasPermission(ChurchPermission.EDIT);
-  const canDelete = hasPermission(ChurchPermission.DELETE);
-
-  // View mode state
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
-
-  // Estado de paginación
-  const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-
-  // Estado de ordenamiento
-  const [sortConfig, setSortConfig] = useState<SortConfig | undefined>(undefined);
-
-  // Mapeo de columnas
-  const columnToJpaPath: Record<string, string> = {
-    name: 'name',
-    pastor: 'pastor.lastName',
-    states: 'city.states.name',
-    city: 'city.name',
-  };
-
-  const sortConfigForBackend = useMemo(() => {
-    if (!sortConfig) return undefined;
-    const jpaPath = columnToJpaPath[sortConfig.field] || sortConfig.field;
-    return { field: jpaPath, direction: sortConfig.direction };
-  }, [sortConfig]);
-
-  // Obtener iglesias hijas
-  const { data: childrenChurches, isLoading: isLoadingChildren } = useChurchChildren(
-    myChurch?.id, 
-    { 
-      page: currentPage, 
-      size: pageSize,
-      sort: sortConfigForBackend 
-    }
-  );
-  const { data: states } = useStates();
-
-  // Modal state
-  const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [selectedChurch, setSelectedChurch] = useState<ChurchSummary | null>(null);
-  const [formData, setFormData] = useState<ChurchFormData>(initialChurchFormData);
-
-  // Get details for selected church
-  const { data: churchDetails, isLoading: isLoadingDetails } = useChurch(selectedChurch?.id);
-  const { data: cities } = useCities(formData.stateId);
-
-  // Mutations
-  const createChurch = useCreateChildrenChurch(myChurch?.id);
-  const updateChurch = useUpdateChurch();
-  const deleteChurch = useDeleteChurch();
-
-  // Track if form was already populated
-  const [formPopulated, setFormPopulated] = useState(false);
-
-  // Load church details when editing/viewing
-  useEffect(() => {
-    if (!churchDetails || !selectedChurch || !(modalMode === 'edit' || modalMode === 'view')) return;
-    if (churchDetails.id !== selectedChurch.id) return;
-    if (formPopulated && modalMode === 'edit') return;
+  // State para las fechas
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>(() => {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
-    setFormData({
-      name: churchDetails.name ?? '',
-      email: churchDetails.email ?? '',
-      phone: churchDetails.phone ?? '',
-      foundationDate: churchDetails.foundationDate ?? '',
-      latitude: churchDetails.latitude ?? undefined,
-      longitude: churchDetails.longitude ?? undefined,
-      pastorId: churchDetails.pastor?.id ?? '',
-      pastor: churchDetails?.pastor ?? {} as PersonSummary,
-      stateId: churchDetails.states?.id ?? undefined,
-      cityId: churchDetails.city?.cityId ?? undefined,
-    });
+    // Formatear fechas para input type="date"
+    const formatDateForInput = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
     
-    if (modalMode === 'edit') {
-      setFormPopulated(true);
-    }
-  }, [churchDetails, selectedChurch, modalMode, formPopulated]);
+    return {
+      start: formatDateForInput(thirtyDaysAgo),
+      end: formatDateForInput(now),
+    };
+  });
 
-  // Handlers for modal operations
-  const openModal = (mode: ModalMode, church?: ChurchSummary) => {
-    if (church) {
-      setSelectedChurch(church);
-      setFormPopulated(false);
-    } else {
-      resetForm();
-    }
-    setModalMode(mode);
+  // Formatear fechas en ISO con timezone para API
+  const formatDateWithTz = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const offset = -date.getTimezoneOffset();
+    const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+    const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, '0');
+    const sign = offset >= 0 ? '+' : '-';
+    return `${dateStr}T00:00:00${sign}${offsetHours}:${offsetMinutes}`;
   };
+  
+  const startTime = formatDateWithTz(dateRange.start);
+  const endTime = formatDateWithTz(dateRange.end);
+  
+  // Obtener métricas de cultos de mi iglesia (sin contextId, es mi iglesia)
+  const { data: worshipMetrics } = useWorshipMetrics(myChurch?.id, startTime, endTime, false);
 
-  const resetForm = () => {
-    setFormData(initialChurchFormData);
-    setSelectedChurch(null);
-    setFormPopulated(false);
-  };
-
-  const closeModal = () => {
-    setModalMode(null);
-    resetForm();
-  };
-
-  // Handle form changes
-  const handleFormChange = (patch: Partial<ChurchFormData>) => {
-    setFormData(prev => ({ ...prev, ...patch }));
-  };
-
-  // CRUD handlers
-  const handleCreate = () => {
-    if (!formData.name) return;
-    createChurch.mutate(
-      {
-        name: formData.name,
-        cityId: formData.cityId || 0,
-        phone: formData.phone,
-        email: formData.email,
-        pastor: '',
-        pastorId: formData.pastorId || undefined,
-        foundationDate: formData.foundationDate || undefined,
-        memberCount: 0,
-        longitude: formData.longitude || 0,
-        latitude: formData.latitude || 0,
-      },
-      { onSuccess: closeModal }
-    );
-  };
-
-  const handleUpdate = () => {
-    if (!selectedChurch?.id || !formData.name) return;
-    updateChurch.mutate(
-      {
-        id: selectedChurch.id,
-        data: {
-          name: formData.name,
-          cityId: formData.cityId,
-          phone: formData.phone,
-          email: formData.email,
-          pastorId: formData.pastorId || undefined,
-          foundationDate: formData.foundationDate,
-          latitude: formData.latitude,
-          longitude: formData.longitude,
-        },
-      },
-      { onSuccess: closeModal }
-    );
-  };
-
-  const handleDelete = () => {
-    if (!selectedChurch?.id) return;
-    deleteChurch.mutate(selectedChurch.id, { onSuccess: closeModal });
-  };
-
-  // Handler para ordenamiento
-  const handleSortChange = (sort: SortConfig | undefined) => {
-    setSortConfig(sort);
-    setCurrentPage(0);
-  };
-
-  // Estado de carga inicial
-  if (isLoadingMyChurch) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center min-h-75">
@@ -198,7 +58,6 @@ export default function MyChurch() {
     );
   }
 
-  // Estado de error
   if (error || !myChurch) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -222,67 +81,19 @@ export default function MyChurch() {
     );
   }
 
-  // Table columns
-  const columns = [
-    { key: 'name' as const, label: 'Nombre', sortable: true },
-    {
-      key: 'pastor' as const,
-      label: 'Pastor',
-      sortable: true,
-      render: (_: unknown, item: ChurchSummary) =>
-        item.pastor && typeof item.pastor === 'object'
-          ? `${item.pastor.firstName} ${item.pastor.lastName}`
-          : '-',
-    },
-    {
-      key: 'states' as const,
-      label: 'Departamento',
-      sortable: true,
-      render: (_: unknown, item: ChurchSummary) => item.states?.name || '-',
-    },
-    {
-      key: 'city' as const,
-      label: 'Ciudad',
-      sortable: true,
-      render: (_: unknown, item: ChurchSummary) => item.city?.name || '-',
-    },
+  // Acciones rápidas habilitadas SOLO para "Mi Iglesia"
+  const quickActions = [
+    { icon: <FiUsers size={16} />, label: 'Administrar Miembros', onClick: () => navigate('/people'), disabled: false },
+    { icon: <FiHome size={16} />, label: 'Ver Grupos', onClick: () => navigate('/groups'), disabled: false },
+    { icon: <FiCalendar size={16} />, label: 'Ver Servicios', onClick: () => navigate('/services'), disabled: false },
+    { icon: <FiCalendar size={16} />, label: 'Ver Eventos', onClick: () => navigate('/events'), disabled: false },
   ];
-
-  // Construir acciones basadas en permisos
-  const tableActions = [
-    ...(canView ? [{ icon: 'view' as const, label: 'Ver', onClick: (c: ChurchSummary) => openModal('view', c), variant: 'secondary' as const }] : []),
-    ...(canEdit ? [{ icon: 'edit' as const, label: 'Editar', onClick: (c: ChurchSummary) => openModal('edit', c), variant: 'primary' as const }] : []),
-    ...(canDelete ? [{ icon: 'delete' as const, label: 'Eliminar', onClick: (c: ChurchSummary) => openModal('delete', c), variant: 'danger' as const }] : []),
-  ];
-
-  const isMutating = createChurch.isPending || updateChurch.isPending;
-
-  // Datos para tabla
-  const churchesArray = Array.isArray(childrenChurches) ? childrenChurches : (childrenChurches?.content ?? []);
-  
-  // Información de paginación del servidor
-  const paginationData = childrenChurches && !Array.isArray(childrenChurches) ? {
-    totalPages: childrenChurches.totalPages,
-    totalElements: childrenChurches.totalElements,
-    currentPage: childrenChurches.number,
-    pageSize: childrenChurches.size
-  } : null;
-
-  // Handlers de paginación
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setCurrentPage(0);
-  };
 
   return (
     <div className="container mx-auto px-4">
       <PageHeader
         title="Mi Iglesia"
-        subtitle={myChurch.name}
+        subtitle={`${myChurch.city?.name || 'Ciudad no especificada'}, ${myChurch.states?.name || ''}`}
         actions={
           <Button variant="secondary" onClick={() => navigate('/churches')}>
             Ver todas las iglesias
@@ -290,250 +101,222 @@ export default function MyChurch() {
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn mb-8">
-        {/* Información de Mi Iglesia */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Info General */}
-          <Card>
-            <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-              <FiHome className="text-primary-600" />
-              Información General
-            </h3>
+      {/* Date Range Selector */}
+      <Card className="p-5 sm:p-6 mb-6">
+        <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+          <FiCalendar size={20} />
+          Rango de Fechas para Métricas
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Fecha Inicio
+            </label>
+            <input
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Fecha Fin
+            </label>
+            <input
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </Card>
 
-            <div className="space-y-4">
-              <div>
-                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
-                  Nombre
-                </span>
-                <p className="text-neutral-800 font-medium mt-1">{myChurch.name}</p>
-              </div>
-
-              {myChurch.phone && (
-                <div>
-                  <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
-                    Teléfono
-                  </span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <FiPhone className="text-neutral-400" size={16} />
-                    <span className="text-neutral-700">{myChurch.phone}</span>
-                  </div>
+      {/* 
+        showQuickActions=true → acciones rápidas VISIBLES y habilitadas 
+        en la vista "Mi Iglesia" 
+      */}
+      <ChurchDetailLayout 
+        church={myChurch} 
+        showQuickActions={true}
+        quickActions={quickActions}
+      >
+        {/* Metrics Section for My Church */}
+        {worshipMetrics && (
+          <>
+            {/* Stats based on Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+              <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+                <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-green-500">
+                  <FiUsers size={28} />
                 </div>
-              )}
+                <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Total Miembros</h3>
+                <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{worshipMetrics.totalPeople}</p>
+              </Card>
 
-              {myChurch.email && (
-                <div>
-                  <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
-                    Email
-                  </span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <FiMail className="text-neutral-400" size={16} />
-                    <a href={`mailto:${myChurch.email}`} className="text-primary-600 hover:text-primary-700">
-                      {myChurch.email}
-                    </a>
-                  </div>
+              <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+                <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-violet-500">
+                  <FiHome size={28} />
                 </div>
-              )}
+                <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Grupos Activos</h3>
+                <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{worshipMetrics.totalGroups}</p>
+              </Card>
 
-              {myChurch.foundationDate && (
-                <div>
-                  <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
-                    Fecha de Fundación
-                  </span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <FiCalendar className="text-neutral-400" size={16} />
-                    <span className="text-neutral-700">
-                      {formatDateForDisplay(myChurch.foundationDate, 'date')}
+              <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+                <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-blue-500">
+                  <FiCalendar size={28} />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Cultos Este Período</h3>
+                <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{worshipMetrics.totalMeetings}</p>
+              </Card>
+
+              <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+                <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-yellow-500">
+                  <MdChurch size={28} />
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Tasa de Asistencia</h3>
+                <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{Math.round(worshipMetrics.attendanceRate)}%</p>
+              </Card>
+            </div>
+
+            {/* Detailed Metrics Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Church Metrics */}
+              <Card className="p-5 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-semibold text-primary-900 mb-4">
+                  Métricas de {myChurch.name}
+                </h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                    <span className="text-sm sm:text-base text-primary-700">Nuevos Asistentes</span>
+                    <span className="text-lg sm:text-xl font-bold text-primary-800">
+                      {worshipMetrics.newAttendees}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                    <span className="text-sm sm:text-base text-primary-700">Total Asistentes</span>
+                    <span className="text-lg sm:text-xl font-bold text-primary-800">
+                      {worshipMetrics.totalPeopleAttended}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                    <span className="text-sm sm:text-base text-primary-700">Asistencia Promedio</span>
+                    <span className="text-lg sm:text-xl font-bold text-primary-800">
+                      {(worshipMetrics.averageAttendancePerMeeting || 0).toFixed(1)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm sm:text-base text-primary-700">Tasa de Inasistencia</span>
+                    <span className="text-lg sm:text-xl font-bold text-primary-800">
+                      {Math.round(worshipMetrics.absenceRate)}%
                     </span>
                   </div>
                 </div>
+              </Card>
+
+              {/* Attendance Rate Visualization */}
+              <Card className="p-5 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-semibold text-primary-900 mb-4">
+                  Tasa de Asistencia
+                </h3>
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative w-24 h-24">
+                    <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-primary-800">
+                          {Math.round(worshipMetrics.attendanceRate)}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="w-full">
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 transition-all"
+                        style={{ width: `${worshipMetrics.attendanceRate}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-primary-600 text-center">
+                    {worshipMetrics.totalPeople} personas | {worshipMetrics.totalMeetings} reuniones totales
+                  </p>
+                </div>
+              </Card>
+
+              {/* Group Metrics */}
+              {worshipMetrics.groupMetrics && (
+                <Card className="p-5 sm:p-6">
+                  <h3 className="text-lg sm:text-xl font-semibold text-primary-900 mb-4">
+                    Métricas de Grupos ({dateRange.start} a {dateRange.end})
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                      <span className="text-sm sm:text-base text-primary-700">Personas en Grupos</span>
+                      <span className="text-lg sm:text-xl font-bold text-primary-800">
+                        {worshipMetrics.groupMetrics.totalPeople}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                      <span className="text-sm sm:text-base text-primary-700">Reuniones de Grupos</span>
+                      <span className="text-lg sm:text-xl font-bold text-primary-800">
+                        {worshipMetrics.groupMetrics.totalMeetings}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                      <span className="text-sm sm:text-base text-primary-700">Asist. Promedio Grupos</span>
+                      <span className="text-lg sm:text-xl font-bold text-primary-800">
+                        {(worshipMetrics.groupMetrics.averageAttendancePerMeeting || 0).toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm sm:text-base text-primary-700">Asistencia Grupos</span>
+                      <span className="text-lg sm:text-xl font-bold text-green-600">
+                        {Math.round(worshipMetrics.groupMetrics.attendanceRate)}%
+                      </span>
+                    </div>
+                  </div>
+                </Card>
               )}
 
-              {/* Ubicación */}
-              <div>
-                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
-                  Ubicación
-                </span>
-                <div className="flex items-center gap-2 mt-1">
-                  <FiMapPin className="text-neutral-400" size={16} />
-                  <span className="text-neutral-700">
-                    {myChurch.city?.name && myChurch.states?.name 
-                      ? `${myChurch.city.name}, ${myChurch.states.name}` 
-                      : 'Sin ubicación'}
-                  </span>
-                </div>
-                {Boolean(myChurch.latitude) && Boolean(myChurch.longitude) && (
-                  <a
-                    href={`https://www.google.com/maps?q=${myChurch.latitude},${myChurch.longitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary-600 hover:text-primary-700 text-sm mt-1 inline-block"
-                  >
-                    Ver en Google Maps →
-                  </a>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Pastor */}
-          <Card>
-            <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-              <FiUser className="text-primary-600" />
-              Pastor
-            </h3>
-
-            {myChurch.pastor ? (
-              <div className="flex items-center gap-3">
-                {myChurch.pastor.avatar ? (
-                  <img
-                    src={myChurch.pastor.avatar}
-                    alt={`${myChurch.pastor.firstName} ${myChurch.pastor.lastName}`}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-lg">
-                    {myChurch.pastor.firstName?.[0]}
-                    {myChurch.pastor.lastName?.[0]}
+              {/* Church Metrics */}
+              {worshipMetrics.churchMetrics && (
+                <Card className="p-5 sm:p-6">
+                  <h3 className="text-lg sm:text-xl font-semibold text-primary-900 mb-4">
+                    Métricas de Cultos ({dateRange.start} a {dateRange.end})
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                      <span className="text-sm sm:text-base text-primary-700">Personas en Cultos</span>
+                      <span className="text-lg sm:text-xl font-bold text-primary-800">
+                        {worshipMetrics.churchMetrics.totalPeople}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                      <span className="text-sm sm:text-base text-primary-700">Total de Cultos</span>
+                      <span className="text-lg sm:text-xl font-bold text-primary-800">
+                        {worshipMetrics.churchMetrics.totalMeetings}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                      <span className="text-sm sm:text-base text-primary-700">Nuevos Asistentes Cultos</span>
+                      <span className="text-lg sm:text-xl font-bold text-primary-800">
+                        {worshipMetrics.churchMetrics.newAttendees}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm sm:text-base text-primary-700">Asistencia Cultos</span>
+                      <span className="text-lg sm:text-xl font-bold text-green-600">
+                        {Math.round(worshipMetrics.churchMetrics.attendanceRate)}%
+                      </span>
+                    </div>
                   </div>
-                )}
-                <div>
-                  <p className="font-medium text-neutral-800">
-                    {myChurch.pastor.firstName} {myChurch.pastor.lastName}
-                  </p>
-                  {myChurch.pastor.phone && (
-                    <p className="text-sm text-neutral-500">{myChurch.pastor.phone}</p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <p className="text-neutral-500 text-center py-4">
-                Sin pastor asignado
-              </p>
-            )}
-          </Card>
-
-          {/* Estadísticas */}
-          {myChurch.memberCount !== undefined && (
-            <Card>
-              <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
-                <FiUsers className="text-primary-600" />
-                Estadísticas
-              </h3>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-primary-600">{myChurch.memberCount}</p>
-                <p className="text-sm text-neutral-500">Miembros registrados</p>
-              </div>
-            </Card>
-          )}
-        </div>
-
-        {/* Iglesias Hijas */}
-        <div className="lg:col-span-2">
-          <Card className="h-full">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
-                <FiHome className="text-primary-600" />
-                Iglesias Hijas
-              </h3>
-              <div className="flex items-center gap-2">
-                {/* Toggle vista tabla/mapa */}
-                <div className="flex border border-neutral-200 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setViewMode('table')}
-                    className={`px-3 py-2 text-sm flex items-center gap-1 transition-colors ${
-                      viewMode === 'table'
-                        ? 'bg-primary-50 text-primary-700'
-                        : 'bg-white text-neutral-600 hover:bg-neutral-50'
-                    }`}
-                  >
-                    <FiList size={16} />
-                    <span className="hidden sm:inline">Lista</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode('map')}
-                    className={`px-3 py-2 text-sm flex items-center gap-1 transition-colors ${
-                      viewMode === 'map'
-                        ? 'bg-primary-50 text-primary-700'
-                        : 'bg-white text-neutral-600 hover:bg-neutral-50'
-                    }`}
-                  >
-                    <FiMap size={16} />
-                    <span className="hidden sm:inline">Mapa</span>
-                  </button>
-                </div>
-                {canCreate && (
-                  <Button onClick={() => openModal('create')}>
-                    Nueva Iglesia
-                  </Button>
-                )}
-              </div>
+                </Card>
+              )}
             </div>
-
-            {viewMode === 'table' ? (
-              <Table<ChurchSummary>
-                data={churchesArray}
-                columns={columns}
-                actions={tableActions}
-                loading={isLoadingChildren}
-                pagination={paginationData ? {
-                  mode: 'manual',
-                  currentPage: paginationData.currentPage,
-                  totalPages: paginationData.totalPages,
-                  totalElements: paginationData.totalElements,
-                  pageSize: paginationData.pageSize,
-                  onPageChange: handlePageChange,
-                  onPageSizeChange: handlePageSizeChange,
-                } : { mode: 'auto', pageSize: DEFAULT_PAGE_SIZE }}
-                sorting={{
-                  mode: 'manual',
-                  sortConfig: sortConfig,
-                  onSortChange: handleSortChange,
-                }}
-              />
-            ) : (
-              <div className="h-96 rounded-lg overflow-hidden border border-neutral-200">
-                <ChurchesMap
-                  churchId={myChurch.id}
-                  height={384}
-                  onChurchSelect={(church) => openModal('view', church)}
-                />
-              </div>
-            )}
-          </Card>
-        </div>
-      </div>
-
-      {/* ========== MODALES ========== */}
-
-      <ChurchFormModal
-        isOpen={modalMode === 'create' || modalMode === 'edit'}
-        mode={modalMode === 'edit' ? 'edit' : 'create'}
-        formData={formData}
-        onFormChange={handleFormChange}
-        onSave={modalMode === 'create' ? handleCreate : handleUpdate}
-        onClose={closeModal}
-        isLoading={modalMode === 'edit' && isLoadingDetails}
-        isSaving={isMutating}
-        states={states}
-        cities={cities}
-      />
-
-      <ChurchViewModal
-        isOpen={modalMode === 'view'}
-        church={selectedChurch!}
-        churchDetails={churchDetails!}
-        isLoading={isLoadingDetails}
-        onEdit={() => selectedChurch && openModal('edit', selectedChurch)}
-        onClose={closeModal}
-      />
-
-      <ChurchDeleteModal
-        isOpen={modalMode === 'delete'}
-        churchName={selectedChurch?.name || ''}
-        onConfirm={handleDelete}
-        onClose={closeModal}
-        isDeleting={deleteChurch.isPending}
-      />
+          </>
+        )}
+      </ChurchDetailLayout>
     </div>
   );
 }

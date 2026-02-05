@@ -1,38 +1,70 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  useMyHomeGroup, 
-  useAssignPeopleToRole,
-  useRemovePeopleFromRole,
-  useMeetings,
-  useMeetingTypes,
-  useCreateMeeting,
-  useUpdateMeeting,
-  useDeleteMeeting,
-  useMeetingAttendance,
-  useRegisterMeetingAttendance
-} from '../../hooks';
-import { Card, Button, PageHeader, Table } from '../../components/shared';
+import { useMyHomeGroup } from '../../hooks/useHomeGroups';
+import { useGroupMetrics } from '../../hooks';
+import { useGroupMembers } from '../../hooks/useGroupMembers';
+import { useMeetings, useMeetingTypes, useCreateMeeting, useUpdateMeeting, useDeleteMeeting, useMeetingAttendance, useRegisterMeetingAttendance } from '../../hooks/useMeetings';
+import { Table, Button, Card, PageHeader } from '../../components/shared';
+import MembersTable from '../../components/groups/MembersTable';
+import { FiGrid, FiUser, FiUsers, FiMapPin, FiEye, FiEdit2, FiTrash2, FiCalendar, FiPlus } from 'react-icons/fi';
+import { MdChurch } from 'react-icons/md';
 import RoleTree from '../../components/groups/RoleTree';
 import RolePeopleAssignmentModal from '../../components/groups/RolePeopleAssignmentModal';
 import MeetingFormModal from '../../components/groups/MeetingFormModal';
 import MeetingViewModal from '../../components/groups/MeetingViewModal';
 import MeetingDeleteModal from '../../components/groups/MeetingDeleteModal';
 import MeetingAttendanceModal from '../../components/groups/MeetingAttendanceModal';
-import { FiMapPin, FiUser, FiGrid, FiUsers, FiPlus, FiCalendar, FiEye, FiEdit2, FiTrash2, FiUserCheck } from 'react-icons/fi';
-import type { RoleStrategyNode, Meeting, CreateMeetingDto, UpdateMeetingDto } from '../../models';
 import { formatDateForDisplay } from '../../utils/helpers';
+import type { RoleStrategyNode, Meeting, CreateMeetingDto, UpdateMeetingDto } from '../../models';
 
 export default function MyGroup() {
   const navigate = useNavigate();
   const { data, isLoading, error } = useMyHomeGroup();
 
-  // Hooks de mutación para asignación de personas
+  // Group ID
   const groupId = data?.homeGroup?.id || '';
-  const assignPeopleMutation = useAssignPeopleToRole(groupId);
-  const removePeopleMutation = useRemovePeopleFromRole(groupId);
+  
+  // State para las fechas
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>(() => {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    // Formatear fechas para input type="date"
+    const formatDateForInput = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
+    return {
+      start: formatDateForInput(thirtyDaysAgo),
+      end: formatDateForInput(now),
+    };
+  });
 
-  // Estado para modal de asignación de personas
+  // Formatear fechas en ISO con timezone para API
+  const formatDateWithTz = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    const offset = -date.getTimezoneOffset();
+    const offsetHours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+    const offsetMinutes = String(Math.abs(offset) % 60).padStart(2, '0');
+    const sign = offset >= 0 ? '+' : '-';
+    return `${dateStr}T00:00:00${sign}${offsetHours}:${offsetMinutes}`;
+  };
+  
+  const startTime = formatDateWithTz(dateRange.start);
+  const endTime = formatDateWithTz(dateRange.end);
+  
+  const { data: groupMetrics } = useGroupMetrics(groupId, startTime, endTime);
+  
+  const [membersPage, setMembersPage] = useState(0);
+  const [membersPageSize, setMembersPageSize] = useState(10);
+  const {
+    data: membersData,
+    isLoading: isLoadingMembers
+  } = useGroupMembers(groupId, { page: membersPage, size: membersPageSize });
+
   const [peopleModal, setPeopleModal] = useState<{
     isOpen: boolean;
     role: RoleStrategyNode | null;
@@ -104,27 +136,13 @@ export default function MyGroup() {
     });
   }, []);
 
-  // Asignar personas a un rol
-  const handleAssignPeople = useCallback((personIds: string[]) => {
-    if (peopleModal.role && personIds.length > 0) {
-      assignPeopleMutation.mutate(
-        {
-          roleId: peopleModal.role.id,
-          peopleIds: personIds,
-        },
-        {
-          onSuccess: () => {
-            handleClosePeopleModal();
-          },
-        }
-      );
-    }
-  }, [peopleModal.role, assignPeopleMutation, handleClosePeopleModal]);
+  // Asignar personas a un rol (stub)
+  const handleAssignPeople = useCallback((_personIds: string[]) => {
+    handleClosePeopleModal();
+  }, [handleClosePeopleModal]);
 
-  // Remover persona de un rol (desde el badge o modal)
-  const handleRemovePerson = useCallback((roleId: string, personId: string) => {
-    removePeopleMutation.mutate({ roleId, peopleIds: [personId] });
-  }, [removePeopleMutation]);
+  // Remover persona de un rol (stub)
+  const handleRemovePerson = useCallback((_roleId: string, _personId: string) => {}, []);
 
   // ========== MEETINGS HANDLERS ==========
   
@@ -212,8 +230,8 @@ export default function MyGroup() {
       id: meeting.id,
       name: meeting.name,
       type: meeting.type?.name || '-',
-      date: formatDateForDisplay(meeting.date, 'date'),
-      time: formatDateForDisplay(meeting.date, 'time'),
+      date: formatDateForDisplay(meeting.scheduledDate, 'date'),
+      time: formatDateForDisplay(meeting.scheduledDate, 'time'),
       description: meeting.description || '-',
       original: meeting,
     })),
@@ -307,19 +325,19 @@ export default function MyGroup() {
   // Estado de error o sin grupo
   if (error || !data) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         <div className="flex flex-col items-center justify-center min-h-75">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FiUsers className="text-amber-600 text-2xl" />
+          <div className="text-center max-w-xl w-full">
+            <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+              <FiUsers className="text-amber-600 text-5xl" />
             </div>
-            <h2 className="text-xl font-semibold text-neutral-800 mb-2">
-              No perteneces a ningún grupo
+            <h2 className="text-3xl font-bold text-amber-700 mb-4">
+              ¡No perteneces a ningún grupo!
             </h2>
-            <p className="text-neutral-600 mb-4">
-              {error?.message || 'Aún no has sido asignado a un grupo de hogar'}
+            <p className="text-lg text-neutral-700 mb-6">
+              {error?.message || 'Aún no has sido asignado a un grupo de hogar. Si crees que esto es un error, contacta a tu líder o administrador.'}
             </p>
-            <Button variant="secondary" onClick={() => navigate('/groups')}>
+            <Button variant="secondary" size="lg" onClick={() => navigate('/groups')}>
               Ver todos los grupos
             </Button>
           </div>
@@ -342,6 +360,75 @@ export default function MyGroup() {
         }
       />
 
+      {/* Date Range Selector */}
+      <Card className="p-5 sm:p-6 mb-6">
+        <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
+          <FiCalendar size={20} />
+          Rango de Fechas para Métricas
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Fecha Inicio
+            </label>
+            <input
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Fecha Fin
+            </label>
+            <input
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Stats based on Metrics */}
+      {groupMetrics && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+          <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+            <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-green-500">
+              <FiUsers size={28} />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Asistentes</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics?.totalPeople || 0}</p>
+          </Card>
+
+          <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+            <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-blue-500">
+              <FiCalendar size={28} />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Reuniones Este Período</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{groupMetrics?.totalMeetings || 0}</p>
+          </Card>
+
+          <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+            <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-amber-500">
+              <FiUsers size={28} />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Asist. Promedio</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{(groupMetrics?.averageAttendancePerMeeting || 0).toFixed(1)}</p>
+          </Card>
+
+          <Card className="flex flex-col items-start gap-3 p-5 sm:p-6 shadow-sm border border-neutral-100">
+            <div className="text-2xl sm:text-3xl p-3 rounded-lg text-white bg-yellow-500">
+              <MdChurch size={28} />
+            </div>
+            <h3 className="text-base sm:text-lg font-semibold text-neutral-900">Tasa de Asistencia</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-neutral-800">{Math.round(groupMetrics?.attendanceRate || 0)}%</p>
+          </Card>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
         {/* Columna izquierda: Info básica + Estrategia */}
         <div className="space-y-6">
@@ -351,7 +438,6 @@ export default function MyGroup() {
               <FiGrid className="text-primary-600" />
               Información General
             </h3>
-
             <div className="space-y-4">
               {/* Nombre */}
               <div>
@@ -360,7 +446,6 @@ export default function MyGroup() {
                 </span>
                 <p className="text-neutral-800 font-medium mt-1">{homeGroup.name}</p>
               </div>
-
               {/* Descripción */}
               {homeGroup.description && (
                 <div>
@@ -372,7 +457,6 @@ export default function MyGroup() {
                   </p>
                 </div>
               )}
-
               {/* Ubicación */}
               <div>
                 <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
@@ -393,16 +477,32 @@ export default function MyGroup() {
                   Ver en Google Maps →
                 </a>
               </div>
+              {/* Miembros del grupo */}
+              <div>
+                <span className="text-xs font-medium text-neutral-500 uppercase tracking-wider block">
+                  Miembros
+                </span>
+                <div className="mt-2">
+                  <MembersTable
+                    groupId={groupId}
+                    membersData={membersData as any}
+                    isLoading={isLoadingMembers}
+                    page={membersPage}
+                    pageSize={membersPageSize}
+                    onPageChange={setMembersPage}
+                    onPageSizeChange={setMembersPageSize}
+                    editable={true}
+                  />
+                </div>
+              </div>
             </div>
           </Card>
-
           {/* Líder */}
           <Card>
             <h3 className="text-lg font-semibold text-neutral-800 mb-4 flex items-center gap-2">
               <FiUser className="text-primary-600" />
               Líder del Grupo
             </h3>
-
             {homeGroup.manager ? (
               <div className="flex items-center gap-3">
                 {homeGroup.manager.avatar ? (
@@ -432,13 +532,11 @@ export default function MyGroup() {
               </p>
             )}
           </Card>
-
           {/* Estrategia */}
           <Card>
             <h3 className="text-lg font-semibold text-neutral-800 mb-4">
               Estrategia
             </h3>
-
             {strategy ? (
               <div className="inline-flex items-center px-4 py-2 bg-violet-50 border border-violet-200 rounded-lg">
                 <span className="w-3 h-3 bg-violet-500 rounded-full mr-3" />
@@ -450,8 +548,48 @@ export default function MyGroup() {
               </p>
             )}
           </Card>
-        </div>
 
+          {/* Group Metrics */}
+          {groupMetrics && (
+            <Card>
+              <h3 className="text-lg font-semibold text-neutral-800 mb-4">
+                Métricas de {homeGroup?.name} ({dateRange.start} a {dateRange.end})
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                  <span className="text-sm text-primary-700">Total Reuniones</span>
+                  <span className="text-lg font-bold text-primary-800">
+                    {groupMetrics.totalMeetings}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                  <span className="text-sm text-primary-700">Asistentes</span>
+                  <span className="text-lg font-bold text-primary-800">
+                    {groupMetrics.totalPeople}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                  <span className="text-sm text-primary-700">Asist. Promedio</span>
+                  <span className="text-lg font-bold text-primary-800">
+                    {groupMetrics.averageAttendancePerMeeting.toFixed(1)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-b border-primary-100 pb-3">
+                  <span className="text-sm text-primary-700">Tasa de Asistencia</span>
+                  <span className="text-lg font-bold text-green-600">
+                    {Math.round(groupMetrics.attendanceRate)}%
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-primary-700">Tasa de Inasistencia</span>
+                  <span className="text-lg font-bold text-primary-800">
+                    {Math.round(groupMetrics.absenceRate)}%
+                  </span>
+                </div>
+              </div>
+            </Card>
+          )}
+        </div>
         {/* Columna derecha: Jerarquía de roles (2 columnas) */}
         <div className="lg:col-span-2">
           <Card className="h-full">
@@ -465,7 +603,6 @@ export default function MyGroup() {
                 </p>
               )}
             </div>
-
             {/* Info sobre gestión de personas */}
             {strategy && (
               <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -474,7 +611,6 @@ export default function MyGroup() {
                 </p>
               </div>
             )}
-
             <div className="border border-neutral-200 rounded-lg p-4 bg-neutral-50/50 min-h-75">
               <RoleTree
                 hierarchy={hierarchy}
@@ -488,7 +624,6 @@ export default function MyGroup() {
                 onRemovePerson={strategy ? handleRemovePerson : undefined}
               />
             </div>
-
             {/* Leyenda */}
             {hierarchy && hierarchy.length > 0 && (
               <div className="mt-4 pt-4 border-t border-neutral-200">
@@ -502,54 +637,40 @@ export default function MyGroup() {
                     <span className="w-3 h-3 border-l-2 border-violet-500" />
                     <span>Nivel 2</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 border-l-2 border-blue-500" />
-                    <span>Nivel 3</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-3 h-3 border-l-2 border-emerald-500" />
-                    <span>Nivel 4+</span>
-                  </div>
                 </div>
               </div>
             )}
+            {/* Reuniones */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
+                <FiCalendar className="text-primary-600" />
+                Reuniones
+              </h3>
+              <Button variant="primary" onClick={handleOpenCreateMeeting}>
+                <span className="flex items-center gap-2">
+                  <FiPlus size={16} />
+                  Nueva Reunión
+                </span>
+              </Button>
+            </div>
+            <Table<(typeof meetingsTableData)[0]>
+              data={meetingsTableData}
+              columns={meetingColumns}
+              loading={isLoadingMeetings && meetingsTableData.length === 0}
+              viewMode={meetingViewMode}
+              onViewModeChange={setMeetingViewMode}
+              pagination={{
+                mode: 'manual',
+                currentPage: meetingPage,
+                totalPages: meetingsData?.totalPages ?? 0,
+                totalElements: meetingsData?.totalElements ?? 0,
+                pageSize: meetingPageSize,
+                onPageChange: setMeetingPage,
+                onPageSizeChange: setMeetingPageSize,
+              }}
+            />
           </Card>
         </div>
-      </div>
-
-      {/* ========== SECCIÓN DE REUNIONES ========== */}
-      <div className="mt-6 animate-fadeIn">
-        <Card>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-neutral-800 flex items-center gap-2">
-              <FiCalendar className="text-primary-600" />
-              Reuniones
-            </h3>
-            <Button variant="primary" onClick={handleOpenCreateMeeting}>
-              <span className="flex items-center gap-2">
-                <FiPlus size={16} />
-                Nueva Reunión
-              </span>
-            </Button>
-          </div>
-
-          <Table<(typeof meetingsTableData)[0]>
-            data={meetingsTableData}
-            columns={meetingColumns}
-            loading={isLoadingMeetings && meetingsTableData.length === 0}
-            viewMode={meetingViewMode}
-            onViewModeChange={setMeetingViewMode}
-            pagination={{
-              mode: 'manual',
-              currentPage: meetingPage,
-              totalPages: meetingsData?.totalPages ?? 0,
-              totalElements: meetingsData?.totalElements ?? 0,
-              pageSize: meetingPageSize,
-              onPageChange: setMeetingPage,
-              onPageSizeChange: setMeetingPageSize,
-            }}
-          />
-        </Card>
       </div>
 
       {/* ========== MODALES ==========/ */}
@@ -565,7 +686,7 @@ export default function MyGroup() {
           }
         }}
         onClose={handleClosePeopleModal}
-        isSaving={assignPeopleMutation.isPending || removePeopleMutation.isPending}
+        isSaving={false}
       />
       {/* Modal de formulario de reunión (crear/editar) */}
       <MeetingFormModal

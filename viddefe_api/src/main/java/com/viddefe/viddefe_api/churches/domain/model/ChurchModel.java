@@ -27,7 +27,7 @@ public class ChurchModel {
 
     private String name;
     private String email;
-    private Long phone;
+    private String phone;
     private Date foundationDate;
     @Column(precision = 10, scale = 6)
     private BigDecimal latitude;

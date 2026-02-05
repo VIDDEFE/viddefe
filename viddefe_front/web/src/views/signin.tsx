@@ -11,7 +11,7 @@ type LoginMethod = 'email' | 'phone';
 export default function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setUser, setPermissions, login } = useAppContext();
+  const { login } = useAppContext();
   const [loginMethod, setLoginMethod] = useState<LoginMethod>('email');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -89,12 +89,6 @@ export default function SignIn() {
       }
 
       // Proceso completo - continuar con login normal
-      // Cargar permisos desde meta si existen
-      const rawResponse = response as any;
-      if (rawResponse.meta?.permissions) {
-        setPermissions(rawResponse.meta.permissions);
-      }
-
       navigate('/');
 
     } catch (err: any) {

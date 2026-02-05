@@ -4,6 +4,8 @@ import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleTypeDto;
+import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,7 +27,7 @@ public class PeopleModel {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(length = 40, nullable = false, unique = true)
+    @Column(length = 40, nullable = false)
     private String cc;
 
     @Column(name = "first_name", length = 256, nullable = false)
@@ -64,6 +66,23 @@ public class PeopleModel {
     }
 
     public PeopleResDto toDto(){
+        // Convertir birthDate de forma segura
+        java.util.Date birth = null;
+        if (this.birthDate != null) {
+            birth = java.sql.Date.valueOf(this.birthDate);
+        }
+
+        // Convertir typePerson y state de forma segura (pueden ser null en tests)
+        PeopleTypeDto typeDto = null;
+        if (this.typePerson != null) {
+            typeDto = this.typePerson.toDto();
+        }
+
+        StatesDto stateDto = null;
+        if (this.state != null) {
+            stateDto = this.state.toDto();
+        }
+
         return new PeopleResDto(
                 this.id,
                 this.cc,
@@ -71,9 +90,12 @@ public class PeopleModel {
                 this.lastName,
                 this.phone,
                 this.avatar,
-                java.sql.Date.valueOf(this.birthDate),
-                this.typePerson,
-                this.state.toDto()
+                birth,
+                typeDto,
+                stateDto,
+                null
+
+
         );
     }
 

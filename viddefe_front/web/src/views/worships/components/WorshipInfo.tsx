@@ -37,7 +37,7 @@ function WorshipInfo({ worship }: Readonly<WorshipInfoProps>) {
           </span>
           <p className="mt-1">
             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800">
-              {worship.worshipType?.name}
+              {worship.type?.name}
             </span>
           </p>
         </div>

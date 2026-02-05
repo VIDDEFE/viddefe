@@ -56,7 +56,7 @@ export default function Account() {
   const permissionsByCategory = permissions.reduce((acc, permission) => {
     // Buscar la categoría del permiso
     let category = 'other';
-    for (const [key, info] of Object.entries(PERMISSION_CATEGORIES)) {
+    for (const key of Object.keys(PERMISSION_CATEGORIES)) {
       if (permission.toLowerCase().includes(key.replace('-', '_'))) {
         category = key;
         break;

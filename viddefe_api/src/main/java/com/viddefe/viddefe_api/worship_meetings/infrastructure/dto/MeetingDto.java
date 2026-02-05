@@ -18,4 +18,5 @@ public class MeetingDto {
     protected String description;
     protected OffsetDateTime scheduledDate;
     protected Instant creationDate;
+    protected MeetingTypeDto type;
 }

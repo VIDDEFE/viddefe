@@ -1,7 +1,7 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.models;
 
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionDto;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -26,12 +26,15 @@ public class MinistryFunction {
     @JoinColumn(name = "people_id", nullable = false)
     private PeopleModel people;
 
-    @Column(nullable = false, unique = false)
-    private UUID eventId;
+    @ManyToOne(
+        fetch = FetchType.EAGER
+    )
+    @JoinColumn(name = "meeting_id", nullable = false)
+    private Meeting meeting;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "event_type", nullable = false)
-    private AttendanceEventType eventType;
+    private TopologyEventType eventType;
 
     private Instant reminderSentAt;
 

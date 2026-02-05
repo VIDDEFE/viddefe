@@ -2,17 +2,21 @@ package com.viddefe.viddefe_api.worship_meetings.infrastructure.web;
 
 import com.viddefe.viddefe_api.common.Components.JwtUtil;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingFacade;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.PastOrPresent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
@@ -56,15 +60,14 @@ public class MeetingsController {
      */
     @PostMapping
     public ResponseEntity<ApiResponse<MeetingDto>> createMeeting(
-            @RequestParam AttendanceEventType type,
+            @RequestParam TopologyEventType type,
             @RequestParam(required = false) UUID contextId,
-            @RequestBody @Valid CreateMeetingDto dto,
+            @RequestBody @Validated(OnCreate.class) CreateMeetingDto dto,
             @CookieValue("access_token") String accessToken
     ) {
+        UUID churchId = jwtUtil.getChurchId(accessToken);
         UUID resolvedContextId = resolveContextId(type, contextId, accessToken);
-        validateDtoForType(dto, type);
-
-        MeetingDto response = meetingFacade.createMeeting(dto, resolvedContextId, type);
+        MeetingDto response = meetingFacade.createMeeting(dto, resolvedContextId, type, churchId);
         return new ResponseEntity<>(ApiResponse.created(response), HttpStatus.CREATED);
     }
 
@@ -80,14 +83,14 @@ public class MeetingsController {
      * @return Página de reuniones
      */
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<? extends MeetingDto>>> getAllMeetings(
-            @RequestParam AttendanceEventType type,
+    public ResponseEntity<ApiResponse<Page<MeetingDto>>> getAllMeetings(
+            @RequestParam TopologyEventType type,
             @RequestParam(required = false) UUID contextId,
             Pageable pageable,
             @CookieValue("access_token") String accessToken
     ) {
         UUID resolvedContextId = resolveContextId(type, contextId, accessToken);
-        Page<? extends MeetingDto> response = meetingFacade.getAllMeetings(resolvedContextId, type, pageable);
+        Page<MeetingDto> response = meetingFacade.getAllMeetings(resolvedContextId, type, pageable);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
@@ -103,7 +106,7 @@ public class MeetingsController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<MeetingDto>> getMeetingById(
             @PathVariable UUID id,
-            @RequestParam AttendanceEventType type,
+            @RequestParam TopologyEventType type,
             @RequestParam(required = false) UUID contextId,
             @CookieValue("access_token") String accessToken
     ) {
@@ -127,14 +130,12 @@ public class MeetingsController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<MeetingDto>> updateMeeting(
             @PathVariable UUID id,
-            @RequestParam AttendanceEventType type,
+            @RequestParam TopologyEventType type,
             @RequestParam(required = false) UUID contextId,
-            @RequestBody @Valid CreateMeetingDto dto,
+            @RequestBody @Validated(OnUpdate.class) CreateMeetingDto dto,
             @CookieValue("access_token") String accessToken
     ) {
         UUID resolvedContextId = resolveContextId(type, contextId, accessToken);
-        validateDtoForType(dto, type);
-
         MeetingDto response = meetingFacade.updateMeeting(dto, resolvedContextId, id, type);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
@@ -153,7 +154,7 @@ public class MeetingsController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteMeeting(
             @PathVariable UUID id,
-            @RequestParam AttendanceEventType type,
+            @RequestParam TopologyEventType type,
             @RequestParam(required = false) UUID contextId,
             @CookieValue("access_token") String accessToken
     ) {
@@ -173,7 +174,7 @@ public class MeetingsController {
      */
     @PutMapping("/attendance")
     public ResponseEntity<ApiResponse<AttendanceDto>> recordAttendance(
-            @RequestParam AttendanceEventType type,
+            @RequestParam TopologyEventType type,
             @RequestBody @Valid CreateAttendanceDto dto
     ) {
         AttendanceDto response = meetingFacade.recordAttendance(dto, type);
@@ -191,52 +192,57 @@ public class MeetingsController {
     @GetMapping("/{id}/attendance")
     public ResponseEntity<ApiResponse<Page<AttendanceDto>>> getAttendance(
             @PathVariable UUID id,
-            @RequestParam AttendanceEventType type,
-            Pageable pageable
+            @RequestParam TopologyEventType type,
+            @RequestParam(required = false) UUID groupId,
+            Pageable pageable,
+            @CookieValue("access_token") String accessToken,
+            @RequestParam(required = false) AttendanceQualityEnum levelOfAttendance
     ) {
-        Page<AttendanceDto> response = meetingFacade.getAttendance(id, type, pageable);
+        UUID contextId = resolveContextId(type, groupId, accessToken);
+        Page<AttendanceDto> response = meetingFacade.getAttendance(id, type, pageable, contextId, levelOfAttendance);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    // ==================== PRIVATE HELPERS ====================
+    @GetMapping("/metrics")
+    public ResponseEntity<ApiResponse<MetricsAttendanceDto>> getMetricsAttendance(
+            @RequestParam TopologyEventType type,
+            @RequestParam(required = false) UUID contextId,
+            @RequestParam @PastOrPresent OffsetDateTime startTime,
+            @RequestParam OffsetDateTime endTime,
+            @CookieValue("access_token") String accessToken
+    ) {
+        //In this case we resolve contextId only for TEMPLE_WORHSIP, for GROUP_MEETING it must be provided
+        //Because the resolverContextId if I send TEMPLE_WORHSIP it will always take churchId from JWT
+        //But in this case we want to allow both options
+        UUID resolvedContextId = contextId != null ? contextId : jwtUtil.getChurchId(accessToken);
+        System.out.println("Fetching metrics for contextId: " + resolvedContextId);
+        System.out.println("Fetching for event type: " + type);
+        MetricsAttendanceDto response = meetingFacade.getMetricsAttendance(
+                resolvedContextId,
+                type,
+                startTime,
+                endTime
+        );
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
 
     /**
      * Resuelve el contextId según el tipo de evento.
      * Para TEMPLE_WORHSIP: usa churchId del JWT.
      * Para GROUP_MEETING: usa el contextId del request param (obligatorio).
      */
-    private UUID resolveContextId(AttendanceEventType type, UUID contextId, String accessToken) {
+    private UUID resolveContextId(TopologyEventType type, UUID contextId, String accessToken) {
         return switch (type) {
             case TEMPLE_WORHSIP -> jwtUtil.getChurchId(accessToken);
             case GROUP_MEETING -> {
                 if (contextId == null) {
                     throw new IllegalArgumentException(
-                            "El parámetro 'contextId' es obligatorio para reuniones de tipo GROUP_MEETING"
+                            "El parámetro 'groupId' es obligatorio para reuniones de tipo: Reuniones de Grupo"
                     );
                 }
                 yield contextId;
             }
         };
-    }
-
-    /**
-     * Valida que el DTO sea del tipo correcto según el tipo de evento.
-     */
-    private void validateDtoForType(CreateMeetingDto dto, AttendanceEventType type) {
-        boolean isValid = switch (type) {
-            case TEMPLE_WORHSIP -> dto instanceof CreateWorshipDto;
-            case GROUP_MEETING -> dto instanceof CreateMeetingGroupDto;
-        };
-
-        if (!isValid) {
-            String expectedType = switch (type) {
-                case TEMPLE_WORHSIP -> "CreateWorshipDto";
-                case GROUP_MEETING -> "CreateMeetingGroupDto";
-            };
-            throw new IllegalArgumentException(
-                    String.format("DTO inválido para tipo %s. Se esperaba %s", type.name(), expectedType)
-            );
-        }
     }
 }
 

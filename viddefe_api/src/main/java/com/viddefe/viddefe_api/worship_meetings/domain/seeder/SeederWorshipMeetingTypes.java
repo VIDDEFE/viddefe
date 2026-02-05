@@ -1,8 +1,11 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.seeder;
 
 import com.viddefe.viddefe_api.worship_meetings.configuration.TempleMeetingTypes;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.WorshipMeetingTypes;
-import com.viddefe.viddefe_api.worship_meetings.domain.repository.WorshipTypesRepository;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+import com.viddefe.viddefe_api.worship_meetings.contracts.TopologyMeetingReader;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.TopologyMeetingModel;
+import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingTypeRepository;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -13,26 +16,22 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class SeederWorshipMeetingTypes {
-    private final WorshipTypesRepository worshipTypesRepository;
+    private final MeetingTypeRepository meetingTypeRepository;
+    private final TopologyMeetingReader topologyMeetingReader;
 
     @PostConstruct
     public void seed() {
-
-        // Implement seeding logic here
-        if (worshipTypesRepository.count() != 0 && worshipTypesRepository.count() != TempleMeetingTypes.values().length) {
-            return;
-        }
-        List<String> worshipMeetingTypesBank = worshipTypesRepository.findAll().stream().map(WorshipMeetingTypes::getName).toList();
-        List<WorshipMeetingTypes> toInsert = Arrays.stream(TempleMeetingTypes.values())
-                .filter(type -> !worshipMeetingTypesBank.contains(type.getLabel()))
-                .map(type -> {
-                    WorshipMeetingTypes entity = new WorshipMeetingTypes();
-                    entity.setName(type.getLabel());
-                    return entity;
-                })
+        TopologyMeetingModel topologyGroupModel = topologyMeetingReader.findByTopologyMeetingEnum(
+                TopologyEventType.TEMPLE_WORHSIP
+        );
+        List<String> existingTypes = meetingTypeRepository.findAll()
+                .stream()
+                .map(MeetingType::getName)
                 .toList();
-
-        worshipTypesRepository.saveAll(toInsert);
-        System.out.println("Finalizando seeder");
+        List<MeetingType> typesToSeed = Arrays.stream(TempleMeetingTypes.values())
+                .filter(templeMeetingTypes -> !existingTypes.contains(templeMeetingTypes.getLabel()))
+                .map(gt -> new MeetingType(null, topologyGroupModel,gt.getLabel()))
+                .toList();
+        meetingTypeRepository.saveAll(typesToSeed);
     }
 }

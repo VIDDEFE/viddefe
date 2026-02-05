@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import type { Person, PersonRole } from '../../models';
+import type { Person } from '../../models';
 import { Button, PageHeader, Table, Modal, Avatar, PersonForm, initialPersonFormData, type PersonFormData, DropDown } from '../../components/shared';
-import { usePeople, usePerson, useUpdatePerson, useDeletePerson, usePersonTypes } from '../../hooks';
+import { usePeople, usePerson, useUpdatePerson, useDeletePerson, usePersonTypes, useMeetingAttendanceLevels } from '../../hooks';
+  // Estado de filtro por calidad de asistencia
 import { authService, type PersonRequest } from '../../services/authService';
 import { formatDate } from '../../utils';
 import CreateUserModal from '../../components/people/CreateUserModal';
@@ -15,6 +16,34 @@ const DEFAULT_PAGE_SIZE = 10;
 
 export default function People() {
   // Estado de paginación
+  const [attendanceQuality, setAttendanceQuality] = useState<string | undefined>(undefined);
+
+  // Mapeo de id a enum para el filtro
+  const attendanceEnumMap: Record<number, string> = {
+    1: 'HIGH',
+    2: 'MEDIUM',
+    3: 'LOW',
+    4: 'NO_YET',
+  };
+
+  // Handler para cambio de nivel de asistencia
+  const handleAttendanceLevelChange = (id: string) => {
+    const numId = Number(id);
+    if (!id || isNaN(numId)) {
+      setAttendanceQuality(undefined);
+    } else {
+      if(numId== 4){
+        setAttendanceQuality('NO_YET');
+        setCurrentPage(0);
+        return;
+      }
+      setAttendanceQuality(attendanceEnumMap[numId]);
+    }
+    setCurrentPage(0);
+  };
+
+  // Hook para obtener niveles de asistencia
+  const { data: attendanceLevels = [] } = useMeetingAttendanceLevels();
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   
@@ -31,7 +60,8 @@ export default function People() {
     page: currentPage, 
     size: pageSize,
     typePersonId: selectedTypeId,
-    sort: sortConfig
+    sort: sortConfig,
+    attendanceQuality: attendanceQuality as any // Puede ser undefined o 'HIGH' | 'MEDIUM' | 'LOW' | 'NO_YET'
   });
   const { hasPermission } = useAppContext();
 
@@ -202,6 +232,14 @@ export default function People() {
       label: 'Nombres',
       render: (_: unknown, person: Person) => `${person.firstName}`
     },
+    {
+      key: 'levelAttendance' as const,
+      label: 'Nivel de Asistencia',
+      render: (_: unknown, person: Person) => 
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-200 text-blue-700">
+          {person?.attendanceQuality?.name || '-'}
+        </span>
+    },
     { 
       key: 'lastName' as const, 
       label: 'Apellidos', 
@@ -323,6 +361,7 @@ export default function People() {
           <div className="flex items-center gap-3">
             {/* Filtro por tipo de persona */}
             <div className="w-48">
+              <label className='text-gray-900 text-sm' htmlFor="typePeopleFilter">Filtrar Por Tipo</label>
               <DropDown
                 options={typeOptions}
                 value={selectedTypeId?.toString() ?? ''}
@@ -330,6 +369,24 @@ export default function People() {
                 placeholder="Filtrar por tipo"
                 labelKey="name"
                 valueKey="id"
+              />
+            </div>
+            <div className="w-48">
+              <label className='text-gray-900 text-sm' htmlFor="levelAttendance">Filtrar Por Nivel de Asistencia</label>
+              <DropDown
+              options={[{ id: '', name: 'Todos los niveles' }, ...attendanceLevels.map(level => ({ id: level.id, name: level.name }))]}
+              value={
+                (() => {
+                if (!attendanceQuality) return '';
+                // Busca el id correspondiente al enum seleccionado
+                const found = Object.entries(attendanceEnumMap).find(([, v]) => v === attendanceQuality);
+                return found ? found[0] : '';
+                })()
+              }
+              onChangeValue={handleAttendanceLevelChange}
+              placeholder="Filtrar por nivel de asistencia"
+              labelKey="name"
+              valueKey="id"
               />
             </div>
             {canCreate && <Button variant="primary" onClick={openCreateModal}>+ Nueva Persona</Button>}
@@ -452,41 +509,51 @@ export default function People() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Cédula</label>
+                  <label htmlFor="cc" className="text-sm font-medium text-neutral-500">Cédula</label>
                   <p className="text-neutral-800">{(personDetails as any)?.cc || '-'}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Teléfono</label>
+                  <label htmlFor="phone" className="text-sm font-medium text-neutral-500">Teléfono</label>
                   <p className="text-neutral-800">{personDetails?.phone || selectedPerson.phone || '-'}</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Fecha de Nacimiento</label>
+                  <label htmlFor="birthDate" className="text-sm font-medium text-neutral-500">Fecha de Nacimiento</label>
                   <p className="text-neutral-800">
                     {personDetails?.birthDate ? formatDate(personDetails.birthDate) : '-'}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Departamento</label>
+                  <label htmlFor="state" className="text-sm font-medium text-neutral-500">Departamento</label>
                   <p className="text-neutral-800">{personDetails?.state?.name || selectedPerson.state?.name || '-'}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-neutral-500">Estado</label>
+                  <label htmlFor="status" className="text-sm font-medium text-neutral-500">Estado</label>
                   <p className="text-neutral-800">
-                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                      selectedPerson.status === 'active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : selectedPerson.status === 'inactive'
-                        ? 'bg-neutral-100 text-neutral-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {selectedPerson.status === 'active' ? 'Activo' : selectedPerson.status === 'inactive' ? 'Inactivo' : 'Suspendido'}
-                    </span>
+                    {(() => {
+                      let statusClass = '';
+                      let statusLabel = '';
+                      if (selectedPerson.status === 'active') {
+                        statusClass = 'bg-green-100 text-green-800';
+                        statusLabel = 'Activo';
+                      } else if (selectedPerson.status === 'inactive') {
+                        statusClass = 'bg-neutral-100 text-neutral-800';
+                        statusLabel = 'Inactivo';
+                      } else {
+                        statusClass = 'bg-red-100 text-red-800';
+                        statusLabel = 'Suspendido';
+                      }
+                      return (
+                        <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${statusClass}`}>
+                          {statusLabel}
+                        </span>
+                      );
+                    })()}
                   </p>
                 </div>
               </div>

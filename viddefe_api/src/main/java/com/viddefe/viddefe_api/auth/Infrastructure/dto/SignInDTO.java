@@ -5,8 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
+@Getter @Setter
 public class SignInDTO {
     @Email(message = "Is not valid format email")
     private String email;

@@ -1,8 +1,8 @@
 package com.viddefe.viddefe_api.worship_meetings.contracts;
 
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDetailedDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,14 +17,14 @@ public interface WorshipService {
      *
      * @param dto Data transfer object containing worship service details.
      * @param churchId The ID of the church associated with the worship service.
-     * @return The created Worship Meeting, {{@link WorshipDto}}.
+     * @return The created Worship Meeting, {{@link MeetingDto}}.
      */
-    WorshipDto createWorship(CreateWorshipDto dto, UUID churchId);
+    MeetingDto createWorship(CreateMeetingDto dto, UUID churchId);
     /**
      * Retrieves a worship service by its ID.
      *
      * @param id The ID of the worship service.
-     * @return The Worship Service, {{@link WorshipDto}}.
+     * @return The Worship Service, {{@link MeetingDto}}.
      */
     WorshipDetailedDto getWorshipById(UUID id);
     /**
@@ -32,18 +32,18 @@ public interface WorshipService {
      *
      * @param pageable Pagination information.
      * @param churchId The ID of the church to filter worship services.
-     * @return A paginated list of Worship Services, {{@link Page}} of {{@link WorshipDto}}.
+     * @return A paginated list of Worship Services, {{@link Page}} of {{@link MeetingDto}}.
      */
-    Page<WorshipDto> getAllWorships(Pageable pageable, UUID churchId);
+    Page<MeetingDto> getAllWorships(Pageable pageable, UUID churchId);
 
     /**
      * Updates an existing worship service.
      * @param id The ID of the worship service to update.
      * @param dto Data transfer object containing updated worship service details.
      * @param churchId The ID of the church associated with the worship service.
-     * @return The updated Worship Service, {{@link WorshipDto}}.
+     * @return The updated Worship Service, {{@link MeetingDto}}.
      */
-    WorshipDto updateWorship(UUID id, CreateWorshipDto dto, UUID churchId);
+    MeetingDto updateWorship(UUID id, CreateMeetingDto dto, UUID churchId);
 
     /**
      * Deletes a worship service by its ID.

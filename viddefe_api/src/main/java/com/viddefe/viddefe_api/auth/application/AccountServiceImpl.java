@@ -8,10 +8,11 @@ import com.viddefe.viddefe_api.auth.domain.model.RolUserModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserPermissions;
 import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
-import com.viddefe.viddefe_api.notifications.Infrastructure.factory.NotificatorFactory;
-import com.viddefe.viddefe_api.notifications.config.Channels;
-import com.viddefe.viddefe_api.notifications.contracts.Notificator;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationAccountEvent;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
+import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.config.rabbit.RabbitPriority;
+import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import lombok.RequiredArgsConstructor;
@@ -35,25 +36,43 @@ public class AccountServiceImpl implements AccountService {
     private final PeopleReader peopleReader;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final NotificatorFactory notificatorFactory;
     private final RolesUserService rolesUserService;
     private final PermissionService permissionService;
+    private final NotificationEventPublisher notificationEventPublisher;
 
-    private static final String TEMPLATE_INVITATION_MESSAGE = "" +
-            "Hello {{name}}, welcome to VidDefe! Your credentials are:\n" +
-            "Username: {{username}}\n" +
-            "Password: {{password}}\n" +
-            "Please change your password after logging in.";
+    /**
+     * Temporary one-time password.
+     * - Generated randomly
+     * - Valid for a short period
+     * - Must be changed on first login
+     * - Never reused
+     */
+    private static final String TEMPLATE_INVITATION_MESSAGE = """
+    Hello {{name}}, welcome to VidDefe!
+    
+    Your account has been created.
+    
+    Username: {{username}}
+    Temporary password (one-time): {{password}}
+    
+    You will be required to change this password immediately after logging in.
+    """;
 
     @Override
-    public void invite(InvitationDto dtp) {
+    public void invite(InvitationDto dtp, UUID churchId) {
         // Implementation goes here
         if((dtp.getEmail() != null && !dtp.getEmail().isBlank()) && userRepository.existsByEmail(dtp.getEmail())) {
             throw new DataIntegrityViolationException("User with email already exists");
         }else if((dtp.getPhone() != null && !dtp.getPhone().isBlank()) && userRepository.existsByPhone(dtp.getPhone())) {
             throw new DataIntegrityViolationException("User with phone number already exists");
-        }
-        List<PermissionModel> permissionModels =permissionService.findByListNames(dtp.getPermissions());
+        }else if(userRepository.existsUserByPeopleIdAndPeopleChurchId(
+                dtp.getPersonId(),
+                peopleReader.getPeopleById(dtp.getPersonId()).getChurch().getId()
+        )){
+            throw new DataIntegrityViolationException("User for the selected person already exists in the church");
+        };
+
+        List<PermissionModel> permissionModels = permissionService.findByListNames(dtp.getPermissions());
 
         RolUserModel role = rolesUserService.foundRolUserById(dtp.getRole());
         PeopleModel person = peopleReader.getPeopleById(dtp.getPersonId());
@@ -68,50 +87,39 @@ public class AccountServiceImpl implements AccountService {
         userModel.setPassword(passwordEncoder.encode(temporaryPassword));
         userRepository.save(userModel);
         Channels channel = Channels.from(dtp.getChannel());
-        Notificator notificator = notificatorFactory.get(channel);
-        if(notificator.channel() == Channels.EMAIL) {
-            sendEmail(dtp, person, userModel, temporaryPassword, notificator);
-        } else if(notificator.channel() == Channels.WHATSAPP) {
-            sendWhatsapp(dtp, person, userModel, temporaryPassword, notificator);
-        }
-
+        NotificationAccountEvent event = new NotificationAccountEvent();
+        event.setPriority(RabbitPriority.HIGH);
+        event.setSubject("Bienvenido a VidDefe!");
+        event.setChannels(channel);
+        event.setPersonId(person.getId());
+        event.setCreatedAt(Instant.now());
+        event.setVariables(resolveVariables(event, person, userModel, temporaryPassword));
+        event.setTemplate("/emails/invitation.html");
+        notificationEventPublisher.publish(event);
     }
 
-    private void sendWhatsapp(InvitationDto dtp, PeopleModel person, UserModel userModel, String temporaryPassword, Notificator notificator) {
-        if(dtp.getChannel().equalsIgnoreCase(Channels.WHATSAPP.name()) && (dtp.getPhone() == null || dtp.getPhone().isBlank())) {
-            throw new IllegalArgumentException("Phone number is required for WhatsApp invitations");
-        }
-        NotificationDto notificationDto = new NotificationDto();
-        notificationDto.setTo(dtp.getPhone());
-        notificationDto.setVariables(
-                Map.of(
-                        "name", person.getFirstName() + " " + person.getLastName(),
-                        "username", userModel.getPhone(),
-                        "password", temporaryPassword
-                )
-        );
-        notificationDto.setCreatedAt(Instant.now());
-        notificator.send(notificationDto);
-    }
+    public Map<String, Object> resolveVariables(NotificationEvent event, PeopleModel person, UserModel user, String temporaryPassword) {
 
-    private void sendEmail(InvitationDto dtp, PeopleModel person, UserModel userModel, String temporaryPassword, Notificator notificator) {
-        if(dtp.getChannel().equalsIgnoreCase(Channels.EMAIL.name()) && (dtp.getEmail() == null || dtp.getEmail().isBlank())) {
-            throw new IllegalArgumentException("Email is required for Email invitations");
+        Map<String, Object> vars = new HashMap<>();
+
+        vars.put("name", person.getFirstName() + " " + person.getLastName());
+
+        switch (event.getChannels()) {
+            case EMAIL -> {
+                vars.put("email", user.getEmail());
+                vars.put("temporaryPassword", temporaryPassword);
+                vars.put("loginUrl", "https://app.viddefe.com/login");
+            }
+            case WHATSAPP -> {
+                vars.put("username", user.getPhone());
+                vars.put("password", temporaryPassword);
+            }
+            default -> throw new IllegalStateException(
+                    "Unsupported channel: " + event.getChannels()
+            );
         }
-        NotificationDto notificationDto = new NotificationDto();
-        notificationDto.setTo(dtp.getEmail());
-        notificationDto.setVariables(
-                Map.of(
-                        "name", person.getFirstName() + " " + person.getLastName(),
-                        "email", userModel.getEmail(),
-                        "temporaryPassword", temporaryPassword,
-                        "loginUrl", "https://app.viddefe.com/login"
-                )
-        );
-        notificationDto.setSubject("Invitacion a VidDefe");
-        notificationDto.setTemplate("emails/invitation-email.html");
-        notificationDto.setCreatedAt(Instant.now());
-        notificator.send(notificationDto);
+
+        return vars;
     }
 
     /**

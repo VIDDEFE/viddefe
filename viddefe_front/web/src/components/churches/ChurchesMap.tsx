@@ -68,7 +68,6 @@ export default function ChurchesMap({
   // Hook para obtener iglesias cercanas según los bounds del mapa
   const { 
     data: churches = [], 
-    isLoading, 
     isFetching,
     refetch,
     error 

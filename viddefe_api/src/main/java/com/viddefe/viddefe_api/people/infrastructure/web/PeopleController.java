@@ -5,6 +5,7 @@ import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.contracts.PeopleService;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -44,10 +45,11 @@ public class PeopleController {
     public ResponseEntity<ApiResponse<Page<PeopleResDto>>> getPeople(
             Pageable pageable,
             @RequestParam(required = false) Long typePersonId,
+            @RequestParam(required = false)AttendanceQualityEnum attendanceQuality,
             @CookieValue(value = "access_token") String jwtToken
     ){
         UUID churchId = jwtUtil.getChurchId(jwtToken);
-        Page<PeopleResDto> people = peopleService.getAllPeople(pageable, typePersonId, churchId);
+        Page<PeopleResDto> people = peopleService.getAllPeople(pageable, typePersonId, churchId, attendanceQuality);
         return ResponseEntity.ok(ApiResponse.ok(people));
     }
 

@@ -1,7 +1,5 @@
 package com.viddefe.viddefe_api.worship_meetings.infrastructure.dto;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,11 +13,6 @@ import java.time.OffsetDateTime;
  * DTO base para creación de meetings/reuniones.
  *
  * <p>Usa deserialización polimórfica de Jackson basada en el campo "meetingType":</p>
- * <ul>
- *   <li>{@code "WORSHIP"} → {@link CreateWorshipDto}</li>
- *   <li>{@code "GROUP_MEETING"} → {@link CreateMeetingGroupDto}</li>
- * </ul>
- *
  * <h3>Reglas de timezone (obligatorias):</h3>
  * <ul>
  *   <li>scheduledDate DEBE incluir offset (ej: "2026-01-15T18:00:00-05:00" o "2026-01-15T23:00:00Z")</li>
@@ -51,31 +44,39 @@ import java.time.OffsetDateTime;
  * </pre>
  */
 @Getter @Setter
-@JsonTypeInfo(
-        use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY,
-        property = "meetingType",
-        visible = true
-)
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = CreateWorshipDto.class, name = "WORSHIP"),
-        @JsonSubTypes.Type(value = CreateMeetingGroupDto.class, name = "GROUP_MEETING")
-})
-public abstract class CreateMeetingDto {
+public class CreateMeetingDto {
 
-    @NotBlank(message = "El nombre de la reunión es obligatorio")
-    @Size(max = 120, message = "El nombre no debe exceder 120 caracteres")
+    @NotBlank(
+            message = "El nombre de la reunión es obligatorio",
+            groups = {OnCreate.class, OnUpdate.class}
+    )
+    @Size(
+            max = 120,
+            message = "El nombre no debe exceder 120 caracteres",
+            groups = {OnCreate.class, OnUpdate.class}
+    )
     private String name;
 
-    @Size(max = 500, message = "La descripción no debe exceder 500 caracteres")
+    @Size(
+            max = 500,
+            message = "La descripción no debe exceder 500 caracteres",
+            groups = {OnCreate.class, OnUpdate.class}
+    )
     private String description;
 
-    /**
-     * Fecha programada del meeting.
-     * DEBE incluir zona horaria (offset).
-     * Formato: ISO-8601 con offset (ej: "2026-01-15T18:00:00-05:00" o "2026-01-15T23:00:00Z")
-     */
-    @NotNull(message = "La fecha programada es obligatoria")
-    @FutureOrPresent(message = "La fecha programada no puede ser en el pasado")
+    @NotNull(
+            message = "La fecha programada es obligatoria",
+            groups = OnCreate.class
+    )
+    @FutureOrPresent(
+            message = "La fecha programada no puede ser en el pasado",
+            groups = OnCreate.class
+    )
     private OffsetDateTime scheduledDate;
+
+    @NotNull(
+            message = "El ID del tipo de reunión es obligatorio",
+            groups = {OnCreate.class, OnUpdate.class}
+    )
+    private Long meetingTypeId;
 }

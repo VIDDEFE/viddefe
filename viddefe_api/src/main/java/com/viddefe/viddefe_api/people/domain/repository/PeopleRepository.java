@@ -2,6 +2,9 @@ package com.viddefe.viddefe_api.people.domain.repository;
 
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleRowProjection;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,24 +18,42 @@ public interface PeopleRepository extends JpaRepository<PeopleModel, UUID> {
     Optional<PeopleModel> findByCcAndTypePersonAndChurchIsNull(String cc, PeopleTypeModel typePerson);
 
     /**
-     * Buscar personas por iglesia y tipo con relaciones pre-cargadas.
-     * Evita N+1 en PeopleServiceImpl.getAllPeople() al llamar toDto()
-     * @param churchId ID de la iglesia
-     * @param typePersonId ID del tipo de persona (opcional)
+     * Search people by church ID with optional typePersonId and attendanceQuality filter.
+     * Avoids N+1 by pre-loading state and typePerson.
+     * @param contextId ID of the church or groupId
+     * @param typePersonId ID of the type of person (nullable)
+     * @param attendanceQuality Attendance quality filter (nullable)
      * @param pageable Paginación
-     * @return Página de personas con state y typePerson pre-cargados
+     * @return Page of PeopleRowProjection {@link PeopleRowProjection}
      */
     @Query("""
-    SELECT p
+    SELECT
+        p.id AS id,
+        p.cc AS cc,
+        p.firstName AS firstName,
+        p.lastName AS lastName,
+        p.phone AS phone,
+        p.avatar AS avatar,
+        p.birthDate AS birthDate,
+        tp.id AS typePersonId,
+        tp.name AS typePersonName,
+        s.id AS stateId,
+        s.name AS stateName,
+        aq AS attendanceQuality
     FROM PeopleModel p
-    LEFT JOIN FETCH p.state
-    LEFT JOIN FETCH p.typePerson
-    WHERE p.church.id = :churchId
-      AND (:typePersonId IS NULL OR p.typePerson.id = :typePersonId)
+    LEFT JOIN p.typePerson tp
+    LEFT JOIN p.state s
+    LEFT JOIN AttendanceQualityPeople aqp ON aqp.people.id = p.id
+    LEFT JOIN aqp.attendanceQuality aq
+    WHERE p.church.id = :contextId
+      AND (:typePersonId IS NULL OR tp.id = :typePersonId)
+      AND (:attendanceQuality IS NULL OR aq.attendanceQuality = :attendanceQuality)
 """)
-    Page<PeopleModel> findByChurchAndOptionalType(
-            @Param("churchId") UUID churchId,
-            @Param("typePersonId") Long typePersonId,
+
+    Page<PeopleRowProjection> findByChurchAndOptionalType(
+            UUID contextId,
+            Long typePersonId,
+            AttendanceQualityEnum attendanceQuality,
             Pageable pageable
     );
 
@@ -47,4 +68,5 @@ public interface PeopleRepository extends JpaRepository<PeopleModel, UUID> {
            "WHERE p.id = :id")
     Optional<PeopleModel> findByIdWithRelations(@Param("id") UUID id);
 
+    Optional<PeopleModel> findByCcAndChurchId(String cc, UUID churchId);
 }

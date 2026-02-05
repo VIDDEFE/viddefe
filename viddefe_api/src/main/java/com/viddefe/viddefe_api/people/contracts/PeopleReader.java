@@ -1,6 +1,9 @@
 package com.viddefe.viddefe_api.people.contracts;
 
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,4 +54,6 @@ public interface PeopleReader {
      * @return Lista de PeopleModel encontrados
      */
     List<PeopleModel> getPeopleByIds(List<UUID> ids);
+
+    void verifyPersonExistsByCcAndChurchId(String cc, UUID churchId);
 }

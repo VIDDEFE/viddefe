@@ -2,15 +2,12 @@ package com.viddefe.viddefe_api.homeGroups.domain.model;
 
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
 import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupsRepository;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.GroupMeetings;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingTypeEnum;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.GroupMeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,5 +19,23 @@ public class HomeGroupsReaderImpl implements HomeGroupReader {
         return homeGroupsRepository.findById(groupId).orElseThrow(
                 () -> new EntityNotFoundException("No se encontró el grupo")
         );
+    }
+
+    /**
+     * @param churchId
+     * @return
+     */
+    @Override
+    public List<EntityIdWithTotalPeople> findAllIdsWithTotalPeopleByChurchId(UUID churchId) {
+        return homeGroupsRepository.findAllIdsWithTotalPeopleByChurchId(churchId);
+    }
+
+    /**
+     * @param groupId
+     * @return
+     */
+    @Override
+    public Long findTotalPeopleByGroupId(UUID groupId) {
+       return homeGroupsRepository.findTotalPeopleByGroupId(groupId);
     }
 }

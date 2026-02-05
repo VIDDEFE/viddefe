@@ -1,6 +1,6 @@
 import { Modal, Button } from '../shared';
 import WorshipForm, { type WorshipFormData } from './WorshipForm';
-import type { WorshipType } from '../../models';
+import type { MeetingType } from '../../models';
 
 interface WorshipFormModalProps {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface WorshipFormModalProps {
   onClose: () => void;
   isLoading?: boolean;
   isSaving?: boolean;
-  worshipTypes?: WorshipType[];
+  worshipTypes?: MeetingType[];
   errors?: Partial<Record<keyof WorshipFormData, string>>;
 }
 

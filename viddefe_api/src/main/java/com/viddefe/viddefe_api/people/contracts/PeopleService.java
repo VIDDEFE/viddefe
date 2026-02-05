@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.people.contracts;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import lombok.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,13 +18,14 @@ public interface PeopleService {
      */
     PeopleResDto createPeople(PeopleDTO dto);
     /**
-     * Obtiene una lista paginada de todas las personas.
+     * Get a paginated list of people with optional filters.
      * @param pageable
-     * @param personTypeId Filtro opcional por tipo de persona
-     * @param churchId Filtro obligatorio por iglesia
+     * @param personTypeId Opcional filter by person type ID
+     * @param churchId ID of the church (non-null)
+     * @param attendanceQuality Filter by attendance quality enum
      * @return
      */
-    Page<PeopleResDto> getAllPeople(Pageable pageable, Long personTypeId, UUID  churchId);
+    Page<PeopleResDto> getAllPeople(Pageable pageable, Long personTypeId, UUID  churchId, AttendanceQualityEnum attendanceQuality);
     /**
      * Actualiza la información de una persona existente.
      * @param dto

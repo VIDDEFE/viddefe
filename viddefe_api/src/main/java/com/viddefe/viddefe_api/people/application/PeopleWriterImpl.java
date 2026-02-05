@@ -5,12 +5,16 @@ import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;
+import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.contracts.PeopleWriter;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
 import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
+import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceQualityPeopleRepository;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.PersonCreatedQualityAttendanceEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +35,18 @@ public class PeopleWriterImpl implements PeopleWriter {
     private final PeopleTypeService peopleTypeService;
     private final StatesCitiesService statesCitiesService;
     private final ChurchLookup churchLookup;
-    
+    private final PeopleReader peopleReader;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
     @Override
     @Transactional
     public PeopleModel createPerson(PeopleDTO dto) {
+        peopleReader.verifyPersonExistsByCcAndChurchId(dto.getCc(), dto.getChurchId());
         PeopleModel person = buildPersonFromDto(dto);
-        return peopleRepository.save(person);
+        PeopleModel saved = peopleRepository.save(person);
+        PersonCreatedQualityAttendanceEvent event = new PersonCreatedQualityAttendanceEvent(saved.getId(), dto.getChurchId());
+        applicationEventPublisher.publishEvent(event.getPersonId());
+        return saved;
     }
     
     @Override
@@ -46,6 +56,9 @@ public class PeopleWriterImpl implements PeopleWriter {
                 .orElseThrow(() -> new CustomExceptions.ResourceNotFoundException("Person not found: " + id));
         
         person.fromDto(dto);
+        if(!person.getCc().equals(dto.getCc())) {
+            peopleReader.verifyPersonExistsByCcAndChurchId(dto.getCc(), dto.getId());
+        }
         // Actualizar relaciones si se proporcionan
         if (dto.getTypePersonId() != null) {
             person.setTypePerson(peopleTypeService.getPeopleTypeById(dto.getTypePersonId()));

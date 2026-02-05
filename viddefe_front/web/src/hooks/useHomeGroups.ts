@@ -3,8 +3,7 @@ import { homeGroupService, strategyService, roleService, roleAssignmentService }
 import type { MapBounds } from '../services/churchService';
 import type { 
   HomeGroup, Strategy, CreateHomeGroupDto, UpdateHomeGroupDto, 
-  HomeGroupDetailResponse, CreateRoleDto, UpdateRoleDto, RoleStrategyNode,
-  RolePeopleDto
+  HomeGroupDetailResponse, CreateRoleDto, UpdateRoleDto, RoleStrategyNode
 } from '../models';
 import type { Pageable, PageableRequest } from '../services/api';
 

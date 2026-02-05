@@ -46,7 +46,7 @@ public class PeopleReaderImpl implements PeopleReader {
         PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.getLabel());
         return peopleRepository.findByCcAndTypePersonAndChurchIsNull(cc, pastorType);
     }
-    
+
     @Override
     public boolean existsPastorByCcWithoutChurch(String cc) {
         PeopleTypeModel pastorType = peopleTypeService.getPeopleTypeByName(TypesPeople.PASTOR.getLabel());
@@ -56,5 +56,15 @@ public class PeopleReaderImpl implements PeopleReader {
     @Override
     public List<PeopleModel> getPeopleByIds(List<UUID> ids) {
         return peopleRepository.findAllById(ids);
+    }
+
+    @Override
+    public void verifyPersonExistsByCcAndChurchId(String cc, UUID churchId) {
+        peopleRepository.findByCcAndChurchId(cc, churchId)
+                .ifPresent(p -> {
+                    throw new IllegalArgumentException(
+                            "La persona con cédula " + cc + " ya existe en la iglesia"
+                    );
+                });
     }
 }

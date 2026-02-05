@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { HomeGroup } from '../../models';
+import type { HomeGroup, Person } from '../../models';
 import { Button, PageHeader, Table } from '../../components/shared';
 import {
   HomeGroupFormModal,
@@ -17,9 +17,11 @@ import {
   useCreateHomeGroup,
   useUpdateHomeGroup,
   useDeleteHomeGroup,
+  useGroupMembers,
 } from '../../hooks';
+
 import { useAppContext } from '../../context/AppContext';
-import type { SortConfig } from '../../services/api';
+import type { SortConfig, Pageable } from '../../services/api';
 import { GroupPermission } from '../../services/userService';
 import { FiSettings, FiList, FiMap } from 'react-icons/fi';
 
@@ -31,6 +33,15 @@ const DEFAULT_PAGE_SIZE = 10;
 export default function Groups() {
   const { hasPermission } = useAppContext();
   const navigate = useNavigate();
+
+  // Estado de grupo seleccionado y paginación de miembros
+  const [selectedGroup, setSelectedGroup] = useState<HomeGroup | null>(null);
+  const [membersPage, setMembersPage] = useState(0);
+  const [membersPageSize, setMembersPageSize] = useState(10);
+  const {
+    data: membersData
+  } = useGroupMembers(selectedGroup?.id, { page: membersPage, size: membersPageSize }) as { data: Pageable<Person> | undefined };
+  const { isLoading: isLoadingMembers } = useGroupMembers(selectedGroup?.id, { page: membersPage, size: membersPageSize });
 
   // Permisos de grupos
   const canCreate = hasPermission(GroupPermission.CREATE);
@@ -64,7 +75,6 @@ export default function Groups() {
 
   // Modal state
   const [modalMode, setModalMode] = useState<ModalMode>(null);
-  const [selectedGroup, setSelectedGroup] = useState<HomeGroup | null>(null);
   const [formData, setFormData] = useState<HomeGroupFormData>(initialHomeGroupFormData);
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof HomeGroupFormData, string>>>({});
 
@@ -380,6 +390,48 @@ export default function Groups() {
       />
 
       <div className="animate-fadeIn">
+        {/* Tabla de miembros del grupo seleccionado */}
+        {selectedGroup && (
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-neutral-800 mb-2">Miembros del grupo</h3>
+            <Table<any>
+              data={membersData?.content || []}
+              columns={[
+                {
+                  key: 'name',
+                  label: 'Nombre',
+                  render: (_: any, m: any) => (
+                    <span className="flex items-center gap-2">
+                      {m.avatar ? (
+                        <img src={m.avatar} alt={m.firstName} className="w-6 h-6 rounded-full object-cover" />
+                      ) : (
+                        <span className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold text-xs">
+                          {m.firstName?.[0]}{m.lastName?.[0]}
+                        </span>
+                      )}
+                      <span>{m.firstName} {m.lastName}</span>
+                    </span>
+                  ),
+                },
+                {
+                  key: 'phone',
+                  label: 'Teléfono',
+                  render: (v: any) => v || <span className="text-neutral-400">-</span>,
+                },
+              ]}
+              loading={isLoadingMembers}
+              pagination={{
+                mode: 'manual',
+                currentPage: membersPage,
+                totalPages: (membersData as any)?.totalPages ?? 0,
+                totalElements: (membersData as any)?.totalElements ?? 0,
+                pageSize: membersPageSize,
+                onPageChange: setMembersPage,
+                onPageSizeChange: setMembersPageSize,
+              }}
+            />
+          </div>
+        )}
         {viewMode === 'table' ? (
           <Table<HomeGroup>
             data={groupsArray}

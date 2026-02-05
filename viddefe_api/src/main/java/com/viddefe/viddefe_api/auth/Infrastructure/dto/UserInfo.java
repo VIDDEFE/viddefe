@@ -10,7 +10,7 @@ import java.util.List;
  * Record representing user information including church details, user email, role, and personal details.
  *
  * @param church   the church information
- * @param user     the user's email
+ * @param user     the user's email or contact_phone
  * @param rolUser  the user's role
  * @param person   the person's details
  */

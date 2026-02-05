@@ -1,22 +1,27 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
-import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
-import com.viddefe.viddefe_api.worship_meetings.contracts.GroupMeetingService;
-import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingFacade;
-import com.viddefe.viddefe_api.worship_meetings.contracts.WorshipService;
+import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
+import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+import com.viddefe.viddefe_api.worship_meetings.contracts.*;
+import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Facade que orquesta las operaciones de reuniones.
- * Centraliza la lógica delegando a los servicios específicos según {@link AttendanceEventType}.
+ * Centraliza la lógica delegando a los servicios específicos según {@link TopologyEventType}.
  *
  * <p>Beneficios:</p>
  * <ul>
@@ -34,20 +39,18 @@ public class MeetingFacadeImpl implements MeetingFacade {
     private final WorshipService worshipService;
     private final GroupMeetingService groupMeetingService;
     private final AttendanceService attendanceService;
+    private final MetricsReportingService metricsReportingService;
 
     // ==================== CREATE ====================
 
     @Override
-    public MeetingDto createMeeting(CreateMeetingDto dto, UUID contextId, AttendanceEventType eventType) {
+    public MeetingDto createMeeting(CreateMeetingDto dto, UUID contextId, TopologyEventType eventType, UUID churchId) {
         return switch (eventType) {
-            case TEMPLE_WORHSIP -> {
-                validateDtoType(dto, CreateWorshipDto.class, eventType);
-                yield worshipService.createWorship((CreateWorshipDto) dto, contextId);
-            }
-            case GROUP_MEETING -> {
-                validateDtoType(dto, CreateMeetingGroupDto.class, eventType);
-                yield groupMeetingService.createGroupMeeting((CreateMeetingGroupDto) dto, contextId);
-            }
+            case TEMPLE_WORHSIP ->
+                 worshipService.createWorship( dto, contextId);
+            case GROUP_MEETING ->
+                groupMeetingService.createGroupMeeting(dto, contextId, churchId);
+
         };
     }
 
@@ -55,7 +58,7 @@ public class MeetingFacadeImpl implements MeetingFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public MeetingDto getMeetingById(UUID contextId, UUID meetingId, AttendanceEventType eventType) {
+    public MeetingDto getMeetingById(UUID contextId, UUID meetingId, TopologyEventType eventType) {
         return switch (eventType) {
             case TEMPLE_WORHSIP -> worshipService.getWorshipById(meetingId);
             case GROUP_MEETING -> groupMeetingService.getGroupMeetingById(contextId, meetingId);
@@ -64,7 +67,7 @@ public class MeetingFacadeImpl implements MeetingFacade {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<? extends MeetingDto> getAllMeetings(UUID contextId, AttendanceEventType eventType, Pageable pageable) {
+    public Page<MeetingDto> getAllMeetings(UUID contextId, TopologyEventType eventType, Pageable pageable) {
         return switch (eventType) {
             case TEMPLE_WORHSIP -> worshipService.getAllWorships(pageable, contextId);
             case GROUP_MEETING -> groupMeetingService.getGroupMeetingByGroupId(contextId, pageable);
@@ -74,23 +77,19 @@ public class MeetingFacadeImpl implements MeetingFacade {
     // ==================== UPDATE ====================
 
     @Override
-    public MeetingDto updateMeeting(CreateMeetingDto dto, UUID contextId, UUID meetingId, AttendanceEventType eventType) {
+    public MeetingDto updateMeeting(CreateMeetingDto dto, UUID contextId, UUID meetingId, TopologyEventType eventType) {
         return switch (eventType) {
-            case TEMPLE_WORHSIP -> {
-                validateDtoType(dto, CreateWorshipDto.class, eventType);
-                yield worshipService.updateWorship(meetingId, (CreateWorshipDto) dto, contextId);
-            }
-            case GROUP_MEETING -> {
-                validateDtoType(dto, CreateMeetingGroupDto.class, eventType);
-                yield groupMeetingService.updateGroupMeeting((CreateMeetingGroupDto) dto, contextId, meetingId);
-            }
+            case TEMPLE_WORHSIP ->
+                    worshipService.updateWorship(meetingId, dto, contextId);
+            case GROUP_MEETING ->
+                groupMeetingService.updateGroupMeeting(dto, contextId, meetingId);
         };
     }
 
     // ==================== DELETE ====================
 
     @Override
-    public void deleteMeeting(UUID contextId, UUID meetingId, AttendanceEventType eventType) {
+    public void deleteMeeting(UUID contextId, UUID meetingId, TopologyEventType eventType) {
         switch (eventType) {
             case TEMPLE_WORHSIP -> worshipService.deleteWorship(meetingId);
             case GROUP_MEETING -> groupMeetingService.deleteGroupMeeting(contextId, meetingId);
@@ -100,35 +99,29 @@ public class MeetingFacadeImpl implements MeetingFacade {
     // ==================== ATTENDANCE ====================
 
     @Override
-    public AttendanceDto recordAttendance(CreateAttendanceDto dto, AttendanceEventType eventType) {
+    public AttendanceDto recordAttendance(CreateAttendanceDto dto, TopologyEventType eventType) {
         return attendanceService.updateAttendance(dto, eventType);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AttendanceDto> getAttendance(UUID meetingId, AttendanceEventType eventType, Pageable pageable) {
-        return attendanceService.getAttendanceByEventId(meetingId, pageable, eventType);
+    public Page<AttendanceDto> getAttendance(UUID meetingId, TopologyEventType eventType, Pageable pageable, UUID contextId, AttendanceQualityEnum levelOfAttendance) {
+        return attendanceService.getAttendanceByEventIdAndContextId(meetingId, pageable, eventType, contextId, levelOfAttendance);
     }
-
-    // ==================== PRIVATE HELPERS ====================
 
     /**
-     * Valida que el DTO sea del tipo esperado según el tipo de evento.
-     *
-     * @param dto DTO a validar
-     * @param expectedType clase esperada
-     * @param eventType tipo de evento para mensaje de error
-     * @throws IllegalArgumentException si el DTO no es del tipo esperado
+     * @param contextId The ID of the context (e.g., church or group)
+     * @param eventType The type of topology event {@link TopologyEventType}
+     * @param startTime The start time for the metrics retrieval
+     * @param endTime The end time for the metrics retrieval
+     * @return MetricsAttendanceDto containing attendance metrics {@link MetricsAttendanceDto}
      */
-    private void validateDtoType(CreateMeetingDto dto, Class<? extends CreateMeetingDto> expectedType, AttendanceEventType eventType) {
-        if (!expectedType.isInstance(dto)) {
-            throw new IllegalArgumentException(
-                    String.format("DTO inválido para %s. Se esperaba %s pero se recibió %s",
-                            eventType.name(),
-                            expectedType.getSimpleName(),
-                            dto.getClass().getSimpleName())
-            );
-        }
+    @Override
+    public MetricsAttendanceDto getMetricsAttendance(UUID contextId, TopologyEventType eventType, OffsetDateTime startTime, OffsetDateTime endTime) {
+       return resolveMetricsByEventType(contextId, eventType, startTime, endTime);
     }
 
+    private MetricsAttendanceDto resolveMetricsByEventType(UUID contextId, TopologyEventType eventType, OffsetDateTime startTime, OffsetDateTime endTime) {
+        return metricsReportingService.getAttendanceMetrics(contextId, eventType, startTime, endTime);
+    }
 }

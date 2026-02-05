@@ -1,11 +1,16 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
 import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
+import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
+import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceEventType;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingReader;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceModel;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceProjectionDto;
@@ -20,6 +25,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +51,12 @@ class AttendanceServiceImplTest {
     @Mock
     private PeopleReader peopleReader;
 
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
+    @Mock
+    private MeetingReader meetingReader;
+
     @InjectMocks
     private AttendanceServiceImpl attendanceService;
 
@@ -54,8 +66,13 @@ class AttendanceServiceImplTest {
     private UUID eventId;
     private UUID peopleId;
     private UUID attendanceId;
+    private UUID contextId;
     private PeopleModel person;
     private CreateAttendanceDto createDto;
+    private AttendanceQualityEnum attendanceQualityEnum;
+    private Meeting meeting;
+    private ChurchModel church;
+    private HomeGroupsModel homeGroup;
 
     private PeopleModel createPeopleModel(UUID id, String firstName, String lastName) {
         PeopleModel people = new PeopleModel();
@@ -72,13 +89,34 @@ class AttendanceServiceImplTest {
         return people;
     }
 
+    private Meeting createMeeting() {
+        Meeting meeting = new Meeting();
+        meeting.setId(eventId);
+        meeting.setName("Sunday Service");
+        meeting.setChurch(church);
+        meeting.setGroup(homeGroup);
+        return meeting;
+    }
+
     @BeforeEach
     void setUp() throws Exception {
         eventId = UUID.randomUUID();
         peopleId = UUID.randomUUID();
         attendanceId = UUID.randomUUID();
+        contextId = UUID.randomUUID();
+        attendanceQualityEnum = AttendanceQualityEnum.HIGH;
+
+        // Crear church y homeGroup antes de crear el meeting
+        church = new ChurchModel();
+        church.setId(contextId);
+        church.setName("Test Church");
+
+        homeGroup = new HomeGroupsModel();
+        homeGroup.setId(UUID.randomUUID());
+        homeGroup.setName("Test Group");
 
         person = createPeopleModel(peopleId, "Juan", "Pérez");
+        meeting = createMeeting();
 
         createDto = createAttendanceDto(peopleId, eventId);
     }
@@ -100,9 +138,10 @@ class AttendanceServiceImplTest {
         return new AttendanceModel(
                 id,
                 person,
-                eventId,
-                AttendanceEventType.TEMPLE_WORHSIP,
-                status
+                meeting,
+                TopologyEventType.TEMPLE_WORHSIP,
+                status,
+                true
         );
     }
 
@@ -114,6 +153,7 @@ class AttendanceServiceImplTest {
         @DisplayName("Debe crear nueva asistencia cuando no existe registro previo")
         void updateAttendance_WhenNoExistingRecord_ShouldCreateNewAttendance() {
             // Arrange
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.empty());
@@ -124,7 +164,7 @@ class AttendanceServiceImplTest {
             // Act
             AttendanceDto result = attendanceService.updateAttendance(
                     createDto,
-                    AttendanceEventType.TEMPLE_WORHSIP
+                    TopologyEventType.TEMPLE_WORHSIP
             );
 
             // Assert
@@ -139,6 +179,7 @@ class AttendanceServiceImplTest {
             // Arrange
             AttendanceModel existingModel = createAttendanceModel(attendanceId, AttendanceStatus.PRESENT);
 
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.of(existingModel));
@@ -147,7 +188,7 @@ class AttendanceServiceImplTest {
             // Act
             AttendanceDto result = attendanceService.updateAttendance(
                     createDto,
-                    AttendanceEventType.TEMPLE_WORHSIP
+                    TopologyEventType.TEMPLE_WORHSIP
             );
 
             // Assert
@@ -160,6 +201,7 @@ class AttendanceServiceImplTest {
         @DisplayName("Debe asignar tipo de evento correcto - TEMPLE_WORSHIP")
         void updateAttendance_WithTempleWorship_ShouldSetCorrectEventType() {
             // Arrange
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.empty());
@@ -167,17 +209,18 @@ class AttendanceServiceImplTest {
                     .thenAnswer(inv -> inv.getArgument(0));
 
             // Act
-            attendanceService.updateAttendance(createDto, AttendanceEventType.TEMPLE_WORHSIP);
+            attendanceService.updateAttendance(createDto, TopologyEventType.TEMPLE_WORHSIP);
 
             // Assert
             verify(attendanceRepository).save(attendanceCaptor.capture());
-            assertEquals(AttendanceEventType.TEMPLE_WORHSIP, attendanceCaptor.getValue().getEventType());
+            assertEquals(TopologyEventType.TEMPLE_WORHSIP, attendanceCaptor.getValue().getEventType());
         }
 
         @Test
         @DisplayName("Debe asignar tipo de evento correcto - GROUP_MEETING")
         void updateAttendance_WithGroupMeeting_ShouldSetCorrectEventType() {
             // Arrange
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.empty());
@@ -185,17 +228,18 @@ class AttendanceServiceImplTest {
                     .thenAnswer(inv -> inv.getArgument(0));
 
             // Act
-            attendanceService.updateAttendance(createDto, AttendanceEventType.GROUP_MEETING);
+            attendanceService.updateAttendance(createDto, TopologyEventType.GROUP_MEETING);
 
             // Assert
             verify(attendanceRepository).save(attendanceCaptor.capture());
-            assertEquals(AttendanceEventType.GROUP_MEETING, attendanceCaptor.getValue().getEventType());
+            assertEquals(TopologyEventType.GROUP_MEETING, attendanceCaptor.getValue().getEventType());
         }
 
         @Test
         @DisplayName("Debe buscar persona correctamente")
         void updateAttendance_ShouldLookupPersonCorrectly() {
             // Arrange
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.empty());
@@ -203,7 +247,7 @@ class AttendanceServiceImplTest {
                     .thenAnswer(inv -> inv.getArgument(0));
 
             // Act
-            attendanceService.updateAttendance(createDto, AttendanceEventType.TEMPLE_WORHSIP);
+            attendanceService.updateAttendance(createDto, TopologyEventType.TEMPLE_WORHSIP);
 
             // Assert
             verify(peopleReader).getPeopleById(peopleId);
@@ -217,6 +261,7 @@ class AttendanceServiceImplTest {
             // Arrange
             AttendanceModel existingModel = createAttendanceModel(attendanceId, AttendanceStatus.PRESENT);
 
+            when(meetingReader.getById(eventId)).thenReturn(meeting);
             when(peopleReader.getPeopleById(peopleId)).thenReturn(person);
             when(attendanceRepository.findByPeopleIdAndEventId(peopleId, eventId))
                     .thenReturn(Optional.of(existingModel));
@@ -224,7 +269,7 @@ class AttendanceServiceImplTest {
             // Act
             AttendanceDto result = attendanceService.updateAttendance(
                     createDto,
-                    AttendanceEventType.TEMPLE_WORHSIP
+                    TopologyEventType.TEMPLE_WORHSIP
             );
 
             // Assert
@@ -244,12 +289,12 @@ class AttendanceServiceImplTest {
             AttendanceProjectionDto projection = new AttendanceProjectionDto(person, AttendanceStatus.PRESENT);
             Page<AttendanceProjectionDto> projectionPage = new PageImpl<>(List.of(projection));
 
-            when(attendanceRepository.findAttendanceByEventWithDefaults(
-                    eventId, AttendanceEventType.TEMPLE_WORHSIP, pageable))
+            when(attendanceRepository.findAttendanceByEventIdAndChurchId(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP,contextId, attendanceQualityEnum, pageable ))
                     .thenReturn(projectionPage);
 
             // Act
-            Page<AttendanceDto> result = attendanceService.getAttendanceByEventId(eventId, pageable, AttendanceEventType.TEMPLE_WORHSIP);
+            Page<AttendanceDto> result = attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId, attendanceQualityEnum);
 
             // Assert
             assertNotNull(result);
@@ -261,12 +306,12 @@ class AttendanceServiceImplTest {
         void getAttendanceByEventId_WhenNoAttendances_ShouldReturnEmptyPage() {
             // Arrange
             Pageable pageable = PageRequest.of(0, 10);
-            when(attendanceRepository.findAttendanceByEventWithDefaults(
-                    eventId, AttendanceEventType.TEMPLE_WORHSIP, pageable))
+            when(attendanceRepository.findAttendanceByEventIdAndChurchId(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP, contextId,attendanceQualityEnum,pageable))
                     .thenReturn(Page.empty());
 
             // Act
-            Page<AttendanceDto> result = attendanceService.getAttendanceByEventId(eventId, pageable, AttendanceEventType.TEMPLE_WORHSIP);
+            Page<AttendanceDto> result = attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId, attendanceQualityEnum);
 
             // Assert
             assertTrue(result.isEmpty());
@@ -277,16 +322,16 @@ class AttendanceServiceImplTest {
         void getAttendanceByEventId_ShouldUseTempleWorshipEventType() {
             // Arrange
             Pageable pageable = PageRequest.of(0, 10);
-            when(attendanceRepository.findAttendanceByEventWithDefaults(
-                    eq(eventId), eq(AttendanceEventType.TEMPLE_WORHSIP), eq(pageable)))
+            when(attendanceRepository.findAttendanceByEventIdAndChurchId(
+                    eq(eventId), eq(TopologyEventType.TEMPLE_WORHSIP),eq(contextId), eq(attendanceQualityEnum), eq(pageable)))
                     .thenReturn(Page.empty());
 
             // Act
-            attendanceService.getAttendanceByEventId(eventId, pageable, AttendanceEventType.TEMPLE_WORHSIP);
+            attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId,attendanceQualityEnum);
 
             // Assert
-            verify(attendanceRepository).findAttendanceByEventWithDefaults(
-                    eventId, AttendanceEventType.TEMPLE_WORHSIP, pageable);
+            verify(attendanceRepository).findAttendanceByEventIdAndChurchId(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP,contextId, attendanceQualityEnum,pageable);
         }
 
         @Test
@@ -294,16 +339,16 @@ class AttendanceServiceImplTest {
         void getAttendanceByEventId_ShouldRespectPagination() {
             // Arrange
             Pageable pageable = PageRequest.of(2, 5);
-            when(attendanceRepository.findAttendanceByEventWithDefaults(
-                    eventId, AttendanceEventType.TEMPLE_WORHSIP, pageable))
+            when(attendanceRepository.findAttendanceByEventIdAndChurchId(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP,contextId,attendanceQualityEnum, pageable))
                     .thenReturn(Page.empty());
 
             // Act
-            attendanceService.getAttendanceByEventId(eventId, pageable, AttendanceEventType.TEMPLE_WORHSIP);
+            attendanceService.getAttendanceByEventIdAndContextId(eventId, pageable, TopologyEventType.TEMPLE_WORHSIP, contextId, attendanceQualityEnum);
 
             // Assert
-            verify(attendanceRepository).findAttendanceByEventWithDefaults(
-                    eventId, AttendanceEventType.TEMPLE_WORHSIP, pageable);
+            verify(attendanceRepository).findAttendanceByEventIdAndChurchId(
+                    eventId, TopologyEventType.TEMPLE_WORHSIP,contextId, attendanceQualityEnum,pageable);
         }
     }
 
@@ -318,7 +363,7 @@ class AttendanceServiceImplTest {
             when(attendanceRepository.countTotalByEventId(eventId)).thenReturn(25L);
 
             // Act
-            long result = attendanceService.countTotalByEventId(eventId, AttendanceEventType.TEMPLE_WORHSIP);
+            long result = attendanceService.countTotalByEventId(eventId, TopologyEventType.TEMPLE_WORHSIP);
 
             // Assert
             assertEquals(25L, result);
@@ -332,7 +377,7 @@ class AttendanceServiceImplTest {
             when(attendanceRepository.countTotalByEventId(eventId)).thenReturn(0L);
 
             // Act
-            long result = attendanceService.countTotalByEventId(eventId, AttendanceEventType.TEMPLE_WORHSIP);
+            long result = attendanceService.countTotalByEventId(eventId, TopologyEventType.TEMPLE_WORHSIP);
 
             // Assert
             assertEquals(0L, result);
@@ -348,13 +393,13 @@ class AttendanceServiceImplTest {
         void countByEventIdWithDefaults_Present_ShouldReturnCorrectCount() {
             // Arrange
             when(attendanceRepository.countByEventIdWithDefaults(
-                    eventId, AttendanceEventType.TEMPLE_WORHSIP, AttendanceStatus.PRESENT))
+                    eventId, TopologyEventType.TEMPLE_WORHSIP, AttendanceStatus.PRESENT))
                     .thenReturn(15L);
 
             // Act
             long result = attendanceService.countByEventIdWithDefaults(
                     eventId,
-                    AttendanceEventType.TEMPLE_WORHSIP,
+                    TopologyEventType.TEMPLE_WORHSIP,
                     AttendanceStatus.PRESENT
             );
 
@@ -367,13 +412,13 @@ class AttendanceServiceImplTest {
         void countByEventIdWithDefaults_Absent_ShouldReturnCorrectCount() {
             // Arrange
             when(attendanceRepository.countByEventIdWithDefaults(
-                    eventId, AttendanceEventType.TEMPLE_WORHSIP, AttendanceStatus.ABSENT))
+                    eventId, TopologyEventType.TEMPLE_WORHSIP, AttendanceStatus.ABSENT))
                     .thenReturn(10L);
 
             // Act
             long result = attendanceService.countByEventIdWithDefaults(
                     eventId,
-                    AttendanceEventType.TEMPLE_WORHSIP,
+                    TopologyEventType.TEMPLE_WORHSIP,
                     AttendanceStatus.ABSENT
             );
 
@@ -385,7 +430,7 @@ class AttendanceServiceImplTest {
         @DisplayName("Debe pasar parámetros correctos al repositorio")
         void countByEventIdWithDefaults_ShouldPassCorrectParameters() {
             // Arrange
-            AttendanceEventType eventType = AttendanceEventType.GROUP_MEETING;
+            TopologyEventType eventType = TopologyEventType.GROUP_MEETING;
             AttendanceStatus status = AttendanceStatus.PRESENT;
 
             when(attendanceRepository.countByEventIdWithDefaults(eventId, eventType, status))

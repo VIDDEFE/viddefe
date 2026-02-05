@@ -1,5 +1,7 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.models;
 
+import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
+import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,10 +18,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class MeetingTest {
 
     private UUID testId;
-    private WorshipMeetingModel worshipMeeting;
-    private GroupMeetings groupMeeting;
+    private Meeting worshipMeeting;
+    private Meeting groupMeeting;
     private OffsetDateTime testScheduledDate;
     private Instant testCreationDate;
+    private MeetingType worshipType;
+    private MeetingType groupType;
+    private ChurchModel church;
+    private HomeGroupsModel homeGroup;
 
     @BeforeEach
     void setUp() {
@@ -27,19 +33,44 @@ class MeetingTest {
         testScheduledDate = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
         testCreationDate = Instant.now();
 
-        worshipMeeting = new WorshipMeetingModel();
+        // Setup types
+        worshipType = new MeetingType();
+        worshipType.setId(1L);
+        worshipType.setName("Culto Dominical");
+
+        groupType = new MeetingType();
+        groupType.setId(2L);
+        groupType.setName("Estudio Bíblico");
+
+        // Setup church
+        church = new ChurchModel();
+        church.setId(UUID.randomUUID());
+        church.setName("Iglesia Test");
+
+        // Setup home group
+        homeGroup = new HomeGroupsModel();
+        homeGroup.setId(UUID.randomUUID());
+        homeGroup.setName("Grupo Test");
+
+        // Worship meeting (church-level)
+        worshipMeeting = new Meeting();
         worshipMeeting.setId(testId);
         worshipMeeting.setName("Culto Dominical");
         worshipMeeting.setDescription("Servicio de adoración");
         worshipMeeting.setScheduledDate(testScheduledDate);
         worshipMeeting.setCreationDate(testCreationDate);
+        worshipMeeting.setChurch(church);
+        worshipMeeting.setMeetingType(worshipType);
 
-        groupMeeting = new GroupMeetings();
-        groupMeeting.setId(testId);
+        // Group meeting
+        groupMeeting = new Meeting();
+        groupMeeting.setId(UUID.randomUUID());
         groupMeeting.setName("Estudio Bíblico");
         groupMeeting.setDescription("Reunión semanal");
         groupMeeting.setScheduledDate(testScheduledDate);
         groupMeeting.setCreationDate(testCreationDate);
+        groupMeeting.setGroup(homeGroup);
+        groupMeeting.setMeetingType(groupType);
     }
 
     @Nested
@@ -50,7 +81,7 @@ class MeetingTest {
         @DisplayName("Debe preservar ID")
         void testIdPreservation() {
             assertEquals(testId, worshipMeeting.getId());
-            assertEquals(testId, groupMeeting.getId());
+            assertNotNull(groupMeeting.getId());
         }
 
         @Test
@@ -86,222 +117,85 @@ class MeetingTest {
         }
 
         @Test
-        @DisplayName("Debe permitir contexto genérico (contextId)")
-        void testContextIdGeneric() {
-            UUID churchId = UUID.randomUUID();
-            worshipMeeting.setContextId(churchId);
-            assertEquals(churchId, worshipMeeting.getContextId());
-
-            UUID groupId = UUID.randomUUID();
-            groupMeeting.setContextId(groupId);
-            assertEquals(groupId, groupMeeting.getContextId());
+        @DisplayName("Debe permitir church para cultos")
+        void testChurchForWorship() {
+            assertNotNull(worshipMeeting.getChurch());
+            assertEquals(church.getId(), worshipMeeting.getChurch().getId());
         }
 
         @Test
-        @DisplayName("Debe permitir tipo genérico (typeId)")
-        void testTypeIdGeneric() {
-            Long worshipTypeId = 1L;
-            worshipMeeting.setTypeId(worshipTypeId);
-            assertEquals(worshipTypeId, worshipMeeting.getTypeId());
+        @DisplayName("Debe permitir group para reuniones de grupo")
+        void testGroupForGroupMeetings() {
+            assertNotNull(groupMeeting.getGroup());
+            assertEquals(homeGroup.getId(), groupMeeting.getGroup().getId());
+        }
 
-            Long groupTypeId = 2L;
-            groupMeeting.setTypeId(groupTypeId);
-            assertEquals(groupTypeId, groupMeeting.getTypeId());
+        @Test
+        @DisplayName("Debe permitir meetingType")
+        void testMeetingType() {
+            assertNotNull(worshipMeeting.getMeetingType());
+            assertEquals(1L, worshipMeeting.getMeetingType().getId());
+
+            assertNotNull(groupMeeting.getMeetingType());
+            assertEquals(2L, groupMeeting.getMeetingType().getId());
         }
     }
 
     @Nested
-    @DisplayName("Timezone - Sin Conversiones")
+    @DisplayName("Timezone Tests")
     class TimezoneTests {
 
         @Test
-        @DisplayName("No debe convertir OffsetDateTime")
-        void testNoTimezoneConversion() {
-            OffsetDateTime bogota = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
-            worshipMeeting.setScheduledDate(bogota);
+        @DisplayName("Debe manejar diferentes offsets")
+        void testDifferentOffsets() {
+            // UTC
+            OffsetDateTime utcDate = OffsetDateTime.of(2026, 1, 15, 15, 0, 0, 0, ZoneOffset.UTC);
+            worshipMeeting.setScheduledDate(utcDate);
+            assertEquals(ZoneOffset.UTC, worshipMeeting.getScheduledDate().getOffset());
 
-            // Debe preservar exactamente como llega
-            assertEquals(bogota, worshipMeeting.getScheduledDate());
-            assertEquals(ZoneOffset.of("-05:00"), worshipMeeting.getScheduledDate().getOffset());
+            // +05:30 (India)
+            OffsetDateTime indiaDate = OffsetDateTime.of(2026, 1, 15, 20, 30, 0, 0, ZoneOffset.of("+05:30"));
+            groupMeeting.setScheduledDate(indiaDate);
+            assertEquals(ZoneOffset.of("+05:30"), groupMeeting.getScheduledDate().getOffset());
         }
 
         @Test
-        @DisplayName("Debe soportar UTC (Z)")
-        void testUTCTimezone() {
-            OffsetDateTime utc = OffsetDateTime.of(2026, 1, 15, 15, 0, 0, 0, ZoneOffset.UTC);
-            groupMeeting.setScheduledDate(utc);
+        @DisplayName("Debe preservar hora exacta con offset")
+        void testExactTimePreservation() {
+            // 10:00 AM en Colombia (-05:00) = 15:00 UTC
+            OffsetDateTime colombiaTime = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
+            worshipMeeting.setScheduledDate(colombiaTime);
 
-            assertEquals(utc, groupMeeting.getScheduledDate());
-            assertEquals(ZoneOffset.UTC, groupMeeting.getScheduledDate().getOffset());
-        }
-
-        @Test
-        @DisplayName("Debe soportar cualquier offset válido")
-        void testAnyValidOffset() {
-            OffsetDateTime newyork = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
-            OffsetDateTime london = OffsetDateTime.of(2026, 1, 15, 15, 0, 0, 0, ZoneOffset.UTC);
-            OffsetDateTime tokyo = OffsetDateTime.of(2026, 1, 16, 0, 0, 0, 0, ZoneOffset.of("+09:00"));
-
-            worshipMeeting.setScheduledDate(newyork);
+            assertEquals(10, worshipMeeting.getScheduledDate().getHour());
             assertEquals(ZoneOffset.of("-05:00"), worshipMeeting.getScheduledDate().getOffset());
 
-            groupMeeting.setScheduledDate(london);
-            assertEquals(ZoneOffset.UTC, groupMeeting.getScheduledDate().getOffset());
-
-            worshipMeeting.setScheduledDate(tokyo);
-            assertEquals(ZoneOffset.of("+09:00"), worshipMeeting.getScheduledDate().getOffset());
-        }
-
-        @Test
-        @DisplayName("CreationDate debe ser Instant (siempre UTC)")
-        void testCreationDateIsInstant() {
-            Instant now = Instant.now();
-            worshipMeeting.setCreationDate(now);
-
-            // Instant no tiene offset, siempre es UTC
-            assertEquals(now, worshipMeeting.getCreationDate());
-            assertNotNull(worshipMeeting.getCreationDate());
+            // Verificar que el instante UTC es correcto
+            assertEquals(15, worshipMeeting.getScheduledDate().atZoneSameInstant(ZoneOffset.UTC).getHour());
         }
     }
 
     @Nested
-    @DisplayName("WorshipMeetingModel - Discriminador WORSHIP")
-    class WorshipMeetingModelTests {
-
-        @Test
-        @DisplayName("Debe ser subclase de Meeting")
-        void testInheritance() {
-            assertTrue(worshipMeeting instanceof Meeting);
-        }
-
-        @Test
-        @DisplayName("fromDto() debe inicializar desde DTO sin conversiones")
-        void testFromDto() {
-            WorshipMeetingModel newWorship = new WorshipMeetingModel();
-            newWorship.setName("Culto Especial");
-            newWorship.setDescription("Evento especial");
-            OffsetDateTime scheduled = OffsetDateTime.of(2026, 1, 20, 18, 0, 0, 0, ZoneOffset.of("-05:00"));
-            newWorship.setScheduledDate(scheduled);
-
-            assertNotNull(newWorship);
-            assertEquals("Culto Especial", newWorship.getName());
-            assertEquals(scheduled, newWorship.getScheduledDate());
-        }
-
-        @Test
-        @DisplayName("updateFrom() no debe modificar creationDate")
-        void testUpdateFromDoesNotChangeBirthDate() {
-            Instant originalCreationDate = worshipMeeting.getCreationDate();
-
-            // Simulación de actualización
-            worshipMeeting.setName("Culto Actualizado");
-            worshipMeeting.setScheduledDate(OffsetDateTime.of(2026, 2, 1, 10, 0, 0, 0, ZoneOffset.of("-05:00")));
-
-            // CreationDate debe permanecer igual
-            assertEquals(originalCreationDate, worshipMeeting.getCreationDate());
-        }
-
-        @Test
-        @DisplayName("toDto() debe preservar offset en DTO")
-        void testToDtoPreservesOffset() {
-            OffsetDateTime scheduled = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
-            worshipMeeting.setScheduledDate(scheduled);
-
-            // El DTO debe tener el mismo offset
-            assertEquals(scheduled.getOffset(), worshipMeeting.getScheduledDate().getOffset());
-        }
-    }
-
-    @Nested
-    @DisplayName("GroupMeetings - Discriminador GROUP_MEETING")
-    class GroupMeetingsTests {
-
-        @Test
-        @DisplayName("Debe ser subclase de Meeting")
-        void testInheritance() {
-            assertTrue(groupMeeting instanceof Meeting);
-        }
-
-        @Test
-        @DisplayName("Debe permitir acceso a groupMeetingType")
-        void testGroupMeetingTypeAccess() {
-            GroupMeetingTypes type = new GroupMeetingTypes();
-            type.setId(1L);
-            type.setName("Estudio Bíblico");
-            groupMeeting.setGroupMeetingType(type);
-
-            assertEquals(type, groupMeeting.getGroupMeetingType());
-            assertEquals("Estudio Bíblico", groupMeeting.getGroupMeetingType().getName());
-        }
-
-        @Test
-        @DisplayName("Debe permitir acceso a HomeGroupsModel")
-        void testHomeGroupsModelAccess() {
-            assertNull(groupMeeting.getGroup());
-            // Se puede inyectar posteriormente si es necesario
-        }
-
-        @Test
-        @DisplayName("Constructor con contextId y typeId")
-        void testConstructorWithIds() {
-            UUID groupId = UUID.randomUUID();
-            Long typeId = 2L;
-
-            GroupMeetings meeting = new GroupMeetings(groupId, typeId);
-
-            assertEquals(groupId, meeting.getContextId());
-            assertEquals(typeId, meeting.getTypeId());
-        }
-    }
-
-    @Nested
-    @DisplayName("Métodos initFromDto y updateFromDto")
+    @DisplayName("DTO Conversion Tests")
     class DtoConversionTests {
 
         @Test
-        @DisplayName("initFromDto() debe setear todos los campos")
-        void testInitFromDtoSetsAllFields() {
-            WorshipMeetingModel meeting = new WorshipMeetingModel();
-            OffsetDateTime scheduled = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
+        @DisplayName("toDto() debe convertir correctamente")
+        void testToDtoConversion() {
+            var dto = worshipMeeting.toDto();
 
-            meeting.initFromDto("Culto Test", "Descripción test", scheduled);
-
-            assertEquals("Culto Test", meeting.getName());
-            assertEquals("Descripción test", meeting.getDescription());
-            assertEquals(scheduled, meeting.getScheduledDate());
-            assertNotNull(meeting.getCreationDate());
+            assertNotNull(dto);
+            assertEquals(worshipMeeting.getId(), dto.getId());
+            assertEquals(worshipMeeting.getName(), dto.getName());
+            assertEquals(worshipMeeting.getDescription(), dto.getDescription());
+            assertEquals(worshipMeeting.getScheduledDate(), dto.getScheduledDate());
         }
 
         @Test
-        @DisplayName("updateFromDto() debe actualizar nombre, descripción y fecha")
-        void testUpdateFromDtoUpdatesFields() {
-            WorshipMeetingModel meeting = new WorshipMeetingModel();
-            Instant originalDate = Instant.now();
-            meeting.setCreationDate(originalDate);
+        @DisplayName("toDto() debe preservar offset en scheduledDate")
+        void testToDtoPreservesOffset() {
+            var dto = worshipMeeting.toDto();
 
-            OffsetDateTime newScheduled = OffsetDateTime.of(2026, 1, 20, 14, 0, 0, 0, ZoneOffset.of("-05:00"));
-            meeting.updateFromDto("Culto Actualizado", "Nueva descripción", newScheduled);
-
-            assertEquals("Culto Actualizado", meeting.getName());
-            assertEquals("Nueva descripción", meeting.getDescription());
-            assertEquals(newScheduled, meeting.getScheduledDate());
-            // CreationDate no debe cambiar
-            assertEquals(originalDate, meeting.getCreationDate());
-        }
-
-        @Test
-        @DisplayName("updateFromDto() con null description debe actualizar")
-        void testUpdateFromDtoWithNullDescription() {
-            WorshipMeetingModel meeting = new WorshipMeetingModel();
-            meeting.setDescription("Descripción original");
-
-            OffsetDateTime scheduled = OffsetDateTime.of(2026, 1, 15, 10, 0, 0, 0, ZoneOffset.of("-05:00"));
-            meeting.updateFromDto("Nuevo nombre", null, scheduled);
-
-            assertEquals("Nuevo nombre", meeting.getName());
-            assertNull(meeting.getDescription());
-            assertEquals(scheduled, meeting.getScheduledDate());
+            assertEquals(ZoneOffset.of("-05:00"), dto.getScheduledDate().getOffset());
         }
     }
 }
-

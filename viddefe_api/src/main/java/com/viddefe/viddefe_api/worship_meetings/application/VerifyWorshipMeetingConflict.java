@@ -1,7 +1,7 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
-import com.viddefe.viddefe_api.worship_meetings.domain.repository.WorshipRepository;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateWorshipDto;
+import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
@@ -12,44 +12,77 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class VerifyWorshipMeetingConflict {
 
-    private final WorshipRepository worshipRepository;
+    private final MeetingRepository meetingRepository;
 
-    /**
-     * Verifica que no existan conflictos de horario o tipo de culto en la misma iglesia.
-     *
-     * @param dto       datos del culto
-     * @param churchId  iglesia
-     * @param worshipId id del culto actual (null si es creación)
-     */
-    public void verifyHourOfWorshipMeeting(
-            CreateWorshipDto dto,
+    public void verifyHourOfMeeting(
+            CreateMeetingDto dto,
             UUID churchId,
-            UUID worshipId
+            UUID groupId,
+            UUID meetingId
     ) {
         boolean conflict;
 
-        if (worshipId == null) {
-            conflict = worshipRepository
-                    .existsByChurchIdAndWorshipTypeIdAndScheduledDate(
-                            churchId,
-                            dto.getWorshipTypeId(),
-                            dto.getScheduledDate()
-                    );
+        if (meetingId == null) {
+            // CREATE
+            conflict = existsForCreate(dto, churchId, groupId);
         } else {
-            conflict = worshipRepository
-                    .existsByChurchIdAndWorshipTypeIdAndScheduledDateAndIdNot(
-                            churchId,
-                            dto.getWorshipTypeId(),
-                            dto.getScheduledDate(),
-                            worshipId
-                    );
+            // UPDATE
+            conflict = existsForUpdate(dto, churchId, groupId, meetingId);
         }
 
         if (conflict) {
             throw new DataIntegrityViolationException(
-                    "Conflict: Ya existe un culto del mismo tipo en ese horario para esta iglesia."
+                    "Conflict: A meeting of the same type already exists at this time for the given context."
             );
         }
     }
 
+    private boolean existsForCreate(
+            CreateMeetingDto dto,
+            UUID churchId,
+            UUID groupId
+    ) {
+        if (groupId == null) {
+            return meetingRepository
+                    .existsByChurchIdAndMeetingTypeIdAndScheduledDate(
+                            churchId,
+                            dto.getMeetingTypeId(),
+                            dto.getScheduledDate()
+                    );
+        }
+
+        return meetingRepository
+                .existsByChurchIdAndGroupIdAndMeetingTypeIdAndScheduledDate(
+                        churchId,
+                        groupId,
+                        dto.getMeetingTypeId(),
+                        dto.getScheduledDate()
+                );
+    }
+
+    private boolean existsForUpdate(
+            CreateMeetingDto dto,
+            UUID churchId,
+            UUID groupId,
+            UUID meetingId
+    ) {
+        if (groupId == null) {
+            return meetingRepository
+                    .existsByChurchIdAndMeetingTypeIdAndScheduledDateAndIdNot(
+                            churchId,
+                            dto.getMeetingTypeId(),
+                            dto.getScheduledDate(),
+                            meetingId
+                    );
+        }
+
+        return meetingRepository
+                .existsByChurchIdAndGroupIdAndMeetingTypeIdAndScheduledDateAndIdNot(
+                        churchId,
+                        groupId,
+                        dto.getMeetingTypeId(),
+                        dto.getScheduledDate(),
+                        meetingId
+                );
+    }
 }
