@@ -56,7 +56,6 @@ export default function MyGroup() {
   const startTime = formatDateWithTz(dateRange.start);
   const endTime = formatDateWithTz(dateRange.end);
   
-  // Obtener métricas del grupo (con contextId)
   const { data: groupMetrics } = useGroupMetrics(groupId, startTime, endTime);
   
   const [membersPage, setMembersPage] = useState(0);
@@ -66,7 +65,6 @@ export default function MyGroup() {
     isLoading: isLoadingMembers
   } = useGroupMembers(groupId, { page: membersPage, size: membersPageSize });
 
-  // Estado para modal de asignación de personas
   const [peopleModal, setPeopleModal] = useState<{
     isOpen: boolean;
     role: RoleStrategyNode | null;
