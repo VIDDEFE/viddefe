@@ -11,7 +11,7 @@ import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationAccountEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.config.rabbit.RabbitPriority;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;

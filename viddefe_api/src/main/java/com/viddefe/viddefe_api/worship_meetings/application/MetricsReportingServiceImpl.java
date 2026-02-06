@@ -42,12 +42,7 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
                 Optional.ofNullable(
                         homeGroupReader.findAllIdsWithTotalPeopleByChurchId(churchId)
                 ).orElse(List.of());
-        System.out.println("TOTAL GROUPS FOUND: " + groupIdWithTotalPeople.size());
-        System.out.println("TOTAL PEOPLE FOUND: " +
-                groupIdWithTotalPeople.stream()
-                        .mapToLong(EntityIdWithTotalPeople::getTotalPeople)
-                        .sum()
-        );
+
         List<EntityIdWithTotalPeople> childrenIdsWithTotalPeople =
                 Optional.ofNullable(
                         churchLookup.findChildrenIdsWithTotalPeopleChurchIdsByChurchId(churchId)
@@ -175,11 +170,8 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
             OffsetDateTime startTime,
             OffsetDateTime endTime
     ) {
-        System.out.println("Building group metrics for groupId: " + groupId);
-        System.out.println("DEBUGING");
         Long totalPeople =
                 homeGroupReader.findTotalPeopleByGroupId(groupId);
-        System.out.println("Total people: " + totalPeople);
         return meetingRepository.getMetricsGroupAttendanceByInId(
                         List.of(groupId),
                         groupType,
@@ -259,7 +251,6 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
             MetricAttendanceProjectionRow row, Long totalPeople,
             OffsetDateTime startTime, OffsetDateTime endTime
     ) {
-        printRow(row);
         long totalAttended = Optional.ofNullable(row.getTotalPeopleAttended()).orElse(0L);
         long newAttendees  = Optional.ofNullable(row.getTotalNewAttendees()).orElse(0L);
 
@@ -281,8 +272,6 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
                 .absenceRate(absenceRate)
                 .totalPeople(totalPeople)
                 .build();
-        System.out.println("Storing in cache for ID: " + row.getId());
-        System.out.println(result);
         metricsRedisAdapter.saveMetrics(
                 eventType,
                 row.getId(),
@@ -293,14 +282,6 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
 
         );
         return result;
-    }
-
-    private void printRow(MetricAttendanceProjectionRow row){
-        System.out.println("Row Data: ");
-        System.out.println("ID: " + row.getId());
-        System.out.println("Total New Attendees: " + row.getTotalNewAttendees());
-        System.out.println("Total People Attended: " + row.getTotalPeopleAttended());
-        System.out.println("Total Meetings: " + row.getTotalMeetings());
     }
 
     /**

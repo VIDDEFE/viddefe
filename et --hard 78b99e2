@@ -1,0 +1,108 @@
+[33m3bd5ee6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmetrics_new_implementation[m[33m, [m[1;31morigin/metrics_new_implementation[m[33m)[m feat: Implement WhatsApp API error handling and resilience features
+[33m8479374[m[33m ([m[1;31morigin/beans_fix[m[33m, [m[1;32mbeans_fix[m[33m)[m Remove some comments
+[33m78b99e2[m feat: Refactor metrics handling and improve null safety in group metrics display
+[33md99ff8d[m feat(dashboard): integrate worship metrics and church data into dashboard stats
+[33m510dc3e[m feat: Complete refactor of MetricsRedisService to MetricsRedisAdapter
+[33m2a63bb3[m feat: Implement metrics reporting and caching services for attendance metrics
+[33m80d1096[m Add unit tests for worship meetings application
+[33m3106e79[m feat: Add Redis caching support and refactor group member management
+[33mda17f8e[m Refactor attendance and meeting metrics handling
+[33macf6e15[m feat: Implement Attendance Quality Recalculation and Event Handling
+[33m64a06de[m feat: Refactor attendance handling and add scheduled job for attendance qualification
+[33m138a7d1[m feat: Update phone field to String and enhance attendance quality filtering in People and Church models
+[33m56c220f[m feat: Implement Attendance Quality Management
+[33m7187271[m feat: Enhance null safety in PeopleModel and attendance/event publishing in services
+[33m9832074[m feat: Enhance attendance tracking and quality metrics
+[33mfad145e[m feat: add verifyPersonExistsByCcAndChurchId method to PeopleReader interface
+[33m0908138[m feat(invitation): enhance invitation process with church ID and email template
+[33m5ac037c[m feat(notifications): implement RabbitMQ notification pipeline with type-based routing and job routines
+[33m2167727[m feat: integrate RabbitMQ for notification system
+[33me5adff0[m Refactor Meeting and Worship Models: Unify Meeting Types and Update Related Components
+[33m3c9978b[m Fix meetings
+[33mf71d187[m fix test
+[33m33433f4[m feat: Add documentation and implement meeting normalization
+[33m36cd394[m feat: Enhance group and worship meeting services with new payload structures and improved date handling
+[33m28c505f[m Refactor worship meetings API and frontend services
+[33m454ede8[m feat: Add Ministry Functions management feature
+[33m13537ce[m Refactor date handling to use OffsetDateTime and Instant
+[33md209d2b[m Refactor HomeGroupsDTO to rename leader to manager; implement MinistryFunctionService and related classes; add MinistryFunctionTypesEnum for role types; update front-end components to reflect manager terminology; enhance meeting detail view with additional information; create seeders for ministry function types.
+[33m8417915[m Refactor worship and meeting models to use a unified Person type; add ChurchDetail and MeetingDetail views; update routing and services accordingly; enhance offerings section with no data state; improve group management with navigation to meeting details.
+[33m5718566[m feat: add meeting management features including create, update, delete, and view modals
+[33ma19f2c7[m feat: enhance error handling in API service and add new church and group functionalities
+[33mb088bf1[m feat: implement infinite scrolling for person selection and enhance dropdown components
+[33mfcbaa11[m feat: add worship components including AttendanceSummary, DeleteOfferingModal, OfferingModal, OfferingsSection, WorshipInfo, and WorshipSchedule
+[33m33086da[m[33m ([m[1;32mmain[m[33m)[m feat: enhance POM structure, improve email service validation, and update Vite metadata
+[33m15e61a2[m sonnar config
+[33mf68761b[m sonnar merge
+[33mbca2da7[m Merge branch 'beans_fix' of https://github.com/VIDDEFE/viddefe
+[33m406bd78[m feat: add SonarQube configuration for project analysis
+[33mf9f1143[m chore: trigger sonar
+[33mf0c301e[m Merge pull request #33 from VIDDEFE/develop
+[33mf5e9bfe[m Merge pull request #32 from VIDDEFE/beans_fix
+[33md644c04[m feat: Implement offerings management in worship detail view
+[33m9e1a6f8[m Merge pull request #31 from VIDDEFE/beans_fix
+[33m9046046[m Add unit tests for AttendanceServiceImpl, TypesWorshipMeetingReaderImpl, VerifyWorshipMeetingConflict, and WorshipServicesImpl; enhance useWorships hook and WorshipDetail component for improved attendance management and UI performance
+[33mbb0ada9[m feat: enhance sign-in functionality to support phone number login; add account management view
+[33me023cc9[m feat: add phone and channel fields to invitation and sign-in DTOs; update user invitation logic
+[33m13a9212[m feat: add WhatsApp notification service and update configuration
+[33ma7426dc[m Add unit tests for authentication and church services
+[33mfbf01ac[m refactorUI
+[33m5057e01[m feat: add WorshipDetail view with attendance statistics and management
+[33m1eafe63[m Merge pull request #23 from VIDDEFE/beans_fix
+[33m687bd5e[m feat: Implement worship meetings module with attendance tracking
+[33m68e6787[m fixing roles assignment
+[33m0c1fbe1[m feat: Implement role assignment and removal for multiple people in home groups
+[33m519d1cf[m feat: Refactor roles and strategies management to include people assignments and enhance DTO structure
+[33md4edfb7[m feat: Enhance Strategy Management with Role Configuration
+[33m471e55c[m feat: update Cities and States models for consistent naming; enhance Church service and repository with sorting functionality
+[33mda3603e[m feat: add Home Group management features including view, create, edit, and delete modals
+[33m2bdffc1[m feat: add worship management module with CRUD functionality
+[33mefaf25d[m feat: Implement worship and group meeting services with corresponding models, repositories, and controllers
+[33m7e71a34[m feat: Enhance People Management API and Frontend
+[33me29ee62[m Merge pull request #21 from VIDDEFE/beans_fix
+[33m150392c[m feat: Refactor AppContext for persistent state management and permissions handling
+[33m108ddf8[m mapas fix
+[33mf131851[m feat: Enhance ChurchMembershipService and user invitation flow
+[33m3b29393[m Implementig Auth Permisions and User Invitation
+[33mbb5872a[m feat: add user management features and update sign-up process
+[33m2f7770c[m[33m ([m[1;31morigin/auth_front_api[m[33m, [m[1;32mauth_front_api[m[33m)[m Fixing dependencies cicle
+[33mcada0c0[m feat: Refactor Church model and related services to improve DTO handling; update ChurchForm and ChurchViewModal for better map integration
+[33me329662[m feat: Enhance Church model and forms with latitude/longitude validation; improve error handling in GlobalExceptionHandler
+[33m89bd539[m feat: Refactor PeopleController to use PeopleResDto for responses and update package-info.java dependencies
+[33m9733bcc[m feat: Add PeopleResDto and implement person retrieval in PeopleController; enhance PersonForm and Table components with pagination
+[33m083acfa[m Fixing dependencies
+[33m6266d6a[m feat: Implement Church Lookup and Detailed Church Retrieval
+[33mb4ebe37[m feat: add child church functionality and update church service methods
+[33m7e677d0[m Fixing dependencies
+[33mfd1d189[m Merge pull request #17 from VIDDEFE/auth_front_api
+[33m2c2aa57[m feat: add NavBar component and integrate user authentication context
+[33m8ab0baf[m Merge pull request #16 from VIDDEFE/auth_front_api
+[33mc878511[m feat: add services, groups, events, and people management views
+[33m7c302e4[m Merge pull request #15 from VIDDEFE/auth_front_api
+[33mfc4c55f[m fix: Initialize user state to null and improve user data validation in SignUpScreen
+[33mb6530df[m feat: Add ResourceAlreadyExistsException and validation handling in GlobalExceptionHandler
+[33med5b0be[m Merge branch 'develop' of https://github.com/VIDDEFE/viddefe into auth_front_api
+[33m7a64245[m Merge pull request #13 from VIDDEFE/auth_basic_config
+[33m071cacd[m feat: enhance user registration flow with email and identification fields
+[33mb30d155[m Merge branch 'develop' of https://github.com/VIDDEFE/viddefe into auth_front_api  Please enter a commit message to explain why this merge is necessary,
+[33m7729064[m[33m ([m[1;31morigin/auth_basic_config[m[33m)[m feat: add States and Cities models, repositories, and services
+[33m6e6a0c5[m feat: implement personal data form in SignUpScreen and add date picker functionality
+[33m0f6cdac[m Merge pull request #12 from VIDDEFE/auth_basic_config
+[33mbafcbaf[m refactor: restructure authentication flow and components
+[33m8918ba3[m Merge pull request #11 from VIDDEFE/auth_basic_config
+[33m8e8f2c3[m fix: remove unnecessary comment from error display in SignInScreen
+[33m3aaa249[m feat: initialize web application with React, Vite, and TypeScript
+[33m92d1563[m feat: - configuration for users - configuration dto for responses in signin and singup - implementation of exception handlers and api responses - auth crud people
+[33m8dcf4c6[m Merge pull request #7 from VIDDEFE/auth_basic_config
+[33m10a2efa[m feat: - configuration for users - configuration dto for responses in signin and singup - implementation of exception handlers and api responses
+[33ma16431d[m Merge pull request #6 from VIDDEFE/auth_basic_config
+[33m62baa07[m feat: - configuration for users - configuration dto for responses in signin and singup
+[33m619654a[m Merge pull request #5 from VIDDEFE/develop
+[33ma7dd1cf[m i finish the generic response and the Rest response
+[33ma454274[m Merge pull request #3 from VIDDEFE/auth_basic_config
+[33m02910c2[m Configuration Seeder for RolUser, StatesCities, fixing SecurityConfig, adding an api-prefix, and updating migration
+[33mec8d458[m feat(auth, people, churches): add DTOs, services, repositories and security config
+[33m7760bd9[m feat: initial project configuration with seeders
+[33m01807b9[m Stopped tracking .env File
+[33m9ebfb3a[m first_commit
+[33m70af8e6[m Initial commit

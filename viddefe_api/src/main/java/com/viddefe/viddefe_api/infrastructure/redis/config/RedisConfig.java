@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.config.redis;
+package com.viddefe.viddefe_api.infrastructure.redis.config;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.config.rabbit;
+package com.viddefe.viddefe_api.infrastructure.rabbit.config;
 
 import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import org.springframework.amqp.core.*;

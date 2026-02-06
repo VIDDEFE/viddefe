@@ -1,7 +1,7 @@
 package com.viddefe.viddefe_api.notifications.application;
 
-import com.viddefe.viddefe_api.config.rabbit.RabbitPriority;
-import com.viddefe.viddefe_api.config.rabbit.RabbitQueues;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
 import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import org.junit.jupiter.api.BeforeEach;

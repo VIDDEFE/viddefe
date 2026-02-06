@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.config.rabbit;
+package com.viddefe.viddefe_api.infrastructure.rabbit.config;
 
 public enum RabbitPriority {
     HIGH(9),
