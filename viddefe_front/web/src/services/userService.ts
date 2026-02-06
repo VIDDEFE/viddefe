@@ -207,10 +207,6 @@ export const DEFAULT_ROLES: Role[] = [
 ];
 
 export const userService = {
-  // Obtener permisos disponibles del backend
-  getPermissions: () =>
-    apiService.get<PermissionResponse[]>('/auth/permissions'),
-
   // Enviar invitación para crear usuario
   sendInvitation: (data: InvitationRequest) =>
   {

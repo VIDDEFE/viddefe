@@ -12,7 +12,6 @@ import Services from '../views/services/Services';
 import Groups from '../views/groups/Groups';
 import HomeGroupDetail from '../views/groups/HomeGroupDetail';
 import MyGroup from '../views/groups/MyGroup';
-import Events from '../views/events/Events';
 import Worships from '../views/worships/Worships';
 import WorshipDetail from '../views/worships/WorshipDetail';
 import MeetingDetail from '../views/groups/MeetingDetail';
@@ -42,7 +41,6 @@ export default function Router() {
         <Route path="/groups" element={<ProtectedRoute element={<Groups />} />} />
         <Route path="/groups/:id" element={<ProtectedRoute element={<HomeGroupDetail />} />} />
         <Route path="/my-group" element={<ProtectedRoute element={<MyGroup />} />} />
-        <Route path="/events" element={<ProtectedRoute element={<Events />} />} />
         <Route path="/worships" element={<ProtectedRoute element={<Worships />} />} />
         <Route path="/worships/:id" element={<ProtectedRoute element={<WorshipDetail />} />} />
         <Route path="/group-meetings/:id" element={<ProtectedRoute element={<MeetingDetail />} />} />

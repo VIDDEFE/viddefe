@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Button, PageHeader } from "../../components/shared";
 import { StatCard, DateRangeSelector, MetricsDetailsGrid } from "../../components/metrics";
-import { UpcomingEventsWidget, GroupsOverviewWidget, RecentWorshipsWidget } from "../../components/dashboard";
+import { RecentWorshipsWidget, RecentGroupMeetingsWidget } from "../../components/dashboard";
 import { FiBarChart2, FiUsers, FiCalendar, FiHome } from "react-icons/fi";
 import { MdChurch } from "react-icons/md";
 import { useWorshipMetrics, useDateRange, useHomeGroups, useMyChurch, useChurchChildren } from "../../hooks";
@@ -63,7 +63,7 @@ export default function Dashboard() {
       icon: <FiBarChart2 size={28} />,
       bgColor: "bg-yellow-500"
     },
-  ], [churchesData, groupsData, worshipMetrics]);
+  ], [churchChildrenData, groupsData, worshipMetrics]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -94,12 +94,9 @@ export default function Dashboard() {
       </div>
 
       {/* Sections - Overview Widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Grupos Activos */}
-        <GroupsOverviewWidget />
-
-        {/* Próximos Eventos */}
-        <UpcomingEventsWidget />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Reuniones de Grupos Recientes */}
+        <RecentGroupMeetingsWidget />
 
         {/* Cultos Recientes */}
         <RecentWorshipsWidget />
@@ -191,16 +188,16 @@ export default function Dashboard() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => navigate('/events')}
+              onClick={() => navigate('/mychurch')}
             >
-              Ver Eventos
+              Mi Iglesia
             </Button>
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => navigate('/mychurch')}
+              onClick={() => navigate('/mygroup')}
             >
-              Mi Iglesia
+              Mi Grupo
             </Button>
           </div>
         </Card>
