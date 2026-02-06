@@ -14,6 +14,7 @@ export * from './useOfferings';
 export * from './useMeetings';
 export * from './useMinistryFunctions';
 export * from './useMetrics';
+export * from './useDateRange';
 
 // Meetings (Group)
 export {
