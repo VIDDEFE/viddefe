@@ -5,7 +5,7 @@ import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.factory.NotificatorFactory;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.config.rabbit.RabbitQueues;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
@@ -37,7 +37,6 @@ public class NotificationConsumer {
     public void consumeMinistry(NotificationEvent event) {
 
         log.info("Starting MINISTRY notification processing");
-        System.out.println("MINISTRY NOTIFICATION PROCESSING");
         printDataEvent(event);
 
         PeopleResDto person =
@@ -107,7 +106,6 @@ public class NotificationConsumer {
     }
 
     private void printDataEvent(NotificationEvent event) {
-
         log.debug("Notification Event Data:");
         log.debug("Person ID: {}", event.getPersonId());
         log.debug("Channels: {}", event.getChannels());

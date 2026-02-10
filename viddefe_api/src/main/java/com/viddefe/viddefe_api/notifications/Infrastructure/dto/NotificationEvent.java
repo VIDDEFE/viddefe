@@ -2,7 +2,7 @@ package com.viddefe.viddefe_api.notifications.Infrastructure.dto;
 
 import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
-import com.viddefe.viddefe_api.config.rabbit.RabbitPriority;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

@@ -6,7 +6,6 @@ export * from './useChurches';
 export * from './useGroups';
 export * from './useHomeGroups';
 export * from './useServices';
-export * from './useEvents';
 export * from './useStateCities';
 export * from './useUsers';
 export * from './useWorships';
@@ -14,6 +13,7 @@ export * from './useOfferings';
 export * from './useMeetings';
 export * from './useMinistryFunctions';
 export * from './useMetrics';
+export * from './useDateRange';
 
 // Meetings (Group)
 export {

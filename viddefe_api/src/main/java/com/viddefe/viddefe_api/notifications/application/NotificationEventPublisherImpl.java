@@ -1,7 +1,7 @@
 package com.viddefe.viddefe_api.notifications.application;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
-import com.viddefe.viddefe_api.config.rabbit.RabbitQueues;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

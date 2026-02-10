@@ -5,7 +5,6 @@ import {
   IconChurch,
   IconPeople,
   IconGroups,
-  IconEvents,
   IconMenu,
   IconClose,
   IconLogout,
@@ -45,7 +44,6 @@ const menuSections: MenuSection[] = [
     items: [
       { path: "/churches", label: "Iglesias Hijas", icon: <IconChurch /> },
       { path: "/worships", label: "Cultos", icon: <IconWorship /> },
-      { path: "/events", label: "Eventos", icon: <IconEvents /> },
     ],
   },
   {
