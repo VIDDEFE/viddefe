@@ -52,6 +52,28 @@ public class RabbitConfig {
         );
     }
 
+    /* ===============================
+     *  WhatsApp Resilient Exchanges
+     * =============================== */
+
+    @Bean
+    public DirectExchange whatsappExchange() {
+        return new DirectExchange(
+                RabbitQueues.WHATSAPP_EXCHANGE,
+                true,   // durable
+                false   // autoDelete
+        );
+    }
+
+    @Bean
+    public DirectExchange whatsappDlx() {
+        return new DirectExchange(
+                RabbitQueues.WHATSAPP_DLX,
+                true,   // durable
+                false   // autoDelete
+        );
+    }
+
 
     /* ===============================
      *  Queues
@@ -83,6 +105,34 @@ public class RabbitConfig {
         return QueueBuilder
                 .durable(RabbitQueues.ATTENDANCE_QUALITY_QUEUE)
                 .withArgument("x-max-priority", 10)
+                .build();
+    }
+
+    /* ===============================
+     *  WhatsApp Resilient Queues
+     * =============================== */
+
+    @Bean
+    public Queue whatsappQueue() {
+        return QueueBuilder.durable(RabbitQueues.WHATSAPP_QUEUE)
+                .withArgument("x-max-priority", 10)
+                .withArgument("x-dead-letter-exchange", RabbitQueues.WHATSAPP_DLX)
+                .withArgument("x-dead-letter-routing-key", RabbitQueues.WHATSAPP_DLQ_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
+    public Queue whatsappRetryQueue() {
+        return QueueBuilder.durable(RabbitQueues.WHATSAPP_RETRY_QUEUE)
+                .withArgument("x-message-ttl", 30000) // 30 seconds
+                .withArgument("x-dead-letter-exchange", RabbitQueues.WHATSAPP_EXCHANGE)
+                .withArgument("x-dead-letter-routing-key", RabbitQueues.WHATSAPP_ROUTING_KEY)
+                .build();
+    }
+
+    @Bean
+    public Queue whatsappDlq() {
+        return QueueBuilder.durable(RabbitQueues.WHATSAPP_DLQ)
                 .build();
     }
 
@@ -132,6 +182,43 @@ public class RabbitConfig {
                 .bind(attendanceQualityQueue)
                 .to(attendanceExchange)
                 .with(AttendanceRoutingKey.RECALCULATE_ATTENDANCE_QUALITY.routingKey());
+    }
+
+    /* ===============================
+     *  WhatsApp Resilient Bindings
+     * =============================== */
+
+    @Bean
+    public Binding whatsappBinding(
+            Queue whatsappQueue,
+            DirectExchange whatsappExchange
+    ) {
+        return BindingBuilder
+                .bind(whatsappQueue)
+                .to(whatsappExchange)
+                .with(RabbitQueues.WHATSAPP_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding whatsappRetryBinding(
+            Queue whatsappRetryQueue,
+            DirectExchange whatsappExchange
+    ) {
+        return BindingBuilder
+                .bind(whatsappRetryQueue)
+                .to(whatsappExchange)
+                .with(RabbitQueues.WHATSAPP_RETRY_ROUTING_KEY);
+    }
+
+    @Bean
+    public Binding whatsappDlqBinding(
+            Queue whatsappDlq,
+            DirectExchange whatsappDlx
+    ) {
+        return BindingBuilder
+                .bind(whatsappDlq)
+                .to(whatsappDlx)
+                .with(RabbitQueues.WHATSAPP_DLQ_ROUTING_KEY);
     }
 
 }
