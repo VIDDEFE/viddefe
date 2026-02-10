@@ -329,11 +329,8 @@ public class MetricsReportingServiceImpl implements MetricsReportingService {
                 metricsRedisAdapter.getMetrics(groupType, groupId, startTime, endTime);
 
         if (cached.isPresent()) {
-            System.out.println("CACHE HIT for groupId: " + groupId);
             return cached.get();
         }
-
-        System.out.println("CACHE MISS for groupId: " + groupId);
 
         MetricsAttendanceDto computed =
                 buildingGroupMetrics(groupId, startTime, endTime);

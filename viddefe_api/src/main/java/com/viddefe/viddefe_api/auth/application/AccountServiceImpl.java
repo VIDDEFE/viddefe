@@ -48,15 +48,16 @@ public class AccountServiceImpl implements AccountService {
      * - Never reused
      */
     private static final String TEMPLATE_INVITATION_MESSAGE = """
-    Hello {{name}}, welcome to VidDefe!
-    
-    Your account has been created.
-    
-    Username: {{username}}
-    Temporary password (one-time): {{password}}
-    
-    You will be required to change this password immediately after logging in.
+    Hola {{name}}, ¡bienvenido/a a VidDefe!
+
+    Tu cuenta ha sido creada correctamente.
+
+    Usuario: {{username}}
+    Contraseña temporal (uso único): {{password}}
+
+    Por seguridad, deberás cambiar esta contraseña inmediatamente después de iniciar sesión.
     """;
+
 
     @Override
     public void invite(InvitationDto dtp, UUID churchId) {
@@ -94,7 +95,8 @@ public class AccountServiceImpl implements AccountService {
         event.setPersonId(person.getId());
         event.setCreatedAt(Instant.now());
         event.setVariables(resolveVariables(event, person, userModel, temporaryPassword));
-        event.setTemplate("/emails/invitation.html");
+        String template = resolveTemplate(dtp.getChannel());
+        event.setTemplate(template);
         notificationEventPublisher.publish(event);
     }
 
@@ -158,11 +160,13 @@ public class AccountServiceImpl implements AccountService {
         }).toList();
     }
 
-    private String buildMessage(Map<String, String> variables) {
-        String message = TEMPLATE_INVITATION_MESSAGE;
-        for (Map.Entry<String, String> entry : variables.entrySet()) {
-            message = message.replace("{{" + entry.getKey() + "}}", entry.getValue());
-        }
-        return message;
+    private String resolveTemplate(String channel) {
+        return switch (Channels.from(channel)) {
+            case EMAIL -> "/emails/invitation.html";
+            case WHATSAPP -> TEMPLATE_INVITATION_MESSAGE;
+            default -> throw new IllegalStateException(
+                    "Unsupported channel: " + channel
+            );
+        };
     }
 }

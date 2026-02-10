@@ -5,10 +5,10 @@ import com.viddefe.viddefe_api.notifications.application.WhatsappClient;
 import com.viddefe.viddefe_api.notifications.common.ResolverMessage;
 import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.retry.annotation.CircuitBreaker;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +24,8 @@ public class WhatsappNotifierService implements Notificator {
 
     @Async
     @Override
-    @CircuitBreaker(label = "whatsapp")
-    @Retryable(label = "whatsapp")
+    @Retry(name = "whatsappSendRetry", fallbackMethod = "sendFallback")
+    @CircuitBreaker(name = "whatsappCircuitBreaker", fallbackMethod = "sendFallback")
     public void send(@Valid NotificationDto notificationDto) {
         String message = ResolverMessage.resolveMessage(notificationDto.getTemplate(), notificationDto.getVariables());
         whatsappClient.sendTextMessage(
