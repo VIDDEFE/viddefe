@@ -1,7 +1,9 @@
 package com.viddefe.viddefe_api.notifications.Infrastructure.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -16,6 +18,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class WhatsappMessageDto {
 
     private String phoneNumber;
@@ -37,18 +40,7 @@ public class WhatsappMessageDto {
     @JsonProperty("last_retry_at")
     private Instant lastRetryAt;
 
-    public WhatsappMessageDto(String phoneNumber, String template, Map<String, Object> variables) {
-        this.phoneNumber = phoneNumber;
-        this.template = template;
-        this.variables = variables;
-        this.correlationId = UUID.randomUUID().toString();
-        this.createdAt = Instant.now();
-    }
-
-    public WhatsappMessageDto(String phoneNumber, String template, Map<String, Object> variables, String originalEventId) {
-        this(phoneNumber, template, variables);
-        this.originalEventId = originalEventId;
-    }
+    private NotificationTypeEnum notificationType;
 
     public void incrementRetry() {
         this.retryCount++;

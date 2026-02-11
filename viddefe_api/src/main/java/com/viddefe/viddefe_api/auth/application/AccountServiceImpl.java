@@ -63,14 +63,14 @@ public class AccountServiceImpl implements AccountService {
     public void invite(InvitationDto dtp, UUID churchId) {
         // Implementation goes here
         if((dtp.getEmail() != null && !dtp.getEmail().isBlank()) && userRepository.existsByEmail(dtp.getEmail())) {
-            throw new DataIntegrityViolationException("User with email already exists");
+            throw new IllegalArgumentException("User with email already exists");
         }else if((dtp.getPhone() != null && !dtp.getPhone().isBlank()) && userRepository.existsByPhone(dtp.getPhone())) {
-            throw new DataIntegrityViolationException("User with phone number already exists");
+            throw new IllegalArgumentException("User with phone number already exists");
         }else if(userRepository.existsUserByPeopleIdAndPeopleChurchId(
                 dtp.getPersonId(),
                 peopleReader.getPeopleById(dtp.getPersonId()).getChurch().getId()
         )){
-            throw new DataIntegrityViolationException("User for the selected person already exists in the church");
+            throw new IllegalArgumentException("User for the selected person already exists in the church");
         };
 
         List<PermissionModel> permissionModels = permissionService.findByListNames(dtp.getPermissions());

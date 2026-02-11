@@ -89,6 +89,7 @@ public class WhatsappClient {
 
     private boolean isRetryableError(HttpStatusCode statusCode) {
         return statusCode.value() == 429 ||  // Rate limit
+               statusCode.value() == 400 ||
                statusCode.value() == 408 ||  // Request timeout
                statusCode.value() == 503;    // Service unavailable
     }

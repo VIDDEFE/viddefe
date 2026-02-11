@@ -60,8 +60,6 @@ public class WhatsappMessageListener {
 
     private void handleRetryableError(WhatsappMessageDto messageDto, Exception e) {
         if (messageDto.hasExceededMaxRetries(MAX_RETRY_COUNT)) {
-            log.error("Max retries exceeded for WhatsApp message to: {}. Sending to DLQ",
-                      messageDto.getPhoneNumber(), e);
             sendToDlq(messageDto, "Max retries exceeded: " + e.getMessage());
             return;
         }
@@ -87,17 +85,11 @@ public class WhatsappMessageListener {
 
     private void sendToDlq(WhatsappMessageDto messageDto, String reason) {
         // Agregar metadatos para debugging en DLQ
-        Map<String, Object> dlqMessage = Map.of(
-            "originalMessage", messageDto,
-            "failureReason", reason,
-            "failureTime", Instant.now().toString(),
-            "correlationId", messageDto.getCorrelationId()
-        );
 
         rabbitTemplate.convertAndSend(
             RabbitQueues.WHATSAPP_DLX,
             RabbitQueues.WHATSAPP_DLQ_ROUTING_KEY,
-            dlqMessage
+                messageDto
         );
 
         log.warn("WhatsApp message sent to DLQ. Phone: {}, Reason: {}",
