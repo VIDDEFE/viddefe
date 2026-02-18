@@ -1,10 +1,16 @@
 package com.viddefe.viddefe_api.notifications.domain.models;
 
+import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.common.NotificationStatus;
+import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Entity
@@ -17,11 +23,12 @@ public class NotificationsFailed {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false)
-    private String message;
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb", nullable = false)
+    private Map<String, Object> variables;
     @Column(nullable = false)
 
-    private OffsetDateTime createdAt;
+    private Instant createdAt;
 
     @Column(nullable = false)
     private String to;
@@ -29,4 +36,17 @@ public class NotificationsFailed {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private NotificationStatus status;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private NotificationTypeEnum type;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Channels channel;
+
+    private String template;
+
+    @Column(nullable = false)
+    private UUID peopleId;
 }

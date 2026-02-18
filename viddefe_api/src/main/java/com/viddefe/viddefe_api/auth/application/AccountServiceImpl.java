@@ -88,16 +88,29 @@ public class AccountServiceImpl implements AccountService {
         userModel.setPassword(passwordEncoder.encode(temporaryPassword));
         userRepository.save(userModel);
         Channels channel = Channels.from(dtp.getChannel());
-        NotificationAccountEvent event = new NotificationAccountEvent();
-        event.setPriority(RabbitPriority.HIGH);
-        event.setSubject("Bienvenido a VidDefe!");
-        event.setChannels(channel);
-        event.setPersonId(person.getId());
-        event.setCreatedAt(Instant.now());
+        NotificationAccountEvent event =
+                NotificationAccountEvent.builder()
+                        .priority(RabbitPriority.HIGH)
+                        .subject("Bienvenido a VidDefe!")
+                        .channels(channel)
+                        .personId(person.getId())
+                        .createdAt(Instant.now())
+                        .template(resolveTemplate(dtp.getChannel()))
+                        .build();
         event.setVariables(resolveVariables(event, person, userModel, temporaryPassword));
-        String template = resolveTemplate(dtp.getChannel());
-        event.setTemplate(template);
         notificationEventPublisher.publish(event);
+
+    }
+
+    /**
+     * @param peopleId The unique identifier of the person whose account ID is to be retrieved.
+     * @return
+     */
+    @Override
+    public UUID getAccountIdByPeopleId(UUID peopleId) {
+       return userRepository.findByPeopleId(peopleId)
+               .orElseThrow(() -> new IllegalArgumentException("No account found for the given person ID"))
+               .getId();
     }
 
     public Map<String, Object> resolveVariables(NotificationEvent event, PeopleModel person, UserModel user, String temporaryPassword) {

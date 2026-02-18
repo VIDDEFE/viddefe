@@ -1,8 +1,10 @@
 package com.viddefe.viddefe_api.notifications.application;
 
+import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.common.exceptions.NonRetryableWhatsappException;
 import com.viddefe.viddefe_api.notifications.common.exceptions.RetryableWhatsappException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,18 +21,22 @@ import java.util.function.Supplier;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class WhatsappClient {
 
     private final RestClient restClient;
-    private final CircuitBreaker circuitBreaker;
 
     @Value("${whatsapp.api.url}")
     private String graphBaseUrl;
 
     @Value("${whatsapp.api.phone.number.id}")
     private String phoneNumberId;
+    private final CircuitBreaker circuitBreaker;
 
+    public WhatsappClient(RestClient restClient, CircuitBreakerRegistry registry) {
+        this.restClient = restClient;
+        String channelName = Channels.WHATSAPP.name();
+        this.circuitBreaker = registry.circuitBreaker(channelName);
+    }
     /**
      * Envía un mensaje de texto por WhatsApp con Circuit Breaker.
      * Distingue entre errores retryables y no retryables.

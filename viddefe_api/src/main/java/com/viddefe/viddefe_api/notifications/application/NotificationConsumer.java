@@ -97,6 +97,7 @@ public class NotificationConsumer {
         dto.setTemplate(event.getTemplate());
         dto.setVariables(event.getVariables());
         dto.setChannels(event.getChannels());
+        dto.setNotificationType(event.getNotificationType());
 
         if (event.getChannels() == Channels.EMAIL) {
             dto.setSubject(event.getSubject());

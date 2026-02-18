@@ -142,15 +142,15 @@ public class MinistryNotificationJobRoutine {
     private NotificationMeetingEvent buildNotificationEvent(
             MinistryFunction function
     ) {
-        NotificationMeetingEvent event = new NotificationMeetingEvent();
-        event.setCreatedAt(Instant.now());
-        event.setMeetingId(function.getMeeting().getId());
-        event.setChannels(Channels.WHATSAPP);
-        event.setPriority(RabbitPriority.LOW);
-        event.setPersonId(function.getPeople().getId());
-        event.setTemplate(resolveTemplate(function));
-        event.setVariables(resolveVariables(function));
-        return event;
+        return NotificationMeetingEvent.builder()
+                .createdAt(Instant.now())
+                .meetingId(function.getMeeting().getId())
+                .channels(Channels.WHATSAPP)
+                .priority(RabbitPriority.LOW)
+                .personId(function.getPeople().getId())
+                .template(resolveTemplate(function))
+                .variables(resolveVariables(function))
+                .build();
     }
 
 }

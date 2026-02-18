@@ -1,6 +1,7 @@
 package com.viddefe.viddefe_api.notifications.Infrastructure.dto;
 
 import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.Map;
+import java.util.UUID;
 
 @AllArgsConstructor @NoArgsConstructor
 @Getter @Setter
@@ -26,4 +28,7 @@ public class NotificationDto{
 
     @NotNull
     private Channels channels;
+
+    private UUID personId;
+    private NotificationTypeEnum notificationType;
 }

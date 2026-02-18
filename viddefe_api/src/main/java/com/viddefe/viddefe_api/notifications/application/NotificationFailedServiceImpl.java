@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.notifications.application;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.WhatsappMessageDto;
 import com.viddefe.viddefe_api.notifications.common.NotificationStatus;
+import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import com.viddefe.viddefe_api.notifications.common.ResolverMessage;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationFailedService;
 import com.viddefe.viddefe_api.notifications.domain.models.NotificationsFailed;
@@ -12,7 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -50,16 +51,15 @@ public class NotificationFailedServiceImpl implements NotificationFailedService 
      */
     @Override
     public void createFailedNotification(WhatsappMessageDto whatsappMessageDto) {
-        String originalMessage = ResolverMessage.resolveMessage(
-            whatsappMessageDto.getTemplate(),
-            whatsappMessageDto.getVariables()
-        );
-        OffsetDateTime now = OffsetDateTime.now();
+        NotificationTypeEnum type = whatsappMessageDto.getNotificationType();
+        Instant now = Instant.now();
         NotificationsFailed notificationsFailed = NotificationsFailed.builder()
                 .to(whatsappMessageDto.getPhoneNumber())
-                .message(originalMessage)
+                .template(whatsappMessageDto.getTemplate())
+                .variables(whatsappMessageDto.getVariables())
                 .status(NotificationStatus.FAILED)
                 .createdAt(now)
+                .type(type)
                 .build();
         notificationFailedRepository.save(notificationsFailed);
     }

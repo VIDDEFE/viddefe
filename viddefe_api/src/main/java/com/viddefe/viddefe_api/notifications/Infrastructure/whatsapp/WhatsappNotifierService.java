@@ -1,10 +1,7 @@
 package com.viddefe.viddefe_api.notifications.Infrastructure.whatsapp;
 
-import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationAccountEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.WhatsappMessageDto;
 import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
@@ -14,8 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.time.Instant;
 
 /**
  * Servicio de notificaciones WhatsApp que usa el sistema de colas resilientes.
@@ -34,28 +29,15 @@ public class WhatsappNotifierService implements Notificator {
     }
 
     @Async
-    @Override
-    public void send(@Valid NotificationEvent notificationEvent) {
-        //log.info("Queuing WhatsApp notification for: {}", notificationEvent.());
-
-        /*NotificationAccountEvent event = new NotificationAccountEvent();
-        event.setPriority(RabbitPriority.HIGH);
-        event.setSubject("Bienvenido a VidDefe!");
-        event.setChannels(channel);
-        event.setPersonId(person.getId());
-        event.setCreatedAt(Instant.now());
-        event.setVariables(resolveVariables(event, person, userModel, temporaryPassword));
-        String template = resolveTemplate(dtp.getChannel());
-        event.setTemplate(template);
-        notificationEventPublisher.publish(event);
-
+    public void send(@Valid NotificationDto notificationDto) {
+        log.info("Queuing WhatsApp notification for: {}", notificationDto.toString());
 
         // Crear DTO con información de retry
         WhatsappMessageDto messageDto = WhatsappMessageDto.builder()
-            .phoneNumber()
+            .phoneNumber(notificationDto.getTo())
             .template(notificationDto.getTemplate())
             .variables(notificationDto.getVariables())
-            //.notificationType(notificationDto.getNotificationType())
+            .notificationType(notificationDto.getNotificationType())
             .build();
 
         // Enviar a la cola principal de WhatsApp
@@ -66,6 +48,5 @@ public class WhatsappNotifierService implements Notificator {
         );
 
         log.info("WhatsApp notification queued successfully for: {}", notificationDto.getTo());
-        */
     }
 }

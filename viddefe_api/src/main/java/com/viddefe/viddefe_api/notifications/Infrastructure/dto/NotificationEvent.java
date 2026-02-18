@@ -5,14 +5,17 @@ import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
 @Getter @Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public abstract class NotificationEvent {
     protected UUID meetingId;
     @NotNull(message = "personId cannot be null")

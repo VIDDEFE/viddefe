@@ -34,8 +34,6 @@ public class WhatsappDlqListener {
             messageDto.getTemplate(),
             messageDto.getVariables()
         );
-
-
         //Here send a message to the sender of the message to notify that the message has failed and will be stored in the database for later analysis and potential retries.
         //sendNotificationToSenderSSE(messageDto.getTo(), originalMessage, failureReason);
 
