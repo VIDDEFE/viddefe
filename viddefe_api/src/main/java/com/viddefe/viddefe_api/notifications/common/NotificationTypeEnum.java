@@ -4,7 +4,8 @@ public enum NotificationTypeEnum {
 
     ACCOUNT_CREATED("notifications.account.created"),
     PASSWORD_RESET("notifications.password.reset"),
-    MINISTRY_FUNCTION_REMINDER("notifications.ministry.reminder");
+    MINISTRY_FUNCTION_REMINDER("notifications.ministry.reminder"),
+    NOTIFICATION_APP_SSE("notifications.sse");
 
     private final String routingKey;
 

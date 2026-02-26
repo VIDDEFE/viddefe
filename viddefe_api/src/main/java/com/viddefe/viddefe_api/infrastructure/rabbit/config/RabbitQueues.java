@@ -35,5 +35,11 @@ public final class RabbitQueues {
     public static final String ATTENDANCE_EXCHANGE = "attendance.exchange";
     public static final String ATTENDANCE_QUALITY_QUEUE = "attendance.quality.queue";
 
+    /* ===============================
+     * APP Notification SSE
+     * =============================== */
+    public static final String NOTIFICATION_SSE_EXCHANGE = "notification.sse.exchange";
+    public static final String NOTIFICATION_SSE_QUEUE = "notification.sse.queue";
+
     private RabbitQueues() {}
 }

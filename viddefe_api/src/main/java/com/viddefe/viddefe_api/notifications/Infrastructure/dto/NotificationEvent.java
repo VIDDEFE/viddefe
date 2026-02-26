@@ -34,6 +34,7 @@ public abstract class NotificationEvent {
     protected String template;
     @NotNull(message = "variables cannot be null")
     protected Map<String, Object> variables;
+    protected UUID remitter;
 
     public abstract NotificationTypeEnum getNotificationType();
 }

@@ -34,6 +34,7 @@ public class WhatsappNotifierService implements Notificator {
 
         // Crear DTO con información de retry
         WhatsappMessageDto messageDto = WhatsappMessageDto.builder()
+            .remitter(notificationDto.getRemitter())
             .phoneNumber(notificationDto.getTo())
             .template(notificationDto.getTemplate())
             .variables(notificationDto.getVariables())

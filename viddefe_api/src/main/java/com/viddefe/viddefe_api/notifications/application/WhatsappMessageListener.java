@@ -83,6 +83,11 @@ public class WhatsappMessageListener {
         sendToDlq(messageDto, "Non-retryable error: " + e.getMessage());
     }
 
+
+    private void sendToSender(WhatsappMessageDto messageDto) {
+
+    }
+
     private void sendToDlq(WhatsappMessageDto messageDto, String reason) {
         // Agregar metadatos para debugging en DLQ
 

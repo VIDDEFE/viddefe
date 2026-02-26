@@ -67,6 +67,23 @@ public class NotificationConsumer {
         log.info("ACCOUNT notification sent successfully at {}", Instant.now());
     }
 
+    @RabbitListener(
+            queues = RabbitQueues.NOTIFICATION_SSE_QUEUE,
+            concurrency = "1-5"
+    )
+    public void consumeSse(NotificationEvent event) {
+
+        log.info("Starting SSE notification processing");
+
+        printDataEvent(event);
+
+        String clientId = "client-" + event.getRemitter().toString();
+
+        sendNotification(clientId, event);
+
+        log.info("SSE notification sent successfully at {}", Instant.now());
+    }
+
     private void sendNotification(String to, NotificationEvent event) {
 
         Notificator notificator =
@@ -91,14 +108,14 @@ public class NotificationConsumer {
 
     private NotificationDto resolveNotificationDto(String to, NotificationEvent event) {
 
-        NotificationDto dto = new NotificationDto();
-
-        dto.setTo(to);
-        dto.setTemplate(event.getTemplate());
-        dto.setVariables(event.getVariables());
-        dto.setChannels(event.getChannels());
-        dto.setNotificationType(event.getNotificationType());
-
+        NotificationDto dto = NotificationDto.builder()
+                .to(to)
+                .template(event.getTemplate())
+                .variables(event.getVariables())
+                .channels(event.getChannels())
+                .notificationType(event.getNotificationType())
+                .remitter(event.getRemitter())
+                .build();
         if (event.getChannels() == Channels.EMAIL) {
             dto.setSubject(event.getSubject());
         }

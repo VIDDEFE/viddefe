@@ -40,6 +40,8 @@ public class WhatsappMessageDto {
     @JsonProperty("last_retry_at")
     private Instant lastRetryAt;
 
+    private UUID remitter;
+
     private NotificationTypeEnum notificationType;
 
     public void incrementRetry() {

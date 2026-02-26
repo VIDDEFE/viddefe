@@ -4,16 +4,14 @@ import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Map;
 import java.util.UUID;
 
 @AllArgsConstructor @NoArgsConstructor
 @Getter @Setter
+@Builder
 public class NotificationDto{
     @NotBlank
     private String to;
@@ -28,6 +26,8 @@ public class NotificationDto{
 
     @NotNull
     private Channels channels;
+
+    private UUID remitter;
 
     private UUID personId;
     private NotificationTypeEnum notificationType;
