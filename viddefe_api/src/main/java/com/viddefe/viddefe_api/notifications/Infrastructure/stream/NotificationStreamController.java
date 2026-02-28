@@ -2,6 +2,7 @@ package com.viddefe.viddefe_api.notifications.Infrastructure.stream;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
 import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.notifications.common.ResolverMessage;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -63,6 +64,8 @@ public class NotificationStreamController implements Notificator {
      */
     @Override
     public void send(NotificationDto notificationDto) {
-
+        String clientId = notificationDto.getTo();
+        String message = ResolverMessage.resolveMessage(notificationDto.getTemplate(), notificationDto.getVariables());
+        sendEvent(clientId, message);
     }
 }

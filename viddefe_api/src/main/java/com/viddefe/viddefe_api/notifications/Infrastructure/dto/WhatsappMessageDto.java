@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 import java.util.Map;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class WhatsappMessageDto {
 
     private String phoneNumber;
@@ -41,6 +42,7 @@ public class WhatsappMessageDto {
     private Instant lastRetryAt;
 
     private UUID remitter;
+    private UUID toId;
 
     private NotificationTypeEnum notificationType;
 

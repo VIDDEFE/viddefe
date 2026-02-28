@@ -2,7 +2,7 @@ package com.viddefe.viddefe_api.worship_meetings.domain.services;
 
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
-import com.viddefe.viddefe_api.worship_meetings.application.MeetingService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;

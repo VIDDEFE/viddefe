@@ -3,6 +3,7 @@ package com.viddefe.viddefe_api.worship_meetings.application;
 import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
 import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;

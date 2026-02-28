@@ -77,7 +77,7 @@ public class NotificationConsumer {
 
         printDataEvent(event);
 
-        String clientId = "client-" + event.getRemitter().toString();
+        String clientId = "client-" + event.getPersonId().toString();
 
         sendNotification(clientId, event);
 
@@ -110,6 +110,7 @@ public class NotificationConsumer {
 
         NotificationDto dto = NotificationDto.builder()
                 .to(to)
+                .personId(event.getPersonId())
                 .template(event.getTemplate())
                 .variables(event.getVariables())
                 .channels(event.getChannels())

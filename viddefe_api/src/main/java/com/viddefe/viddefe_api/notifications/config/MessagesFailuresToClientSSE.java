@@ -1,48 +1,47 @@
 package com.viddefe.viddefe_api.notifications.config;
 
-import lombok.Getter;
-
-/**
- * Enum to define failure messages to be sent to the client via Server-Sent Events (SSE) in case of errors during account creation, reminders, or ministry assignments.
- * Each enum constant represents a specific failure scenario and contains a template message that can be formatted with relevant details when sending the notification to the client.
- */
-@Getter
-public enum MessagesFailuresToClientSSE {
+public class MessagesFailuresToClientSSE {
 
     /**
-     * values for the enum constants, each with a template message for different failure scenarios:
-     * - 1. Name: Name of the person who is the subject of the account creation failure.
+     * Account creation failure message.
+     * - {{name}}: Name of the person who is the remitter of the account creation failure.
      */
-    ACCOUNT_CREATION_FAILURE(
-            "Ha ocurrido un error al enviar las credenciales de %s. Estaremos trabajando en ello," +
-                    "en dado caso puedes eliminar la cuenta y volver a crearla para intentar nuevamente."
-    ),
-    /**
-     * values for the enum constants, each with a template message for different failure scenarios:
-     * - 1. Name: Name of the person who is the subject of the reminder failure.
-     * - 2. Ministry Function Name: Name of the ministry function for which the reminder failed to be sent.
-     */
-    MINISTRY_REMINDER_FAILURE(
-            "Ha ocurrido un error al enviar el recordatorio de %s para su servicio como %s. Por favor, intente nuevamente."
-    ),
+    public static final String ACCOUNT_CREATION_FAILURE =
+            "Ha ocurrido un error al enviar las credenciales de {{name}}. Estaremos trabajando en ello, " +
+                    "en dado caso puedes eliminar la cuenta y volver a crearla para intentar nuevamente.";
 
     /**
-     * values for the enum constants, each with a template message for different failure scenarios:
-     * - 1. Name: Name of the person who is the subject of the ministry assignment failure.
-     * - 2. Ministry Function Name: Name of the ministry function for which the assignment failed.
+     * Ministry reminder failure message.
+     * - {{name}}: Name of the person who is the subject of the reminder failure.
+     * - {{ministryFunction}}: Name of the ministry function for which the reminder failed.
      */
-    WHATSAPP_SERVICE_HEALTH(
-            "Hola %s, hemos detectado un problema con el servicio de WhatsApp que podría afectar la entrega de tus mensajes. " +
-                    "Nuestro equipo ya está trabajando para resolverlo lo antes posible. Agradecemos tu paciencia y comprensión."
-    );
+    public static final String MINISTRY_REMINDER_FAILURE =
+            "Ha ocurrido un error al enviar el recordatorio de {{name}} para su servicio como {{ministryFunction}}. Por favor, intente nuevamente.";
 
-    private final String template;
+    /**
+     * WhatsApp service health issue message.
+     * - {{remmiterName}}: Name of the person being notified.
+     */
+    public static final String WHATSAPP_SERVICE_HEALTH =
+            "Hola {{remmiterName}}, hemos detectado un problema con el servicio de WhatsApp que podría afectar la entrega de tus mensajes. " +
+                    "Nuestro equipo ya está trabajando para resolverlo lo antes posible. Agradecemos tu paciencia y comprensión.";
 
-    MessagesFailuresToClientSSE(String template) {
-        this.template = template;
-    }
+    /**
+     * Invalid phone number message.
+     * - {{remmiterName}}: Name of the admin/user being notified.
+     * - {{personName}}: Name of the person whose phone number is invalid.
+     */
+    public static final String INVALID_PHONE_NUMBER =
+            "Hola {{remmiterName}}, el número de teléfono proporcionado para la persona {{personName}} es inválido. " +
+                    "Por favor, verifica el número y actualízalo para asegurarte de recibir las notificaciones correctamente.";
 
-    public String format(Object... args) {
-        return String.format(template, args);
-    }
+    /**
+     * Unknown error message.
+     * - {{remmiterName}}: Name of the person being notified.
+     */
+    public static final String UNKNOWN_ERROR =
+            "Hola {{remmiterName}}, hemos detectado un problema inesperado que podría afectar la entrega de tus mensajes. " +
+                    "Nuestro equipo ya está investigando el problema para resolverlo lo antes posible. Agradecemos tu paciencia y comprensión.";
+
+    private MessagesFailuresToClientSSE() {}
 }

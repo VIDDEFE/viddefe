@@ -1,5 +1,8 @@
 package com.viddefe.viddefe_api.notifications.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.common.exceptions.NonRetryableWhatsappException;
 import com.viddefe.viddefe_api.notifications.common.exceptions.RetryableWhatsappException;
@@ -51,10 +54,41 @@ public class WhatsappClient {
         try {
             decoratedSupplier.get();
             log.info("WhatsApp message sent successfully to: {}", to);
+        } catch (HttpClientErrorException e) {
+            String body = e.getResponseBodyAsString();
+            int errorCode = extractErrorCode(body); // parseas el JSON de Meta
+
+            if (isInvalidPhoneNumber(errorCode)) {
+                throw new NonRetryableWhatsappException("Invalid phone number: " + to, e);
+            }
+            throw new RetryableWhatsappException("Transient error", e);
         } catch (Exception e) {
-            log.error("Failed to send WhatsApp message to: {}. Error: {}", to, e.getMessage());
-            throw e; // Re-throw para que sea manejado por el listener
+            throw new RetryableWhatsappException("Unexpected error", e);
         }
+    }
+    private int extractErrorCode(String responseBody) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(responseBody);
+            JsonNode errorCode = root.path("error").path("code");
+
+            if (errorCode.isMissingNode()) {
+                log.warn("No error code found in WhatsApp response body: {}", responseBody);
+                return -1;
+            }
+
+            return errorCode.asInt();
+        } catch (JsonProcessingException e) {
+            log.warn("Could not parse WhatsApp error response body: {}", responseBody);
+            return -1;
+        }
+    }
+
+    private boolean isInvalidPhoneNumber(int errorCode) {
+        // Códigos de error de Meta para número inválido
+        return errorCode == 131026 // Recipient phone number not in allowed list
+                || errorCode == 131047 // Non-existent number
+                || errorCode == 100;   // Invalid parameter (número mal formado)
     }
 
     private void executeWhatsappCall(String to, String message) {

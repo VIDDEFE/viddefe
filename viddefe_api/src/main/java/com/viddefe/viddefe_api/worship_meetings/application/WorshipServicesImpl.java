@@ -5,6 +5,7 @@ import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.WorshipService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
