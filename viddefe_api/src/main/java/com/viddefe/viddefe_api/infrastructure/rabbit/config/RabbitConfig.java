@@ -52,6 +52,15 @@ public class RabbitConfig {
         );
     }
 
+    @Bean
+    public DirectExchange notificationSseExchange() {
+        return new DirectExchange(
+                RabbitQueues.NOTIFICATION_SSE_EXCHANGE,
+                true,   // durable
+                false   // autoDelete
+        );
+    }
+
     /* ===============================
      *  WhatsApp Resilient Exchanges
      * =============================== */
@@ -104,6 +113,13 @@ public class RabbitConfig {
     public Queue attendanceQualityQueue() {
         return QueueBuilder
                 .durable(RabbitQueues.ATTENDANCE_QUALITY_QUEUE)
+                .withArgument("x-max-priority", 10)
+                .build();
+    }
+
+    @Bean
+    public Queue notificationSseQueue() {
+        return QueueBuilder.durable(RabbitQueues.NOTIFICATION_SSE_QUEUE)
                 .withArgument("x-max-priority", 10)
                 .build();
     }
@@ -182,6 +198,17 @@ public class RabbitConfig {
                 .bind(attendanceQualityQueue)
                 .to(attendanceExchange)
                 .with(AttendanceRoutingKey.RECALCULATE_ATTENDANCE_QUALITY.routingKey());
+    }
+
+    @Bean
+    public Binding notificationSseBinding(
+            Queue notificationSseQueue,
+            DirectExchange notificationSseExchange
+    ) {
+        return BindingBuilder
+                .bind(notificationSseQueue)
+                .to(notificationSseExchange)
+                .with("notification.sse");
     }
 
     /* ===============================
