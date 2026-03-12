@@ -139,21 +139,22 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
 
     private void sendNotification(PeopleResDto person, Meeting meeting, MinistryFunctionTypes role, String template) {
         MeetingDto meetingDto = meeting.toDto();
-        NotificationMeetingEvent event = new NotificationMeetingEvent();
-        event.setMeetingId(meeting.getId());
-        event.setCreatedAt(Instant.now());
-        event.setPersonId(person.getId());
-        event.setTemplate(template);
-        event.setPriority(RabbitPriority.MEDIUM);
-        event.setVariables(
-                java.util.Map.of(
-                        "name", person.getFirstName() + " " + person.getLastName(),
-                        "date", meetingDto.getScheduledDate().toLocalDate().toString(),
-                        "eventName", meetingDto.getName(),
-                        "role", role.getName()
+        NotificationMeetingEvent event = NotificationMeetingEvent.builder()
+                .meetingId(meeting.getId())
+                .createdAt(Instant.now())
+                .personId(person.getId())
+                .template(template)
+                .priority(RabbitPriority.MEDIUM)
+                .variables(
+                        java.util.Map.of(
+                                "name", person.getFirstName() + " " + person.getLastName(),
+                                "date", meetingDto.getScheduledDate().toLocalDate().toString(),
+                                "eventName", meetingDto.getName(),
+                                "role", role.getName()
+                        )
                 )
-        );
-        event.setChannels(Channels.WHATSAPP);
+                .channels(Channels.WHATSAPP)
+                .build();
         notificatorPublisher.publish(event);
     }
 

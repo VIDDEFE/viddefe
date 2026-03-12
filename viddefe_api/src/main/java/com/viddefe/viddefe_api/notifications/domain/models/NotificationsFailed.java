@@ -9,7 +9,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -30,7 +29,7 @@ public class NotificationsFailed {
 
     private Instant createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "\"to\"", nullable = false)
     private String to;
 
     @Column(nullable = false)
