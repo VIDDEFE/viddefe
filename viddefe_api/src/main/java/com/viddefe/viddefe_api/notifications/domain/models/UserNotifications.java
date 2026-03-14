@@ -17,7 +17,7 @@ import java.util.UUID;
 @Getter @Setter
 @AllArgsConstructor @NoArgsConstructor
 @Builder
-public class NotificationsFailed {
+public class UserNotifications {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

@@ -1,5 +1,13 @@
 package com.viddefe.viddefe_api.notifications.application;
 
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
 import com.viddefe.viddefe_api.auth.contracts.AccountService;
 import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationAccountEvent;
@@ -9,15 +17,9 @@ import com.viddefe.viddefe_api.notifications.common.NotificationStatus;
 import com.viddefe.viddefe_api.notifications.common.VerifyChannelWorkingSuccessful;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationFailedService;
-import com.viddefe.viddefe_api.notifications.domain.models.NotificationsFailed;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import com.viddefe.viddefe_api.notifications.domain.models.UserNotifications;
 
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -31,7 +33,7 @@ public class NotificationFailedScheduled {
     @Scheduled(fixedRate = 6000 * 10) // Execute every 10 minutes (60000 ms * 10 = 10 minutes)
     public void sendNotificationFailed() {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
-        Page<NotificationsFailed> failedNotificationsPage;
+        Page<UserNotifications> failedNotificationsPage;
         do{
             failedNotificationsPage = notificationFailedService.getFailedNotifications(pageable);
             failedNotificationsPage.getContent()
@@ -40,7 +42,7 @@ public class NotificationFailedScheduled {
         }while (failedNotificationsPage.hasNext());
     }
 
-    private void retrySendingNotification(NotificationsFailed notification) {
+    private void retrySendingNotification(UserNotifications notification) {
         if(verifyChannelWorkingSuccessful.verify(notification.getChannel())) return;
         NotificationEvent event = resolveType(notification);
         eventPublisher.publish(event);
@@ -48,7 +50,7 @@ public class NotificationFailedScheduled {
 
     }
 
-    private NotificationEvent resolveType(NotificationsFailed notification) {
+    private NotificationEvent resolveType(UserNotifications notification) {
         return switch (notification.getType()) {
             case ACCOUNT_CREATED -> {
                 UUID accountId = accountService.getAccountIdByPeopleId(notification.getPeopleId());
