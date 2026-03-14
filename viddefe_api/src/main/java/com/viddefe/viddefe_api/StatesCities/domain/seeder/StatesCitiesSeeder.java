@@ -1,9 +1,10 @@
-package com.viddefe.viddefe_api.StatesCities.domain.seeder;
+package com.viddefe.viddefe_api.statescities.domain.seeder;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
-import com.viddefe.viddefe_api.StatesCities.domain.repository.StatesRepository;
+import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
+import com.viddefe.viddefe_api.statescities.domain.repository.StatesRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;

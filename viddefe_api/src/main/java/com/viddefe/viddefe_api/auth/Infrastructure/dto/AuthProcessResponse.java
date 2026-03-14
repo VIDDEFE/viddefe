@@ -1,6 +1,7 @@
-package com.viddefe.viddefe_api.auth.Infrastructure.dto;
+package com.viddefe.viddefe_api.auth.infrastructure.dto;
 
-import com.viddefe.viddefe_api.auth.Config.AuthFlowPastorEnum;
+import com.viddefe.viddefe_api.auth.config.AuthFlowPastorEnum;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

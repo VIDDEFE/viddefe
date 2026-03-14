@@ -1,6 +1,7 @@
-package com.viddefe.viddefe_api.StatesCities.domain.model;
+package com.viddefe.viddefe_api.statescities.domain.model;
 
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.CitiesDto;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.CitiesDto;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

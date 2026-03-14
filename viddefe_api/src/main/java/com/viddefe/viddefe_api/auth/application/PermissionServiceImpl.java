@@ -1,10 +1,11 @@
 package com.viddefe.viddefe_api.auth.application;
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.PermissionSeedRequest;
 import com.viddefe.viddefe_api.auth.contracts.PermissionEnum;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
 import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
 import com.viddefe.viddefe_api.auth.domain.repository.PermissionRepository;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.PermissionSeedRequest;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

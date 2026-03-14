@@ -1,7 +1,7 @@
-package com.viddefe.viddefe_api.homeGroups.domain.repository;
+package com.viddefe.viddefe_api.homegroups.domain.repository;
 
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsPeopleMembers;
-import com.viddefe.viddefe_api.homeGroups.domain.model.serializable.HomeGroupPeopleMembersId;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsPeopleMembers;
+import com.viddefe.viddefe_api.homegroups.domain.model.serializable.HomeGroupPeopleMembersId;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

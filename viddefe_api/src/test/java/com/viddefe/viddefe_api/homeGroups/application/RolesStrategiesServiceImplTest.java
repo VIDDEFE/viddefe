@@ -1,12 +1,5 @@
 package com.viddefe.viddefe_api.homeGroups.application;
 
-import com.viddefe.viddefe_api.homeGroups.contracts.StrategyReader;
-import com.viddefe.viddefe_api.homeGroups.domain.model.RolesStrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.RolesStrategyRepository;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateRolesStrategiesDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesWithPeopleDto;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +12,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+
+import com.viddefe.viddefe_api.homegroups.application.RolesStrategiesServiceImpl;
+import com.viddefe.viddefe_api.homegroups.contracts.StrategyReader;
+import com.viddefe.viddefe_api.homegroups.domain.model.RolesStrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.model.StrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.repository.RolesStrategyRepository;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.CreateRolesStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.RolesStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.RolesStrategiesWithPeopleDto;
 
 import java.lang.reflect.Field;
 import java.util.*;

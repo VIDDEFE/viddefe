@@ -1,29 +1,26 @@
 package com.viddefe.viddefe_api.notifications.application;
 
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+
 import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.ApplicationSendEventDto;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.FailureWhatsappMessageDto;
 import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.notifications.common.ResolverMessage;
 import com.viddefe.viddefe_api.notifications.config.MessagesFailuresToClientSSE;
 import com.viddefe.viddefe_api.notifications.config.SseFailureType;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
-import com.viddefe.viddefe_api.notifications.contracts.NotificationFailedService;
-import com.viddefe.viddefe_api.notifications.common.ResolverMessage;
+import com.viddefe.viddefe_api.notifications.contracts.NotificationService;
 import com.viddefe.viddefe_api.people.contracts.PeopleService;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
-import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionReader;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunction;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionDto;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Listener para la Dead Letter Queue (DLQ) de WhatsApp.
@@ -33,12 +30,13 @@ import java.util.UUID;
 @Component
 public class WhatsappDlqListener {
 
-    private final NotificationFailedService notificationFailedService;
+    private final NotificationService notificationFailedService;
     private final NotificationEventPublisher eventPublisher;
     private final PeopleService peopleService;
     private final MinistryFunctionReader ministryFunctionReader;
 
-    public WhatsappDlqListener(NotificationFailedService notificationFailedService, NotificationEventPublisher eventPublisher, PeopleService peopleService, MinistryFunctionReader ministryFunctionReader) {
+    public WhatsappDlqListener(NotificationService notificationFailedService, NotificationEventPublisher eventPublisher,
+         PeopleService peopleService, MinistryFunctionReader ministryFunctionReader) {
         this.notificationFailedService = notificationFailedService;
         this.eventPublisher = eventPublisher;
         this.peopleService = peopleService;

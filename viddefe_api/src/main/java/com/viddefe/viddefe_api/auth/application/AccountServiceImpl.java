@@ -1,6 +1,16 @@
 package com.viddefe.viddefe_api.auth.application;
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.InvitationDto;
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.viddefe.viddefe_api.auth.contracts.AccountService;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
 import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
@@ -8,21 +18,16 @@ import com.viddefe.viddefe_api.auth.domain.model.RolUserModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserPermissions;
 import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.InvitationDto;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationAccountEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
-import java.time.Instant;
-import java.util.*;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +44,8 @@ public class AccountServiceImpl implements AccountService {
     private final RolesUserService rolesUserService;
     private final PermissionService permissionService;
     private final NotificationEventPublisher notificationEventPublisher;
+    private final SecureRandom random;
+
 
     /**
      * Temporary one-time password.
@@ -71,7 +78,7 @@ public class AccountServiceImpl implements AccountService {
                 peopleReader.getPeopleById(dtp.getPersonId()).getChurch().getId()
         )){
             throw new IllegalArgumentException("User for the selected person already exists in the church");
-        };
+        }
 
         List<PermissionModel> permissionModels = permissionService.findByListNames(dtp.getPermissions());
 
@@ -143,7 +150,6 @@ public class AccountServiceImpl implements AccountService {
      *
      */
     private String generateRandomPassword() {
-        SecureRandom random = new SecureRandom();
         StringBuilder password = new StringBuilder();
 
         password.append(UPPER.charAt(random.nextInt(UPPER.length())));

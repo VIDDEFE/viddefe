@@ -1,11 +1,11 @@
-package com.viddefe.viddefe_api.homeGroups.application;
+package com.viddefe.viddefe_api.homegroups.application;
 
-import com.viddefe.viddefe_api.homeGroups.contracts.RolesPeopleStrategiesService;
-import com.viddefe.viddefe_api.homeGroups.contracts.RolesStrategiesReader;
-import com.viddefe.viddefe_api.homeGroups.domain.model.RolPeopleStrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.RolesStrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.RolesPeopleStrategiesRepository;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.AssignPeopleToRoleDto;
+import com.viddefe.viddefe_api.homegroups.contracts.RolesPeopleStrategiesService;
+import com.viddefe.viddefe_api.homegroups.contracts.RolesStrategiesReader;
+import com.viddefe.viddefe_api.homegroups.domain.model.RolPeopleStrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.model.RolesStrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.repository.RolesPeopleStrategiesRepository;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.AssignPeopleToRoleDto;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import lombok.RequiredArgsConstructor;

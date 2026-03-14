@@ -16,7 +16,7 @@ import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationMeet
 import com.viddefe.viddefe_api.notifications.common.NotificationStatus;
 import com.viddefe.viddefe_api.notifications.common.VerifyChannelWorkingSuccessful;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
-import com.viddefe.viddefe_api.notifications.contracts.NotificationFailedService;
+import com.viddefe.viddefe_api.notifications.contracts.NotificationService;
 import com.viddefe.viddefe_api.notifications.domain.models.UserNotifications;
 
 import lombok.RequiredArgsConstructor;
@@ -24,8 +24,8 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class NotificationFailedScheduled {
-    private final NotificationFailedService notificationFailedService;
-    private final static Integer PAGE_SIZE = 10;
+    private final NotificationService notificationFailedService;
+    private static final  Integer PAGE_SIZE = 10;
     private final AccountService accountService;
     private final NotificationEventPublisher eventPublisher;
     private final VerifyChannelWorkingSuccessful verifyChannelWorkingSuccessful;
@@ -35,7 +35,8 @@ public class NotificationFailedScheduled {
         Pageable pageable = PageRequest.of(0, PAGE_SIZE);
         Page<UserNotifications> failedNotificationsPage;
         do{
-            failedNotificationsPage = notificationFailedService.getFailedNotifications(pageable);
+            NotificationStatus status = NotificationStatus.FAILED;
+            failedNotificationsPage = notificationFailedService.getNotificationsByStatus(pageable, status);
             failedNotificationsPage.getContent()
                     .forEach(this::retrySendingNotification);
             pageable = pageable.next();

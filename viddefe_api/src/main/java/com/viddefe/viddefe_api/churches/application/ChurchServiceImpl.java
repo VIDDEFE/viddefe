@@ -1,7 +1,14 @@
 package com.viddefe.viddefe_api.churches.application;
 
-import com.viddefe.viddefe_api.StatesCities.application.StatesCitiesService;
-import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.viddefe.viddefe_api.churches.contracts.ChurchPastorService;
 import com.viddefe.viddefe_api.churches.contracts.ChurchService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
@@ -12,16 +19,12 @@ import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.contracts.ChurchMembershipService;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import com.viddefe.viddefe_api.statescities.application.StatesCitiesService;
+import com.viddefe.viddefe_api.statescities.domain.model.CitiesModel;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +59,7 @@ public class ChurchServiceImpl implements ChurchService {
     @Override
     @Transactional
     public ChurchResDto addChildChurch(
-            UUID parentChurchId,
+            @NonNull UUID parentChurchId,
             ChurchDTO dto,
             UUID creatorPastorId
     ) {
@@ -76,7 +79,7 @@ public class ChurchServiceImpl implements ChurchService {
 
     @Override
     @Transactional
-    public ChurchResDto updateChurch(UUID id, ChurchDTO dto, UUID updaterPastorId) {
+    public ChurchResDto updateChurch(@NonNull UUID id, ChurchDTO dto, UUID updaterPastorId) {
         ChurchModel church = churchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Iglesia no encontrada: " + id));
 
@@ -92,7 +95,7 @@ public class ChurchServiceImpl implements ChurchService {
 
     @Transactional
     @Override
-    public void deleteChurch(UUID id) {
+    public void deleteChurch(@NonNull UUID id) {
         ChurchModel church = churchRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Church not found"));
 

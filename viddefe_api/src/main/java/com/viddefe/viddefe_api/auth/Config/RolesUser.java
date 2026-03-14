@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.auth.Config;
+package com.viddefe.viddefe_api.auth.config;
 
 public enum RolesUser {
     OWNER_APP("Owner App"),

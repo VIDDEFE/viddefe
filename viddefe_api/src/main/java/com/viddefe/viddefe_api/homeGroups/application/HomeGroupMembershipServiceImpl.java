@@ -1,11 +1,11 @@
-package com.viddefe.viddefe_api.homeGroups.application;
+package com.viddefe.viddefe_api.homegroups.application;
 
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupMemberShipService;
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsPeopleMembers;
-import com.viddefe.viddefe_api.homeGroups.domain.model.serializable.HomeGroupPeopleMembersId;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupMembersRepository;
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupMemberShipService;
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupReader;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsModel;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsPeopleMembers;
+import com.viddefe.viddefe_api.homegroups.domain.model.serializable.HomeGroupPeopleMembersId;
+import com.viddefe.viddefe_api.homegroups.domain.repository.HomeGroupMembersRepository;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;

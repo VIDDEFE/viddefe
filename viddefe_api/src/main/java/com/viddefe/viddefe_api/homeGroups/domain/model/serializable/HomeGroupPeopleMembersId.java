@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.homeGroups.domain.model.serializable;
+package com.viddefe.viddefe_api.homegroups.domain.model.serializable;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;

@@ -1,11 +1,10 @@
 package com.viddefe.viddefe_api.auth.contracts;
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.PermissionSeedRequest;
-import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
-import com.viddefe.viddefe_api.auth.domain.model.UserModel;
-
 import java.util.List;
 import java.util.UUID;
+
+import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.PermissionSeedRequest;
 
 /**
  * Service interface for managing permissions.

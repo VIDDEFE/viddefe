@@ -1,16 +1,16 @@
-package com.viddefe.viddefe_api.homeGroups.application;
+package com.viddefe.viddefe_api.homegroups.application;
 
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupService;
-import com.viddefe.viddefe_api.homeGroups.contracts.RolesStrategiesService;
-import com.viddefe.viddefe_api.homeGroups.contracts.StrategyReader;
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsPeopleMembers;
-import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.serializable.HomeGroupPeopleMembersId;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupsRepository;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.*;
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupService;
+import com.viddefe.viddefe_api.homegroups.contracts.RolesStrategiesService;
+import com.viddefe.viddefe_api.homegroups.contracts.StrategyReader;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsModel;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsPeopleMembers;
+import com.viddefe.viddefe_api.homegroups.domain.model.StrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.model.serializable.HomeGroupPeopleMembersId;
+import com.viddefe.viddefe_api.homegroups.domain.repository.HomeGroupsRepository;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.*;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;

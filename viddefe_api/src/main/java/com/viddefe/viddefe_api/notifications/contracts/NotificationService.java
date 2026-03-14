@@ -9,8 +9,8 @@ import com.viddefe.viddefe_api.notifications.Infrastructure.dto.WhatsappMessageD
 import com.viddefe.viddefe_api.notifications.common.NotificationStatus;
 import com.viddefe.viddefe_api.notifications.domain.models.UserNotifications;
 
-public interface NotificationFailedService {
-    Page<UserNotifications> getFailedNotifications(Pageable pageable);
+public interface NotificationService {
+    Page<UserNotifications> getNotificationsByStatus(Pageable pageable, NotificationStatus status);
     void updateNotificationStatus(UUID notificationId, NotificationStatus status);
     void createFailedNotification(WhatsappMessageDto whatsappMessageDto);
 }

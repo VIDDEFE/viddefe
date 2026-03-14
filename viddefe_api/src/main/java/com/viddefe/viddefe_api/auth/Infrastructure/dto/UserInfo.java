@@ -1,10 +1,8 @@
-package com.viddefe.viddefe_api.auth.Infrastructure.dto;
+package com.viddefe.viddefe_api.auth.infrastructure.dto;
 
 import com.viddefe.viddefe_api.auth.domain.model.RolUserModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
-
-import java.util.List;
 
 /**
  * Record representing user information including church details, user email, role, and personal details.

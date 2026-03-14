@@ -1,8 +1,8 @@
-package com.viddefe.viddefe_api.homeGroups.domain.model;
+package com.viddefe.viddefe_api.homegroups.domain.model;
 
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateHomeGroupsDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDTO;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.CreateHomeGroupsDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.HomeGroupsDTO;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,22 +1,33 @@
 package com.viddefe.viddefe_api.churches.infrastructure.web;
 
-import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
-import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
-import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
-import com.viddefe.viddefe_api.common.response.ApiResponse;
-import com.viddefe.viddefe_api.common.Components.JwtUtil;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import com.viddefe.viddefe_api.churches.contracts.ChurchService;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.UUID;
+import com.viddefe.viddefe_api.churches.contracts.ChurchService;
+import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
+import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
+import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
+import com.viddefe.viddefe_api.common.components.JwtUtil;
+import com.viddefe.viddefe_api.common.response.ApiResponse;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/churches")
@@ -26,7 +37,7 @@ public class ChurchController {
     private final JwtUtil jwtUtil;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ChurchResDto>> createChurch(@Valid @RequestBody ChurchDTO dto){;
+    public ResponseEntity<ApiResponse<ChurchResDto>> createChurch(@Valid @RequestBody ChurchDTO dto){
         ChurchResDto response = churchService.addChurch(dto);
         return new ResponseEntity<>(ApiResponse.created(response), HttpStatus.CREATED);
     }

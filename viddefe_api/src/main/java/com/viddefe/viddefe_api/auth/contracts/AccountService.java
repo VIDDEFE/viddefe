@@ -1,9 +1,9 @@
 package com.viddefe.viddefe_api.auth.contracts;
 
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.InvitationDto;
-
 import java.util.UUID;
+
+import com.viddefe.viddefe_api.auth.infrastructure.dto.InvitationDto;
 
 public interface AccountService {
 

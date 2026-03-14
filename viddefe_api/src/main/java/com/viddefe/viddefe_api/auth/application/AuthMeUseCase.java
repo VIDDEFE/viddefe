@@ -1,24 +1,25 @@
 package com.viddefe.viddefe_api.auth.application;
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.UserInfo;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.viddefe.viddefe_api.auth.contracts.AuthMeService;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
 import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserModel;
-import com.viddefe.viddefe_api.auth.domain.model.UserPermissions;
 import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.UserInfo;
 import com.viddefe.viddefe_api.churches.contracts.ChurchPastorService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
 /**
  * Service implementation for retrieving authenticated user information.
  */
@@ -45,8 +46,10 @@ public class AuthMeUseCase implements AuthMeService {
         ChurchModel church = user.getPeople().getChurch();
         PeopleModel pastor = churchPastorService.getPastorFromChurch(church);
         ChurchResDto churchResDto = church != null ? church.toDto() : null;
-        assert churchResDto != null;
-        churchResDto.setPastor(pastor != null ? pastor.toDto() : null);
+        
+        if (churchResDto != null) {
+            churchResDto.setPastor(pastor != null ? pastor.toDto() : null);
+        }
 
         String contact = user.getEmail() != null && !user.getEmail().isBlank() ? user.getEmail() : user.getPhone();
 

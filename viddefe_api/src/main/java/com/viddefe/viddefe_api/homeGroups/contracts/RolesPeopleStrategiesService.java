@@ -1,9 +1,8 @@
-package com.viddefe.viddefe_api.homeGroups.contracts;
+package com.viddefe.viddefe_api.homegroups.contracts;
 
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.AssignPeopleToRoleDto;
-
-import java.util.List;
 import java.util.UUID;
+
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.AssignPeopleToRoleDto;
 
 public interface RolesPeopleStrategiesService {
     /**

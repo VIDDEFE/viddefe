@@ -1,8 +1,8 @@
-package com.viddefe.viddefe_api.homeGroups.domain.repository;
+package com.viddefe.viddefe_api.homegroups.domain.repository;
 
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.HomeGroupsDetailDto;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsModel;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.HomeGroupsDetailDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

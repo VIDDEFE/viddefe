@@ -1,5 +1,11 @@
 package com.viddefe.viddefe_api.notifications.application;
 
+import java.time.Instant;
+
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.stereotype.Component;
+
 import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.FailureWhatsappMessageDto;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.WhatsappMessageDto;
@@ -7,16 +13,10 @@ import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import com.viddefe.viddefe_api.notifications.common.ResolverMessage;
 import com.viddefe.viddefe_api.notifications.common.exceptions.NonRetryableWhatsappException;
 import com.viddefe.viddefe_api.notifications.common.exceptions.RetryableWhatsappException;
-import com.viddefe.viddefe_api.notifications.config.MessagesFailuresToClientSSE;
 import com.viddefe.viddefe_api.notifications.config.SseFailureType;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.stereotype.Component;
-
-import java.time.Instant;
-import java.util.Map;
 
 /**
  * Listener resiliente para mensajes de WhatsApp.

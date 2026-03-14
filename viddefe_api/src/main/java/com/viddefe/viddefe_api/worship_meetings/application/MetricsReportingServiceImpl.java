@@ -1,7 +1,17 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
+import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupReader;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MetricsReportingService;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
@@ -10,16 +20,8 @@ import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithT
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MetricAttendanceProjectionRow;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MetricsAttendanceDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.redis.MetricsRedisAdapter;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

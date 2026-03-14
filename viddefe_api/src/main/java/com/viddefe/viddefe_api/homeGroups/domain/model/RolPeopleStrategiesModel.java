@@ -1,7 +1,7 @@
-package com.viddefe.viddefe_api.homeGroups.domain.model;
+package com.viddefe.viddefe_api.homegroups.domain.model;
 
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolPeopleStrategiesDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.RolPeopleStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.RolesStrategiesDto;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.*;
 import lombok.Getter;
