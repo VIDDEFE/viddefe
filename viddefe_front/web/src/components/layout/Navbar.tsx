@@ -2,7 +2,7 @@ import { useAppContext } from '../../context/AppContext';
 import { FiLogOut, FiChevronDown, FiUser } from 'react-icons/fi';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Avatar } from '../shared';
+import { Avatar, NotificationBell } from '../shared';
 
 export default function NavBar() {
   const { user, logout } = useAppContext();
@@ -26,8 +26,11 @@ export default function NavBar() {
         <h2 className="text-lg font-semibold text-primary-900">Bienvenido, {fullName}</h2>
       </div>
 
-      {/* Right side - User Profile */}
+      {/* Right side - User Profile & Notifications */}
       <div className="ml-auto flex items-center gap-4">
+        {/* Notification Bell */}
+        <NotificationBell />
+
         <div className="relative">
           <button
             onClick={() => setIsProfileOpen(!isProfileOpen)}
