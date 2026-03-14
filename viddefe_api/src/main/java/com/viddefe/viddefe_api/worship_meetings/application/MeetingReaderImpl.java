@@ -17,8 +17,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MeetingReaderImpl implements MeetingReader {
     private final MeetingRepository meetingRepository;
-    private final ChurchLookup churchLookup;
-    private final HomeGroupReader homeGroupReader;
 
     @Override
     public Meeting getById(UUID id) {
