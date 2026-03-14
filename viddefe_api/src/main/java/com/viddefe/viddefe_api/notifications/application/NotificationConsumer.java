@@ -1,23 +1,28 @@
 package com.viddefe.viddefe_api.notifications.application;
 
+import java.time.Instant;
+import java.util.UUID;
+
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+
+import com.viddefe.viddefe_api.auth.contracts.AccountService;
 import com.viddefe.viddefe_api.auth.contracts.AuthMeService;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.factory.NotificatorFactory;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionReader;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MinistryFunctionReminderSentWriter;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunction;
+
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
-
-import java.time.Instant;
 
 @Slf4j
 @Component
@@ -29,6 +34,7 @@ public class NotificationConsumer {
     private final NotificatorFactory notificatorFactory;
     private final MinistryFunctionReader ministryFunctionReader;
     private final MinistryFunctionReminderSentWriter ministryFunctionReminderSentWriter;
+    private final AccountService accountService;
 
     @RabbitListener(
             queues = RabbitQueues.MINISTRY_QUEUE,
@@ -42,8 +48,12 @@ public class NotificationConsumer {
         PeopleResDto person =
                 peopleReader.getPeopleById(event.getPersonId()).toDto();
 
+        UUID clientId = accountService.getAccountIdByPeopleId(person.getId());
+        
         sendNotification(person.getPhone(), event);
-
+        event.setChannels(Channels.APP);
+        sendNotification(clientId.toString(), event);
+        
         handleMinistryFunctionReminder(event);
 
         log.info("MINISTRY notification sent successfully at {}", Instant.now());
@@ -106,7 +116,7 @@ public class NotificationConsumer {
                 .writeMinistryFunctionReminderSent(ministryFunction);
     }
 
-    private NotificationDto resolveNotificationDto(String to, NotificationEvent event) {
+    private NotificationDto resolveNotificationDto(@NonNull String to, NotificationEvent event) {
 
         NotificationDto dto = NotificationDto.builder()
                 .to(to)

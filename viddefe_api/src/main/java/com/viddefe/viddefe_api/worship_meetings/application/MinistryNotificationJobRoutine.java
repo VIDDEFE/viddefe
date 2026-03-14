@@ -1,13 +1,16 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationMeetingEvent;
-import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
-import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
-import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunction;
-import com.viddefe.viddefe_api.worship_meetings.domain.repository.MinistryFunctionRepository;
-import lombok.RequiredArgsConstructor;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ForkJoinPool;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,11 +18,15 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationMeetingEvent;
+import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+import com.viddefe.viddefe_api.worship_meetings.domain.models.MinistryFunction;
+import com.viddefe.viddefe_api.worship_meetings.domain.repository.MinistryFunctionRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -29,7 +36,7 @@ public class MinistryNotificationJobRoutine {
     private static final ForkJoinPool PUBLISH_POOL = new ForkJoinPool(10);
     private static final Integer DAYS_BEFORE_MEETING = 1;
     private static final Integer HOURS_BEFORE_MEETING = 5; // 5 hours before meeting
-    private final String TEMPLATE_GROUP_MEETING = """
+    private static final String TEMPLATE_GROUP_MEETING = """
         Hola {{name}} 👋
         Te recordamos que tienes una función ministerial asignada para la próxima reunión de grupo {{groupName}} en la iglesia {{churchName}}.
         📌 Evento: {{eventName}}
@@ -38,7 +45,7 @@ public class MinistryNotificationJobRoutine {
         Gracias por tu compromiso y servicio 💙
         
         """;
-    private final String TEMPLATE_WORSHIP_MEETING_REMINDER = """
+    private static final String TEMPLATE_WORSHIP_MEETING_REMINDER = """
         Hola {{name}} 👋
 
         Te recordamos que tienes una función ministerial asignada para la próxima reunión de adoración en la iglesia {{churchName}}.
@@ -153,4 +160,25 @@ public class MinistryNotificationJobRoutine {
                 .build();
     }
 
+    /**
+     * Create a general notification for many different people involve in the meeting.
+     *  for example, all the people with a ministry function assigned to the meeting, or all the people that are part of the group of the meeting, etc. 
+     * This notification is not for a specific person, but for many people involved in the meeting, so it does not have a personId, 
+     * but it has a list of variables that can be used to personalize the notification for each person.
+     * @param function
+     * @return
+     */
+    private NotificationMeetingEvent buildGeneralNotificationEvent(
+            MinistryFunction function
+    ) {
+        return NotificationMeetingEvent.builder()
+                .createdAt(Instant.now())
+                .meetingId(function.getMeeting().getId())
+                .channels(Channels.APP)
+                .priority(RabbitPriority.LOW)
+                .personId(function.getPeople().getId())
+                .template("Tienes una función ministerial asignada para la próxima reunión de adoración en la iglesia {{churchName}}. Evento: {{eventName}}, Rol: {{role}}, Fecha: {{date}}")
+                .variables(resolveVariables(function))
+                .build();
+    }
 }

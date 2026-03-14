@@ -1,8 +1,14 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationMeetingEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
@@ -19,14 +25,9 @@ import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMinistr
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MinistryFunctionTypeDto;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -156,40 +157,6 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
                 .channels(Channels.WHATSAPP)
                 .build();
         notificatorPublisher.publish(event);
-    }
-
-    private boolean shouldSendReminder(
-            MinistryFunction mf,
-            OffsetDateTime now,
-            int daysBefore,
-            int hoursBefore
-    ) {
-        OffsetDateTime scheduled = mf.getMeeting().getScheduledDate();
-
-        // Window start: X days before
-        OffsetDateTime windowStart = scheduled.minusDays(daysBefore);
-
-        // Window end: X hours before
-        OffsetDateTime windowEnd = scheduled.minusHours(hoursBefore);
-
-        if (now.isBefore(windowStart)) return false;
-        if (now.isAfter(windowEnd)) return false;
-
-        // One reminder per day
-        Instant lastSent = mf.getReminderSentAt();
-        if (lastSent != null) {
-            OffsetDateTime lastSentDay =
-                    lastSent.atOffset(ZoneOffset.UTC).toLocalDate().atStartOfDay().atOffset(ZoneOffset.UTC);
-
-            OffsetDateTime today =
-                    now.toLocalDate().atStartOfDay().atOffset(now.getOffset());
-
-            if (!lastSentDay.isBefore(today)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
 }
