@@ -10,8 +10,7 @@ import {
   IconLogout,
   IconWorship,
 } from "../../components/icons";
-import { FiHome, FiUsers } from "react-icons/fi";
-import { Bell } from "lucide-react";
+import { FiHome, FiUsers, FiBell } from "react-icons/fi";
 
 // Estructura de menú con secciones para mejor organización
 interface MenuItem {
@@ -31,7 +30,7 @@ const menuSections: MenuSection[] = [
     title: "",
     items: [
       { path: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
-      { path: "/notifications", label: "Notifications", icon: <Bell size={20} /> },
+      { path: "/notifications", label: "Notifications", icon: <FiBell size={20} /> },
     ],
   },
   {

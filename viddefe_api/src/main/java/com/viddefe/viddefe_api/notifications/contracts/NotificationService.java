@@ -7,10 +7,10 @@ import org.springframework.data.domain.Pageable;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.WhatsappMessageDto;
 import com.viddefe.viddefe_api.notifications.common.NotificationStatus;
-import com.viddefe.viddefe_api.notifications.domain.models.UserNotifications;
+import com.viddefe.viddefe_api.notifications.domain.models.UserNotification;
 
 public interface NotificationService {
-    Page<UserNotifications> getNotificationsByStatus(Pageable pageable, NotificationStatus status);
+    Page<UserNotification> getNotificationsByStatus(Pageable pageable, NotificationStatus status);
     void updateNotificationStatus(UUID notificationId, NotificationStatus status);
     void createFailedNotification(WhatsappMessageDto whatsappMessageDto);
 }

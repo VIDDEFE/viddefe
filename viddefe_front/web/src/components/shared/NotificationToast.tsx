@@ -2,12 +2,11 @@ import React, { useEffect } from 'react';
 import { useNotifications } from '../../hooks/useNotifications';
 import { toast } from 'sonner';
 import {
-  CheckCircle2,
-  AlertCircle,
-  AlertTriangle,
-  Info,
-  Bell,
-} from 'lucide-react';
+  FiCheckCircle,
+  FiAlertCircle,
+  FiAlertTriangle,
+  FiInfo,
+} from 'react-icons/fi';
 
 /**
  * NotificationToast - Automatically displays SSE notifications as toasts
@@ -39,14 +38,14 @@ export const NotificationToast: React.FC = () => {
 
       switch (type) {
         case 'success':
-          return <CheckCircle2 className="w-5 h-5" />;
+          return <FiCheckCircle className="w-5 h-5" />;
         case 'error':
-          return <AlertCircle className="w-5 h-5" />;
+          return <FiAlertCircle className="w-5 h-5" />;
         case 'warning':
-          return <AlertTriangle className="w-5 h-5" />;
+          return <FiAlertTriangle className="w-5 h-5" />;
         case 'info':
         default:
-          return <Info className="w-5 h-5" />;
+          return <FiInfo className="w-5 h-5" />;
       }
     };
 
@@ -82,7 +81,7 @@ export const NotificationToast: React.FC = () => {
     }
   }, [lastNotification]);
 
-  return null; // This component only handles side effects
+  return null;
 };
 
 export default NotificationToast;

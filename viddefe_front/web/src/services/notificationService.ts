@@ -1,5 +1,4 @@
-import { apiService } from './api';
-
+// SSE notification interfaces
 export interface Notification {
   id: string;
   title: string;
@@ -51,7 +50,7 @@ class NotificationServiceImpl {
     this.clientId = clientId;
 
     try {
-      const apiUrl = apiService.defaults.baseURL || 'http://localhost:8080/api/v1';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
       const sseUrl = `${apiUrl}/notifications/stream/${clientId}`;
       
       console.log('🔌 Connecting to SSE stream:', sseUrl);
