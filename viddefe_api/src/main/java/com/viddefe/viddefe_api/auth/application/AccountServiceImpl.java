@@ -44,7 +44,7 @@ public class AccountServiceImpl implements AccountService {
     private final RolesUserService rolesUserService;
     private final PermissionService permissionService;
     private final NotificationEventPublisher notificationEventPublisher;
-    private final SecureRandom random;
+    private final SecureRandom random = new SecureRandom();
 
 
     /**

@@ -38,12 +38,12 @@ import com.viddefe.viddefe_api.auth.infrastructure.dto.SignInDTO;
 import com.viddefe.viddefe_api.auth.infrastructure.dto.SignInResDTO;
 import com.viddefe.viddefe_api.auth.infrastructure.dto.SignUpDTO;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
-import com.viddefe.viddefe_api.common.components.JwtUtil;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.contracts.PeopleWriter;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
+import com.viddefe.viddefe_api.common.components.JwtUtil;
 
 import jakarta.persistence.EntityNotFoundException;
 

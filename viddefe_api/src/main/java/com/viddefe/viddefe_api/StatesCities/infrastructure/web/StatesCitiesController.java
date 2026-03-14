@@ -2,8 +2,6 @@ package com.viddefe.viddefe_api.statescities.infrastructure.web;
 
 import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.statescities.application.StatesCitiesService;
-import com.viddefe.viddefe_api.statescities.domain.model.CitiesModel;
-import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.statescities.infrastructure.dto.CitiesDto;
 import com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto;
 
