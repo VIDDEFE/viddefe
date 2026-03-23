@@ -4,17 +4,25 @@ import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
+
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+
 @Entity
 @Table(name = "meetings")
 @Getter @Setter
+@Builder
+@AllArgsConstructor @NoArgsConstructor
 public class Meeting {
 
     @Id
@@ -51,6 +59,8 @@ public class Meeting {
     @JoinColumn(name = "meeting_type_id", nullable = false)
     private MeetingType meetingType;
 
+    private UUID contextId; // Puede ser null para reuniones de templo, o contener el ID del grupo para reuniones de grupo
+
 
     public Meeting fromDto(CreateMeetingDto dto){
         this.name = dto.getName();
@@ -60,13 +70,15 @@ public class Meeting {
     }
 
     public MeetingDto toDto() {
-        MeetingDto meetingDto = new MeetingDto();
-        meetingDto.setId(this.id);
-        meetingDto.setName(this.name);
-        meetingDto.setDescription(this.description);
-        meetingDto.setCreationDate(this.creationDate);
-        meetingDto.setScheduledDate(this.scheduledDate);
-        meetingDto.setType(this.meetingType.toDto());
+        MeetingDto meetingDto = MeetingDto.builder()
+        .contextId(contextId)
+        .eventType(group != null ? TopologyEventType.GROUP_MEETING : TopologyEventType.TEMPLE_WORHSIP)
+        .name(name)
+        .description(description)
+        .scheduledDate(scheduledDate)
+        .type(meetingType.toDto())
+        .creationDate(creationDate)
+        .build();
         return meetingDto;
     }
 }

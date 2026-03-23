@@ -108,7 +108,7 @@ public class WhatsappClient {
                     .body(payload)
                     .retrieve()
                     .toBodilessEntity();
-
+            log.info("WhatsApp message sended");
         } catch (HttpClientErrorException e) {
             if (isRetryableError(e.getStatusCode())) {
                 throw new RetryableWhatsappException("Transient WhatsApp error: " + e.getStatusCode(), e);

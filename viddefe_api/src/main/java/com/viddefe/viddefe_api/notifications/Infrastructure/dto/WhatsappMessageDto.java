@@ -25,7 +25,8 @@ public class WhatsappMessageDto {
     private String phoneNumber;
     private String template;
     private Map<String, Object> variables;
-
+    
+    @Builder.Default
     @JsonProperty("retry_count")
     private Integer retryCount = 0;
 

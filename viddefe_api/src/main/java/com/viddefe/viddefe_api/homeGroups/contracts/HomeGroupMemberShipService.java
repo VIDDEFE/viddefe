@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.homegroups.contracts;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -11,4 +12,5 @@ public interface HomeGroupMemberShipService {
     PeopleResDto addMemberToHomeGroup(UUID homeGroupId, UUID peopleId);
     void removeMemberFromHomeGroup(UUID homeGroupId, UUID peopleId);
     Page<PeopleResDto> getMembersInHomeGroup(UUID homeGroupId, Pageable pageable);
+    List<UUID> getMemberIdsInHomeGroup(UUID homeGroupId);
 }

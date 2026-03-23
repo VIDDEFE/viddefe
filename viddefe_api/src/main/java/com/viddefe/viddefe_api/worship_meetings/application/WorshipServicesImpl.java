@@ -1,9 +1,16 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
+import java.time.Instant;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
-import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceStatus;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
@@ -14,15 +21,10 @@ import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingReposit
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.WorshipDetailedDto;
+
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +36,6 @@ public class WorshipServicesImpl implements WorshipService {
     private final MeetingTypesService meetingTypesService;
     private final ChurchLookup churchLookup;
     private final AttendanceService attendanceService;
-
 
     @Override
     public MeetingDto createWorship(CreateMeetingDto dto, @NotNull UUID churchId) {

@@ -1,14 +1,16 @@
 package com.viddefe.viddefe_api.homegroups.domain.repository;
 
-import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsPeopleMembers;
-import com.viddefe.viddefe_api.homegroups.domain.model.serializable.HomeGroupPeopleMembersId;
-import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.UUID;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsPeopleMembers;
+import com.viddefe.viddefe_api.homegroups.domain.model.serializable.HomeGroupPeopleMembersId;
+import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 
 public interface HomeGroupMembersRepository extends JpaRepository<HomeGroupsPeopleMembers, HomeGroupPeopleMembersId> {
     @Query("""
@@ -20,4 +22,10 @@ public interface HomeGroupMembersRepository extends JpaRepository<HomeGroupsPeop
         WHERE hpm.homeGroupPeopleMembersId.homeGroupId = :homeGroupId
     """)
     Page<PeopleModel> findMembersByHomeGroupId(UUID homeGroupId, Pageable pageable);
+    @Query("""
+        SELECT hpm.homeGroupPeopleMembersId.peopleId
+        FROM HomeGroupsPeopleMembers hpm
+        WHERE hpm.homeGroupPeopleMembersId.homeGroupId = :homeGroupId
+    """)
+    List<UUID> findMemberIdsByHomeGroupId(UUID homeGroupId);
 }

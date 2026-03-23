@@ -1,29 +1,27 @@
 package com.viddefe.viddefe_api.notifications.application;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import lombok.extern.slf4j.Slf4j;
-
-import com.viddefe.viddefe_api.notifications.domain.models.Notification;
-import com.viddefe.viddefe_api.notifications.domain.models.UserNotification;
-import com.viddefe.viddefe_api.notifications.domain.models.NotificationFailed;
-import com.viddefe.viddefe_api.notifications.domain.models.enums.UserNotificationStatus;
-import com.viddefe.viddefe_api.notifications.domain.models.enums.NotificationFailedStatus;
-import com.viddefe.viddefe_api.notifications.domain.models.enums.NotificationTypeEnum;
-import com.viddefe.viddefe_api.notifications.domain.repository.NotificationRepository;
-import com.viddefe.viddefe_api.notifications.domain.repository.UserNotificationRepository;
-import com.viddefe.viddefe_api.notifications.domain.repository.NotificationFailedRepository;
-import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.notifications.domain.repository.NotificationRepository;
-import com.viddefe.viddefe_api.notifications.domain.repository.UserNotificationRepository;
-import com.viddefe.viddefe_api.notifications.domain.repository.NotificationFailedRepository;
-import com.viddefe.viddefe_api.notifications.common.Channels;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.notifications.domain.models.Notification;
+import com.viddefe.viddefe_api.notifications.domain.models.NotificationFailed;
+import com.viddefe.viddefe_api.notifications.domain.models.UserNotification;
+import com.viddefe.viddefe_api.notifications.domain.models.enums.NotificationFailedStatus;
+import com.viddefe.viddefe_api.notifications.domain.models.enums.NotificationTypeEnum;
+import com.viddefe.viddefe_api.notifications.domain.models.enums.UserNotificationStatus;
+import com.viddefe.viddefe_api.notifications.domain.repository.NotificationFailedRepository;
+import com.viddefe.viddefe_api.notifications.domain.repository.NotificationRepository;
+import com.viddefe.viddefe_api.notifications.domain.repository.UserNotificationRepository;
+
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * NotificationApplicationService provides high-level orchestration for notification operations.
@@ -82,7 +80,7 @@ public class NotificationApplicationService {
             log.error("Invalid notification type: {}", type, e);
             throw new IllegalArgumentException("Invalid notification type: " + type);
         }
-        
+        log.debug("Creating notification with title: {}, type: {}, channel: {}", title, type, channel);
         return notificationRepository.save(notification);
     }
 
@@ -111,7 +109,7 @@ public class NotificationApplicationService {
      * Mark a user notification as sent
      * @param userNotificationId The ID of the user notification to mark
      */
-    public void markAsSent(UUID userNotificationId) {
+    public void markAsSent(@NonNull UUID userNotificationId) {
         UserNotification userNotif = userNotificationRepository.findById(userNotificationId)
                 .orElseThrow(() -> new IllegalArgumentException("UserNotification not found: " + userNotificationId));
         
@@ -125,7 +123,7 @@ public class NotificationApplicationService {
      * Mark a user notification as read
      * @param userNotificationId The ID of the user notification to mark
      */
-    public void markAsRead(UUID userNotificationId) {
+    public void markAsRead(@NonNull UUID userNotificationId) {
         UserNotification userNotif = userNotificationRepository.findById(userNotificationId)
                 .orElseThrow(() -> new IllegalArgumentException("UserNotification not found: " + userNotificationId));
         
@@ -144,7 +142,7 @@ public class NotificationApplicationService {
      * @param variables The template variables
      */
     public void recordFailedNotification(
-            UUID peopleId,
+            @NonNull UUID peopleId,
             UUID userNotificationId,
             String type,
             Channels channel,
@@ -181,16 +179,17 @@ public class NotificationApplicationService {
      * @param failedNotificationId The ID of the failed notification to retry
      */
     @Transactional
-    public void retryFailedNotification(UUID failedNotificationId) {
+    public void retryFailedNotification(@NonNull UUID failedNotificationId) {
         NotificationFailed failed = notificationFailedRepository.findById(failedNotificationId)
                 .orElseThrow(() -> new IllegalArgumentException("NotificationFailed not found: " + failedNotificationId));
         
         if (!failed.isExhausted()) {
             failed.incrementRetry();
             notificationFailedRepository.save(failed);
+            Integer retryCount = failed.getRetryCount();
             
             log.info("Retrying failed notification {}. Retry count: {}/{}. Next retry at: {}",
-                     failedNotificationId, failed.getRetryCount(), failed.getMaxRetries(), failed.getNextRetryAt());
+                     failedNotificationId, retryCount, failed.getMaxRetries(), failed.getNextRetryAt());
         } else {
             log.warn("Failed notification {} is exhausted, no more retries", failedNotificationId);
         }
@@ -209,7 +208,7 @@ public class NotificationApplicationService {
      */
     @Transactional
     public void cleanupExhaustedNotifications() {
-        Instant thirtyDaysAgo = Instant.now().minusSeconds(30 * 24 * 60 * 60);
+        Instant thirtyDaysAgo = Instant.now().minusSeconds(30L * 24 * 60 * 60);
         int deletedCount = notificationFailedRepository.deleteExhaustedBefore(thirtyDaysAgo);
         
         if (deletedCount > 0) {
@@ -223,7 +222,7 @@ public class NotificationApplicationService {
      * @return The number of notifications marked as read
      */
     @Transactional
-    public int markAllAsRead(UUID peopleId) {
+    public int markAllAsRead(@NonNull UUID peopleId) {
         return userNotificationRepository.markAllAsRead(peopleId);
     }
 
@@ -232,7 +231,7 @@ public class NotificationApplicationService {
      * @param peopleId The ID of the user
      * @return The count of unread notifications
      */
-    public long countUnread(UUID peopleId) {
+    public long countUnread(@NonNull UUID peopleId) {
         return userNotificationRepository.countUnreadByPeopleId(peopleId);
     }
 }

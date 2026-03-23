@@ -39,8 +39,9 @@ public class WhatsappMessageListener {
     @RabbitListener(queues = RabbitQueues.WHATSAPP_QUEUE, concurrency = "1-5")
     public void handleWhatsappMessage(WhatsappMessageDto messageDto) {
         try {
+            Integer retryCount = messageDto.getRetryCount() != null ? messageDto.getRetryCount() : 0;
             log.info("Processing WhatsApp message for: {} (attempt: {})",
-                     messageDto.getPhoneNumber(), messageDto.getRetryCount() + 1);
+                     messageDto.getPhoneNumber(), retryCount + 1);
 
             String message = ResolverMessage.resolveMessage(
                 messageDto.getTemplate(),
@@ -73,9 +74,10 @@ public class WhatsappMessageListener {
         }
 
         messageDto.incrementRetry();
+        Integer retryCount = messageDto.getRetryCount();
 
         log.warn("Retryable error for WhatsApp message to: {}. Scheduling retry #{}",
-                 messageDto.getPhoneNumber(), messageDto.getRetryCount(), e);
+                 messageDto.getPhoneNumber(), retryCount, e);
 
         // Enviar a la cola de retry (con TTL)
         rabbitTemplate.convertAndSend(
