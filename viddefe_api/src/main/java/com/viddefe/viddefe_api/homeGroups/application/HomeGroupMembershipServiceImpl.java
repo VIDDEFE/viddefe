@@ -38,6 +38,15 @@ public class HomeGroupMembershipServiceImpl implements HomeGroupMemberShipServic
         return homeGroupMembersRepository.findMemberIdsByHomeGroupId(homeGroupId);
     }
 
+    /**
+     * @param homeGroupId
+     * @return
+     */
+    @Override
+    public List<UUID> getUserIdsInHomeGroup(UUID homeGroupId) {
+       return  homeGroupMembersRepository.findUserIdsInHomeGroupId(homeGroupId);
+    }
+
     @Override
     public PeopleResDto addMemberToHomeGroup(UUID homeGroupId, UUID peopleId) {
         HomeGroupsModel homeGroup = homeGroupReader.findById(homeGroupId);

@@ -63,7 +63,7 @@ public class NotificationsController {
         
         // Get paginated user notifications ordered by newest first
         Page<UserNotification> userNotificationsPage = userNotificationRepository
-                .findByPeopleId(userId, pageable);
+                .findByUserId(userId, pageable);
         
         // Map to response DTOs with full notification details
         Page<UserNotificationResponseDto> responsePage = userNotificationsPage
@@ -99,7 +99,7 @@ public class NotificationsController {
         
         // Get the user notification, ensuring it belongs to the authenticated user
         UserNotification userNotification = userNotificationRepository
-                .findByNotificationIdAndPeopleId(notificationId, userId)
+                .findByNotificationIdAndUserId(notificationId, userId)
                 .orElseThrow(() -> {
                     log.warn("Notification {} not found for user {}", notificationId, userId);
                     return new IllegalArgumentException("Notification not found");
@@ -151,7 +151,7 @@ public class NotificationsController {
         
         // Verify the notification belongs to the user
         UserNotification userNotification = userNotificationRepository
-                .findByNotificationIdAndPeopleId(notificationId, userId)
+                .findByNotificationIdAndUserId(notificationId, userId)
                 .orElseThrow(() -> {
                     log.warn("Notification {} not found for user {}", notificationId, userId);
                     return new IllegalArgumentException("Notification not found");
@@ -209,7 +209,7 @@ public class NotificationsController {
             return UserNotificationResponseDto.builder()
                     .id(userNotification.getId())
                     .notificationId(userNotification.getNotificationId())
-                    .peopleId(userNotification.getPeopleId())
+                    .peopleId(userNotification.getUserId())
                     .status(userNotification.getStatus())
                     .readAt(userNotification.getReadAt())
                     .createdAt(userNotification.getCreatedAt())
@@ -221,7 +221,7 @@ public class NotificationsController {
         return UserNotificationResponseDto.builder()
                 .id(userNotification.getId())
                 .notificationId(userNotification.getNotificationId())
-                .peopleId(userNotification.getPeopleId())
+                .peopleId(userNotification.getUserId())
                 .title(notification.getTitle())
                 .body(notification.getBody())
                 .type(notification.getType() != null ? notification.getType().name() : null)

@@ -26,7 +26,7 @@ import java.util.UUID;
  */
 @Entity
 @Table(name = "user_notifications", 
-        uniqueConstraints = @UniqueConstraint(columnNames = {"notification_id", "people_id"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"notification_id", "user_id"}))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -48,8 +48,8 @@ public class UserNotification {
      * Reference to the user (People) entity
      * ON DELETE CASCADE ensures cleanup when user is deleted
      */
-    @Column(name = "people_id", nullable = false)
-    private UUID peopleId;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     /**
      * Timestamp when this notification was marked as read

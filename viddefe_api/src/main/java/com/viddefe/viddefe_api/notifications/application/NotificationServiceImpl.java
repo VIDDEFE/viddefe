@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.WhatsappMessageDto;
 import com.viddefe.viddefe_api.notifications.common.NotificationStatus;
-import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationService;
 import com.viddefe.viddefe_api.notifications.domain.models.UserNotification;
 import com.viddefe.viddefe_api.notifications.domain.models.enums.UserNotificationStatus;

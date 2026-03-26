@@ -20,4 +20,13 @@ public class ChurchMemberShipImpl implements ChurchMemberShip{
     public List<UUID> getPeopleIdsByChurchId(UUID churchId) {
         return churchMemberShipRepository.findPeopleIdsByChurchId(churchId);
     }
+
+    /**
+     * @param churchId
+     * @return
+     */
+    @Override
+    public List<UUID> getUserIdsByChurchId(UUID churchId) {
+        return churchMemberShipRepository.findUserIdsByChurchId(churchId);
+    }
 }

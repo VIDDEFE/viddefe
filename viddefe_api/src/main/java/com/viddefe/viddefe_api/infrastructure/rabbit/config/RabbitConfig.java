@@ -203,12 +203,12 @@ public class RabbitConfig {
     @Bean
     public Binding notificationSseBinding(
             Queue notificationSseQueue,
-            DirectExchange notificationSseExchange
+            DirectExchange notificationsExchange
     ) {
         return BindingBuilder
                 .bind(notificationSseQueue)
-                .to(notificationSseExchange)
-                .with("notification.sse");
+                .to(notificationsExchange)
+                .with(NotificationTypeEnum.NOTIFICATION_APP_SSE.routingKey());
     }
 
     /* ===============================

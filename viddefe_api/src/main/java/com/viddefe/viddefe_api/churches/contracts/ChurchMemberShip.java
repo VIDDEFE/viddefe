@@ -5,4 +5,5 @@ import java.util.UUID;
 
 public interface  ChurchMemberShip {
     List<UUID> getPeopleIdsByChurchId(UUID churchId);
+    List<UUID> getUserIdsByChurchId(UUID churchId);
 }

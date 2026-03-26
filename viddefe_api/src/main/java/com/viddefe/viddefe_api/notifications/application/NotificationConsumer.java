@@ -2,10 +2,12 @@ package com.viddefe.viddefe_api.notifications.application;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,12 +96,12 @@ public class NotificationConsumer {
             // Send via SMS (phone)
             UserNotification smNotif = userNotifications.get(0);
             NotificationDto dtoPhone = resolveNotificationDto(person.getPhone(), event);
-            boolean smsSent = sendNotificationWithTracking(dtoPhone, event.getChannels(), smNotif.getId());
+            sendNotificationWithTracking(dtoPhone, event.getChannels(), smNotif.getId());
 
             // Send via APP (client ID)
             event.setChannels(Channels.APP);
             NotificationDto dtoApp = resolveNotificationDto(clientId.toString(), event);
-            boolean appSent = sendNotificationWithTracking(dtoApp, Channels.APP, smNotif.getId());
+            sendNotificationWithTracking(dtoApp, Channels.APP, smNotif.getId());
 
             // Handle ministry-specific logic (reminder tracking)
             handleMinistryFunctionReminder(event);
@@ -141,14 +143,14 @@ public class NotificationConsumer {
             List<UserNotification> userNotifications = 
                     notificationApplicationService.createUserNotifications(
                             notification.getId(),
-                            Arrays.asList(event.getPersonId())
+                            event.getPeopleIdList() != null ? event.getPeopleIdList() : Collections.singletonList(event.getPersonId())
                     );
 
             // Send notification
-            UserNotification userNotif = userNotifications.get(0);
-            NotificationDto dto = resolveNotificationDto(contact, event);
-            sendNotificationWithTracking(dto, event.getChannels(), userNotif.getId());
-
+            for (UserNotification userNotification : userNotifications) {
+                NotificationDto dto = resolveNotificationDto(contact, event);
+                sendNotificationWithTracking(dto, event.getChannels(), userNotification.getId());
+            }
             log.info("ACCOUNT notification sent successfully at {}", Instant.now());
         } catch (Exception e) {
             log.error("Error processing ACCOUNT notification", e);
@@ -169,7 +171,7 @@ public class NotificationConsumer {
         printDataEvent(event);
 
         try {
-            String clientId = "client-" + event.getPersonId().toString();
+            
 
             // Create a decoupled Notification entity
             Notification notification = notificationApplicationService.createNotification(
@@ -186,15 +188,16 @@ public class NotificationConsumer {
             List<UserNotification> userNotifications = 
                     notificationApplicationService.createUserNotifications(
                             notification.getId(),
-                            Arrays.asList(event.getPersonId())
+                            event.getPeopleIdList() != null ? event.getPeopleIdList() : Collections.singletonList(event.getPersonId())
                     );
 
             // Send notification
-            UserNotification userNotif = userNotifications.get(0);
-            NotificationDto dto = resolveNotificationDto(clientId, event);
-            sendNotificationWithTracking(dto, event.getChannels(), userNotif.getId());
+            for (UserNotification userNotif : userNotifications) {
+                NotificationDto dto = resolveNotificationDto(userNotif.getUserId().toString(), event);
+                sendNotificationWithTracking(dto, event.getChannels(), userNotif.getId());
+            }
 
-            log.info("SSE notification sent successfully at {}", Instant.now());
+            log.debug("SSE notification sent successfully at {}", Instant.now());
         } catch (Exception e) {
             log.error("Error processing SSE notification", e);
         }
@@ -207,15 +210,16 @@ public class NotificationConsumer {
      * @param userNotificationId The ID of the UserNotification to track
      * @return true if sent successfully, false otherwise
      */
-    private boolean sendNotificationWithTracking(NotificationDto dto, Channels channel, UUID userNotificationId) {
+    @Async
+    protected void sendNotificationWithTracking(NotificationDto dto, Channels channel, UUID userNotificationId) {
         try {
+            log.debug("Attempting to send notification {} via {}", userNotificationId, channel);
             Notificator notificator = notificatorFactory.get(channel);
             notificator.send(dto);
             
             // Mark as sent on success
             notificationApplicationService.markAsSent(userNotificationId);
             log.debug("Notification {} sent successfully via {}", userNotificationId, channel);
-            return true;
         } catch (Exception e) {
             log.error("Failed to send notification {} via {}", userNotificationId, channel, e);
             
@@ -227,7 +231,6 @@ public class NotificationConsumer {
                     channel,
                     dto.getVariables()
             );
-            return false;
         }
     }
 
@@ -264,7 +267,7 @@ public class NotificationConsumer {
                 .remitter(event.getRemitter())
                 .build();
         
-        if (event.getChannels() == Channels.EMAIL) {
+        if (event.getChannels() != Channels.WHATSAPP) {
             dto.setSubject(event.getSubject());
         }
 

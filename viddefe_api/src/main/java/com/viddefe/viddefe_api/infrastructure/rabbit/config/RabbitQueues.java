@@ -38,8 +38,8 @@ public final class RabbitQueues {
     /* ===============================
      * APP Notification SSE
      * =============================== */
-    public static final String NOTIFICATION_SSE_EXCHANGE = "notification.sse.exchange";
-    public static final String NOTIFICATION_SSE_QUEUE = "notification.sse.queue";
+    public static final String NOTIFICATION_SSE_EXCHANGE = "notifications.sse.exchange";
+    public static final String NOTIFICATION_SSE_QUEUE = "notifications.sse.queue";
 
     private RabbitQueues() {}
 }

@@ -228,7 +228,7 @@ class NotificationApplicationServiceTest {
             UserNotification userNotif = new UserNotification();
             userNotif.setId(UUID.randomUUID());
             userNotif.setNotificationId(notificationId);
-            userNotif.setPeopleId(userId);
+            userNotif.setUserId(userId);
             userNotif.setStatus(UserNotificationStatus.PENDING);
 
             when(userNotificationRepository.saveAll(anyList()))
@@ -245,7 +245,7 @@ class NotificationApplicationServiceTest {
             assertThat(result).hasSize(1);
             assertThat(capturedNotifications).hasSize(1);
             assertThat(capturedNotifications.get(0).getNotificationId()).isEqualTo(notificationId);
-            assertThat(capturedNotifications.get(0).getPeopleId()).isEqualTo(userId);
+            assertThat(capturedNotifications.get(0).getUserId()).isEqualTo(userId);
             assertThat(capturedNotifications.get(0).getStatus()).isEqualTo(UserNotificationStatus.PENDING);
         }
 
@@ -264,7 +264,7 @@ class NotificationApplicationServiceTest {
                 UserNotification userNotif = new UserNotification();
                 userNotif.setId(UUID.randomUUID());
                 userNotif.setNotificationId(notificationId);
-                userNotif.setPeopleId(userId);
+                userNotif.setUserId(userId);
                 userNotif.setStatus(UserNotificationStatus.PENDING);
                 savedNotifications.add(userNotif);
             }
@@ -287,7 +287,7 @@ class NotificationApplicationServiceTest {
                     .allMatch(un -> un.getStatus().equals(UserNotificationStatus.PENDING));
 
             Set<UUID> capturedUserIds = capturedNotifications.stream()
-                    .map(UserNotification::getPeopleId)
+                    .map(UserNotification::getUserId)
                     .collect(java.util.stream.Collectors.toSet());
             assertThat(capturedUserIds).containsExactlyInAnyOrder(user1, user2, user3);
         }
@@ -307,7 +307,7 @@ class NotificationApplicationServiceTest {
                 UserNotification userNotif = new UserNotification();
                 userNotif.setId(UUID.randomUUID());
                 userNotif.setNotificationId(notificationId);
-                userNotif.setPeopleId(userId);
+                userNotif.setUserId(userId);
                 userNotif.setStatus(UserNotificationStatus.PENDING);
                 savedNotifications.add(userNotif);
             }
@@ -336,7 +336,7 @@ class NotificationApplicationServiceTest {
                         UserNotification un = new UserNotification();
                         un.setId(UUID.randomUUID());
                         un.setNotificationId(notificationId);
-                        un.setPeopleId(userId);
+                        un.setUserId(userId);
                         un.setStatus(UserNotificationStatus.PENDING);
                         return un;
                     })

@@ -28,4 +28,12 @@ public interface HomeGroupMembersRepository extends JpaRepository<HomeGroupsPeop
         WHERE hpm.homeGroupPeopleMembersId.homeGroupId = :homeGroupId
     """)
     List<UUID> findMemberIdsByHomeGroupId(UUID homeGroupId);
+
+    @Query(value = """
+        SELECT u.id FROM HomeGroupsPeopleMembers hpm
+        JOIN PeopleModel p ON p.id = hpm.people.id
+        JOIN UserModel u ON u.people.id = p.id
+        WHERE hpm.homeGroupPeopleMembersId.homeGroupId = :homeGroupId
+    """)
+    List<UUID> findUserIdsInHomeGroupId(UUID homeGroupId);
 }

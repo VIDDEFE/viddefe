@@ -86,7 +86,7 @@ class NotificationsControllerTest {
                     PageRequest.of(0, 20),
                     2);
 
-            when(userNotificationRepository.findByPeopleId(userId, PageRequest.of(0, 20)))
+            when(userNotificationRepository.findByUserId(userId, PageRequest.of(0, 20)))
                     .thenReturn(page);
 
             Notification notif1 = createNotification(notificationId1, "Test Notification 1");
@@ -97,7 +97,7 @@ class NotificationsControllerTest {
 
             // Act
             Page<UserNotificationResponseDto> result = userNotificationRepository
-                    .findByPeopleId(userId, PageRequest.of(0, 20))
+                    .findByUserId(userId, PageRequest.of(0, 20))
                     .map(userNotif -> mapToResponseDto(userNotif, notificationRepository));
 
             // Assert
@@ -106,7 +106,7 @@ class NotificationsControllerTest {
             assertThat(result.getTotalElements()).isEqualTo(2);
             assertThat(result.getTotalPages()).isEqualTo(1);
 
-            verify(userNotificationRepository).findByPeopleId(userId, PageRequest.of(0, 20));
+            verify(userNotificationRepository).findByUserId(userId, PageRequest.of(0, 20));
         }
 
         @Test
@@ -121,14 +121,14 @@ class NotificationsControllerTest {
                     PageRequest.of(1, 10),
                     25);
 
-            when(userNotificationRepository.findByPeopleId(userId, PageRequest.of(1, 10)))
+            when(userNotificationRepository.findByUserId(userId, PageRequest.of(1, 10)))
                     .thenReturn(page);
 
             Notification notif = createNotification(notificationId1, "Test");
             when(notificationRepository.findById(notificationId1)).thenReturn(Optional.of(notif));
 
             // Act
-            Page<UserNotification> result = userNotificationRepository.findByPeopleId(userId, PageRequest.of(1, 10));
+            Page<UserNotification> result = userNotificationRepository.findByUserId(userId, PageRequest.of(1, 10));
 
             // Assert
             assertThat(result.getNumber()).isEqualTo(1);
@@ -149,11 +149,11 @@ class NotificationsControllerTest {
                     PageRequest.of(0, 20),
                     0);
 
-            when(userNotificationRepository.findByPeopleId(userId, PageRequest.of(0, 20)))
+            when(userNotificationRepository.findByUserId(userId, PageRequest.of(0, 20)))
                     .thenReturn(emptyPage);
 
             // Act
-            Page<UserNotification> result = userNotificationRepository.findByPeopleId(userId, PageRequest.of(0, 20));
+            Page<UserNotification> result = userNotificationRepository.findByUserId(userId, PageRequest.of(0, 20));
 
             // Assert
             assertThat(result).isEmpty();
@@ -175,7 +175,7 @@ class NotificationsControllerTest {
             UUID userNotifId = UUID.randomUUID();
             UserNotification userNotif = createUserNotification(userNotifId, notificationId1, userId);
 
-            when(userNotificationRepository.findByNotificationIdAndPeopleId(notificationId1, userId))
+            when(userNotificationRepository.findByNotificationIdAndUserId(notificationId1, userId))
                     .thenReturn(Optional.of(userNotif));
 
             Notification notif = createNotification(notificationId1, "Specific Notification");
@@ -183,12 +183,12 @@ class NotificationsControllerTest {
 
             // Act
             Optional<UserNotification> result = userNotificationRepository
-                    .findByNotificationIdAndPeopleId(notificationId1, userId);
+                    .findByNotificationIdAndUserId(notificationId1, userId);
 
             // Assert
             assertThat(result).isPresent();
             assertThat(result.get().getNotificationId()).isEqualTo(notificationId1);
-            assertThat(result.get().getPeopleId()).isEqualTo(userId);
+            assertThat(result.get().getUserId()).isEqualTo(userId);
         }
 
         @Test
@@ -198,12 +198,12 @@ class NotificationsControllerTest {
             when(jwtUtil.getUserId(jwtToken)).thenReturn(userId);
             UUID differentUserId = UUID.randomUUID();
 
-            when(userNotificationRepository.findByNotificationIdAndPeopleId(notificationId1, differentUserId))
+            when(userNotificationRepository.findByNotificationIdAndUserId(notificationId1, differentUserId))
                     .thenReturn(Optional.empty());
 
             // Act
             Optional<UserNotification> result = userNotificationRepository
-                    .findByNotificationIdAndPeopleId(notificationId1, differentUserId);
+                    .findByNotificationIdAndUserId(notificationId1, differentUserId);
 
             // Assert
             assertThat(result).isEmpty();
@@ -299,7 +299,7 @@ class NotificationsControllerTest {
         UserNotification userNotif = new UserNotification();
         userNotif.setId(userNotifId);
         userNotif.setNotificationId(notifId);
-        userNotif.setPeopleId(peopleId);
+        userNotif.setUserId(peopleId);
         userNotif.setStatus(UserNotificationStatus.SENT);
         userNotif.setReadAt(null);
         userNotif.setCreatedAt(Instant.now());
@@ -339,7 +339,7 @@ class NotificationsControllerTest {
             return UserNotificationResponseDto.builder()
                     .id(userNotification.getId())
                     .notificationId(userNotification.getNotificationId())
-                    .peopleId(userNotification.getPeopleId())
+                    .peopleId(userNotification.getUserId())
                     .status(userNotification.getStatus())
                     .readAt(userNotification.getReadAt())
                     .createdAt(userNotification.getCreatedAt())
@@ -350,7 +350,7 @@ class NotificationsControllerTest {
         return UserNotificationResponseDto.builder()
                 .id(userNotification.getId())
                 .notificationId(userNotification.getNotificationId())
-                .peopleId(userNotification.getPeopleId())
+                .peopleId(userNotification.getUserId())
                 .title(notification.getTitle())
                 .body(notification.getBody())
                 .type(notification.getType() != null ? notification.getType().name() : null)

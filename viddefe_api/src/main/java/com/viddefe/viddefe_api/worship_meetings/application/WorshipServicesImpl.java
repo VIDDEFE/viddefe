@@ -52,6 +52,7 @@ public class WorshipServicesImpl implements WorshipService {
         worshipModel.fromDto(dto);
         worshipModel.setCreationDate(Instant.now());
         worshipModel.setChurch(church);
+
         worshipModel.setMeetingType(worshipMeetingTypes);
 
         // Usar MeetingService para persistir

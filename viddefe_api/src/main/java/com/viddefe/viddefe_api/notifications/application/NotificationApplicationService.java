@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -97,18 +98,22 @@ public class NotificationApplicationService {
         for (UUID userId : userIds) {
             UserNotification userNotif = new UserNotification();
             userNotif.setNotificationId(notificationId);
-            userNotif.setPeopleId(userId);
+            userNotif.setUserId(userId);
             userNotif.setStatus(UserNotificationStatus.PENDING);
             userNotifications.add(userNotif);
         }
-        
-        return userNotificationRepository.saveAll(userNotifications);
+        List<UserNotification> savedNotifications = userNotificationRepository.saveAll(userNotifications);
+        for (UserNotification userNotification : savedNotifications) {
+            log.debug("Saving user notification: {}", userNotification);
+        }
+        return savedNotifications;
     }
 
     /**
      * Mark a user notification as sent
      * @param userNotificationId The ID of the user notification to mark
      */
+    @Async
     public void markAsSent(@NonNull UUID userNotificationId) {
         UserNotification userNotif = userNotificationRepository.findById(userNotificationId)
                 .orElseThrow(() -> new IllegalArgumentException("UserNotification not found: " + userNotificationId));

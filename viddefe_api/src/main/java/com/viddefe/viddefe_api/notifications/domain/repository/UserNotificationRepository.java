@@ -20,18 +20,18 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
     /**
      * Find all unread notifications for a specific user
      */
-    @Query("SELECT un FROM UserNotification un WHERE un.peopleId = :peopleId AND un.readAt IS NULL")
+    @Query("SELECT un FROM UserNotification un WHERE un.userId = :peopleId AND un.readAt IS NULL")
     List<UserNotification> findUnreadByPeopleId(@Param("peopleId") UUID peopleId);
 
     /**
      * Find notification by its ID and people ID
      */
-    Optional<UserNotification> findByNotificationIdAndPeopleId(UUID notificationId, UUID peopleId);
+    Optional<UserNotification> findByNotificationIdAndUserId(UUID notificationId, UUID peopleId);
 
     /**
      * Count unread notifications for a specific user
      */
-    @Query("SELECT COUNT(un) FROM UserNotification un WHERE un.peopleId = :peopleId AND un.readAt IS NULL")
+    @Query("SELECT COUNT(un) FROM UserNotification un WHERE un.userId = :peopleId AND un.readAt IS NULL")
     long countUnreadByPeopleId(@Param("peopleId") UUID peopleId);
 
     /**
@@ -39,7 +39,7 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
      */
     @Modifying
     @Transactional
-    @Query("UPDATE UserNotification un SET un.readAt = CURRENT_TIMESTAMP, un.status = 'READ' WHERE un.peopleId = :peopleId AND un.readAt IS NULL")
+    @Query("UPDATE UserNotification un SET un.readAt = CURRENT_TIMESTAMP, un.status = 'READ' WHERE un.userId = :peopleId AND un.readAt IS NULL")
     int markAllAsRead(@Param("peopleId") UUID peopleId);
 
     /**
@@ -50,11 +50,12 @@ public interface UserNotificationRepository extends JpaRepository<UserNotificati
     /**
      * Find all user notifications by people ID
      */
-    Page<UserNotification> findByPeopleId(UUID peopleId, Pageable pageable);
+    Page<UserNotification> findByUserId(UUID peopleId, Pageable pageable);
 
     /**
      * Find all user notifications by notification ID
      */
     List<UserNotification> findByNotificationId(UUID notificationId);
 
+    Optional<UserNotification> findByUserId(UUID userId);
 }

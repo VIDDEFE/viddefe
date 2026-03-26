@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 
 @Getter @Setter
 @SuperBuilder
-@AllArgsConstructor @NoArgsConstructor
+@AllArgsConstructor
 public class NotificationMeetingEvent extends  NotificationEvent {
     @Override
     public NotificationTypeEnum getNotificationType() {

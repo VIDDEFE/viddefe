@@ -13,4 +13,5 @@ public interface HomeGroupMemberShipService {
     void removeMemberFromHomeGroup(UUID homeGroupId, UUID peopleId);
     Page<PeopleResDto> getMembersInHomeGroup(UUID homeGroupId, Pageable pageable);
     List<UUID> getMemberIdsInHomeGroup(UUID homeGroupId);
+    List<UUID> getUserIdsInHomeGroup(UUID homeGroupId);
 }

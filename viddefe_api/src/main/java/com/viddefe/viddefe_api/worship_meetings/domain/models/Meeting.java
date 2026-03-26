@@ -59,9 +59,6 @@ public class Meeting {
     @JoinColumn(name = "meeting_type_id", nullable = false)
     private MeetingType meetingType;
 
-    private UUID contextId; // Puede ser null para reuniones de templo, o contener el ID del grupo para reuniones de grupo
-
-
     public Meeting fromDto(CreateMeetingDto dto){
         this.name = dto.getName();
         this.description = dto.getDescription();
@@ -70,15 +67,15 @@ public class Meeting {
     }
 
     public MeetingDto toDto() {
-        MeetingDto meetingDto = MeetingDto.builder()
-        .contextId(contextId)
+        return MeetingDto.builder()
+        .contextId(group != null ? group.getId() : church.getId())
         .eventType(group != null ? TopologyEventType.GROUP_MEETING : TopologyEventType.TEMPLE_WORHSIP)
         .name(name)
         .description(description)
         .scheduledDate(scheduledDate)
         .type(meetingType.toDto())
         .creationDate(creationDate)
+        .id(id)
         .build();
-        return meetingDto;
     }
 }
