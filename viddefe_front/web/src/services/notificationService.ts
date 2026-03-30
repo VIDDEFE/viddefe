@@ -18,6 +18,71 @@ export interface NotificationEvent {
   timestamp: string;
 }
 
+/**
+ * Parses a plain text message from SSE and extracts notification data
+ * Handles messages like: "Hola, se ha actualizado la reunión de templo. La nueva fecha de la reunión es 2026-03-31T21:44Z. ¡No te lo pierdas!."
+ */
+function parsePlainTextMessage(data: string): NotificationEvent {
+  const isoDateRegex = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?Z?/;
+  const dateMatch = data.match(isoDateRegex);
+  const eventDate = dateMatch ? new Date(dateMatch[0]) : new Date();
+  
+  // Detect entity type and create appropriate title
+  let title = 'Notificación';
+  let icon = 'ℹ️';
+  let type: 'info' | 'success' | 'error' | 'warning' = 'info';
+  
+  const lowerData = data.toLowerCase();
+  
+  if (lowerData.includes('reunión') || lowerData.includes('worship')) {
+    title = '🙏 Actualización de Reunión';
+    type = 'info';
+  } else if (lowerData.includes('grupo') || lowerData.includes('group')) {
+    title = '👥 Actualización de Grupo';
+    type = 'info';
+  } else if (lowerData.includes('ofrendas') || lowerData.includes('offering')) {
+    title = '💰 Actualización de Ofrendas';
+    type = 'success';
+  } else if (lowerData.includes('error') || lowerData.includes('problema')) {
+    title = '⚠️ Error';
+    type = 'error';
+  } else if (lowerData.includes('actualizado') || lowerData.includes('updated')) {
+    title = '✅ Se ha actualizado';
+    type = 'success';
+  }
+  
+  return {
+    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    title,
+    message: data,
+    type,
+    icon,
+    timestamp: eventDate.toISOString(),
+  };
+}
+
+/**
+ * Attempts to parse event data as JSON, falls back to plain text parsing
+ */
+function parseEventData(data: string): NotificationEvent {
+  try {
+    // First, try to parse as JSON
+    const parsed = JSON.parse(data);
+    
+    // Validate that it has the required NotificationEvent properties
+    if (parsed.id && parsed.title && parsed.message && parsed.type && parsed.timestamp) {
+      return parsed as NotificationEvent;
+    }
+    
+    // If JSON is missing required fields, treat as plain text
+    throw new Error('Invalid NotificationEvent structure');
+  } catch (e) {
+    // If JSON parsing fails or structure is invalid, treat as plain text
+    console.log('📝 Parsing as plain text message');
+    return parsePlainTextMessage(data);
+  }
+}
+
 // SSE subscription manager
 class NotificationServiceImpl {
   private eventSource: EventSource | null = null;
@@ -60,7 +125,7 @@ class NotificationServiceImpl {
       // Handle incoming messages
       this.eventSource.onmessage = (event) => {
         try {
-          const notification: NotificationEvent = JSON.parse(event.data);
+          const notification: NotificationEvent = parseEventData(event.data);
           console.log('📬 Notification received:', notification);
           this.notifyListeners(notification);
         } catch (error) {
