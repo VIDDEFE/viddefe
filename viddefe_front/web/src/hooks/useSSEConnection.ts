@@ -19,9 +19,10 @@ export function useSSEConnection(): void {
   const { user } = useAppContext();
 
   useEffect(() => {
-    if (user?.id) {
+    console.log('🎯 useSSEConnection: Checking user authentication state', { user });
+    if (user?.userId) {
       console.log('🎯 useSSEConnection: User logged in, connecting to SSE');
-      connect(user.id);
+      connect(user.userId);
     } else {
       console.log('🎯 useSSEConnection: User logged out, disconnecting from SSE');
       disconnect();
@@ -32,7 +33,7 @@ export function useSSEConnection(): void {
       // Don't disconnect on unmount - keep connection alive
       // Only disconnect on logout (when user becomes null)
     };
-  }, [user?.id, connect, disconnect]);
+  }, [user?.userId, connect, disconnect]);
 }
 
 export default useSSEConnection;

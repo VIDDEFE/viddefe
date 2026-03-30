@@ -18,10 +18,6 @@ import com.viddefe.viddefe_api.common.response.ApiResponse;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationListResponseDto;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.UserNotificationResponseDto;
 import com.viddefe.viddefe_api.notifications.application.NotificationApplicationService;
-import com.viddefe.viddefe_api.notifications.domain.models.Notification;
-import com.viddefe.viddefe_api.notifications.domain.models.UserNotification;
-import com.viddefe.viddefe_api.notifications.domain.repository.NotificationRepository;
-import com.viddefe.viddefe_api.notifications.domain.repository.UserNotificationRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 public class NotificationsController {
 
     private final NotificationApplicationService notificationApplicationService;
-    private final UserNotificationRepository userNotificationRepository;
-    private final NotificationRepository notificationRepository;
     private final JwtUtil jwtUtil;
 
     /**
@@ -61,13 +55,9 @@ public class NotificationsController {
         UUID userId = jwtUtil.getUserId(jwt);
         log.info("Fetching notifications for user: {}", userId);
         
-        // Get paginated user notifications ordered by newest first
-        Page<UserNotification> userNotificationsPage = userNotificationRepository
-                .findByUserId(userId, pageable);
-        
-        // Map to response DTOs with full notification details
-        Page<UserNotificationResponseDto> responsePage = userNotificationsPage
-                .map(this::mapToResponseDto);
+        // Get paginated user notifications as DTOs
+        Page<UserNotificationResponseDto> responsePage = notificationApplicationService
+                .getUserNotificationsAsDto(userId, pageable);
         
         // Build response with pagination metadata
         NotificationListResponseDto response = NotificationListResponseDto.from(responsePage);
@@ -97,15 +87,9 @@ public class NotificationsController {
         UUID userId = jwtUtil.getUserId(jwt);
         log.info("Fetching notification {} for user: {}", notificationId, userId);
         
-        // Get the user notification, ensuring it belongs to the authenticated user
-        UserNotification userNotification = userNotificationRepository
-                .findByNotificationIdAndUserId(notificationId, userId)
-                .orElseThrow(() -> {
-                    log.warn("Notification {} not found for user {}", notificationId, userId);
-                    return new IllegalArgumentException("Notification not found");
-                });
-        
-        UserNotificationResponseDto response = mapToResponseDto(userNotification);
+        // Get the notification with validation
+        UserNotificationResponseDto response = notificationApplicationService
+                .getUserNotificationByIdAsDto(notificationId, userId);
         
         return new ResponseEntity<>(ApiResponse.ok(response), HttpStatus.OK);
     }
@@ -149,15 +133,11 @@ public class NotificationsController {
         UUID userId = jwtUtil.getUserId(jwt);
         log.info("Marking notification {} as read for user: {}", notificationId, userId);
         
-        // Verify the notification belongs to the user
-        UserNotification userNotification = userNotificationRepository
-                .findByNotificationIdAndUserId(notificationId, userId)
-                .orElseThrow(() -> {
-                    log.warn("Notification {} not found for user {}", notificationId, userId);
-                    return new IllegalArgumentException("Notification not found");
-                });
+        // Get the notification to verify it belongs to the user
+        UserNotificationResponseDto userNotification = notificationApplicationService
+                .getUserNotificationByIdAsDto(notificationId, userId);
         
-        // Mark as read
+        // Mark as read using the internal user notification ID
         notificationApplicationService.markAsRead(userNotification.getId());
         
         log.info("Marked notification {} as read for user: {}", notificationId, userId);
@@ -186,52 +166,5 @@ public class NotificationsController {
         log.info("Marked {} notifications as read for user: {}", markedCount, userId);
         
         return new ResponseEntity<>(ApiResponse.ok(markedCount), HttpStatus.OK);
-    }
-
-    /**
-     * Map a UserNotification entity to a response DTO.
-     * Includes full notification details along with user-specific tracking info.
-     * 
-     * @param userNotification The user notification entity
-     * @return Mapped response DTO
-     */
-    private UserNotificationResponseDto mapToResponseDto(UserNotification userNotification) {
-        // Get the associated notification entity
-        UUID notificationId = userNotification.getNotificationId();
-        Notification notification = notificationId != null 
-            ? notificationRepository.findById(notificationId).orElse(null)
-            : null;
-        
-        if (notification == null) {
-            log.warn("Associated notification not found for user notification: {}", 
-                    userNotification.getId());
-            // Return minimal DTO if notification not found
-            return UserNotificationResponseDto.builder()
-                    .id(userNotification.getId())
-                    .notificationId(userNotification.getNotificationId())
-                    .peopleId(userNotification.getUserId())
-                    .status(userNotification.getStatus())
-                    .readAt(userNotification.getReadAt())
-                    .createdAt(userNotification.getCreatedAt())
-                    .updatedAt(userNotification.getUpdatedAt())
-                    .build();
-        }
-        
-        // Map full notification details
-        return UserNotificationResponseDto.builder()
-                .id(userNotification.getId())
-                .notificationId(userNotification.getNotificationId())
-                .peopleId(userNotification.getUserId())
-                .title(notification.getTitle())
-                .body(notification.getBody())
-                .type(notification.getType() != null ? notification.getType().name() : null)
-                .channel(notification.getChannel() != null ? notification.getChannel().name() : null)
-                .template(notification.getTemplate())
-                .variables(notification.getVariables())
-                .status(userNotification.getStatus())
-                .readAt(userNotification.getReadAt())
-                .createdAt(userNotification.getCreatedAt())
-                .updatedAt(userNotification.getUpdatedAt())
-                .build();
     }
 }

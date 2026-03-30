@@ -57,7 +57,8 @@ public class AuthMeUseCase implements AuthMeService {
                 churchResDto,
                 contact,
                 user.getRolUser(),
-                user.getPeople().toDto()
+                user.getPeople().toDto(),
+                user.getId()
         );
     }
 

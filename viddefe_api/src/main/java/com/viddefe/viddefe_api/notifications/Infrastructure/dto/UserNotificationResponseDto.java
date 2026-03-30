@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -53,21 +52,6 @@ public class UserNotificationResponseDto {
     private String type;
 
     /**
-     * Delivery channel (EMAIL, WHATSAPP, APP)
-     */
-    private String channel;
-
-    /**
-     * Template name for rendering
-     */
-    private String template;
-
-    /**
-     * Personalization variables
-     */
-    private Map<String, Object> variables;
-
-    /**
      * Current status of the notification for this user
      * (PENDING, SENT, READ, FAILED)
      */
@@ -88,6 +72,8 @@ public class UserNotificationResponseDto {
      * When the notification was last updated
      */
     private Instant updatedAt;
+
+    private String message;
 
     /**
      * Derived property indicating if notification is unread

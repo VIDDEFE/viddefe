@@ -45,4 +45,13 @@ public interface NotificationRepository extends JpaRepository<Notification, UUID
     @Query("SELECT n FROM Notification n WHERE n.createdAt >= :startDate AND n.createdAt <= :endDate")
     List<Notification> findByCreatedAtBetween(@Param("startDate") Instant startDate, @Param("endDate") Instant endDate);
 
+    /**
+     * Find all notifications by a list of IDs.
+     * Optimized query to avoid N+1 problem when bulk mapping notifications.
+     * 
+     * @param notificationIds List of notification IDs to retrieve
+     * @return List of Notification entities found
+     */
+    List<Notification> findByIdIn(List<UUID> notificationIds);
+
 }

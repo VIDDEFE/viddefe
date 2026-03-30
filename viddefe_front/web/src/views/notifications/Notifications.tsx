@@ -283,7 +283,7 @@ export default function NotificationsPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-gray-900">
-                          {notification.title || notification.body.substring(0, 50)}
+                          {notification.title || notification?.body?.substring(0, 50)}
                         </h3>
                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(notification.status)}`}>
                           {notification.status}
@@ -291,7 +291,7 @@ export default function NotificationsPage() {
                       </div>
                       {notification.title && (
                         <p className="text-gray-700 text-sm">
-                          {notification.body}
+                          {notification.message}
                         </p>
                       )}
                     </div>
@@ -299,7 +299,7 @@ export default function NotificationsPage() {
                     {/* Actions */}
                     {notification.status !== 'READ' && (
                       <button
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => markAsRead(notification.notificationId)}
                         disabled={isMarkingRead}
                         className="shrink-0 px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 disabled:opacity-50 transition-colors"
                         title="Mark as read"

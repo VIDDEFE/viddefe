@@ -1,17 +1,16 @@
 package com.viddefe.viddefe_api.notifications.application;
 
-import java.time.Instant;
 import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
+import com.viddefe.viddefe_api.notifications.common.VerifyChannelWorkingSuccessful;
+import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.notifications.domain.models.NotificationFailed;
 import com.viddefe.viddefe_api.notifications.domain.repository.NotificationFailedRepository;
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
-import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
-import com.viddefe.viddefe_api.notifications.common.VerifyChannelWorkingSuccessful;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,5 +1,7 @@
 package com.viddefe.viddefe_api.auth.infrastructure.dto;
 
+import java.util.UUID;
+
 import com.viddefe.viddefe_api.auth.domain.model.RolUserModel;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
@@ -11,11 +13,13 @@ import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
  * @param user     the user's email or contact_phone
  * @param rolUser  the user's role
  * @param person   the person's details
+ * @param userId   the user's ID
  */
 public record UserInfo(
         ChurchResDto church,
         String user,
         RolUserModel rolUser,
-        PeopleResDto person
+        PeopleResDto person,
+        UUID userId
 ) {
 }

@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.UserNotificationResponseDto;
 import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.domain.models.Notification;
 import com.viddefe.viddefe_api.notifications.domain.models.NotificationFailed;
@@ -43,14 +45,17 @@ public class NotificationApplicationService {
     private final NotificationRepository notificationRepository;
     private final UserNotificationRepository userNotificationRepository;
     private final NotificationFailedRepository notificationFailedRepository;
+    private final UserNotificationDtoMapper dtoMapper;
 
     public NotificationApplicationService(
             NotificationRepository notificationRepository,
             UserNotificationRepository userNotificationRepository,
-            NotificationFailedRepository notificationFailedRepository) {
+            NotificationFailedRepository notificationFailedRepository,
+            UserNotificationDtoMapper dtoMapper) {
         this.notificationRepository = notificationRepository;
         this.userNotificationRepository = userNotificationRepository;
         this.notificationFailedRepository = notificationFailedRepository;
+        this.dtoMapper = dtoMapper;
     }
 
     /**
@@ -113,7 +118,6 @@ public class NotificationApplicationService {
      * Mark a user notification as sent
      * @param userNotificationId The ID of the user notification to mark
      */
-    @Async
     public void markAsSent(@NonNull UUID userNotificationId) {
         UserNotification userNotif = userNotificationRepository.findById(userNotificationId)
                 .orElseThrow(() -> new IllegalArgumentException("UserNotification not found: " + userNotificationId));
@@ -238,5 +242,74 @@ public class NotificationApplicationService {
      */
     public long countUnread(@NonNull UUID peopleId) {
         return userNotificationRepository.countUnreadByPeopleId(peopleId);
+    }
+
+    /**
+     * Get paginated notifications for a user as response DTOs.
+     * Converts UserNotification entities to DTOs with notification details.
+     * Optimized to avoid N+1 queries by bulk-loading notifications.
+     * 
+     * @param userId The ID of the user
+     * @param pageable Pagination parameters
+     * @return Page of UserNotificationResponseDto ordered by newest first
+     * @throws IllegalArgumentException if user ID is null
+     */
+    public Page<UserNotificationResponseDto> getUserNotificationsAsDto(
+            @NonNull UUID userId, 
+            @NonNull Pageable pageable) {
+        
+        log.debug("Fetching notifications for user: {} with page params: {}", userId, pageable);
+        
+        Page<UserNotification> userNotificationsPage = userNotificationRepository
+                .findByUserId(userId, pageable);
+        
+        log.debug("Found {} notifications for user: {} (total: {})", 
+                userNotificationsPage.getNumberOfElements(), userId, userNotificationsPage.getTotalElements());
+        
+        log.debug("List userNotificationsPage: {}", userNotificationsPage);
+        
+        if(userNotificationsPage.isEmpty()) {
+            log.debug("No notifications found for user: {}", userId);
+            return Page.empty(pageable);
+        }
+        // Convert page content using optimized bulk mapping (1 query for all notifications)
+        List<UserNotificationResponseDto> dtoList = dtoMapper.toResponseDtoList(
+                userNotificationsPage.getContent());
+        
+        // Return new page with pre-converted DTOs
+        return new org.springframework.data.domain.PageImpl<>(dtoList, pageable, userNotificationsPage.getTotalElements());
+    }
+
+    /**
+     * Get a specific notification for a user by ID.
+     * Ensures the notification belongs to the authenticated user.
+     * Loads the notification details explicitly to avoid mapper database access.
+     * 
+     * @param notificationId The ID of the notification to retrieve
+     * @param userId The ID of the user requesting the notification
+     * @return UserNotificationResponseDto with full notification details
+     * @throws IllegalArgumentException if notification not found for the user
+     */
+    public UserNotificationResponseDto getUserNotificationByIdAsDto(
+            @NonNull UUID notificationId,
+            @NonNull UUID userId) {
+        
+        log.debug("Fetching notification {} for user: {}", notificationId, userId);
+        
+        // Get the user notification (ensures it belongs to the user)
+        UserNotification userNotification = userNotificationRepository
+                .findByNotificationIdAndUserId(notificationId, userId)
+                .orElseThrow(() -> {
+                    log.warn("Notification {} not found for user {}", notificationId, userId);
+                    return new IllegalArgumentException("Notification not found");
+                });
+        
+        // Pre-load the notification to avoid mapper database access
+        Notification notification = notificationRepository
+                .findById(userNotification.getNotificationId())
+                .orElse(null);
+        
+        // Map with pre-loaded notification
+        return dtoMapper.toResponseDto(userNotification, notification);
     }
 }

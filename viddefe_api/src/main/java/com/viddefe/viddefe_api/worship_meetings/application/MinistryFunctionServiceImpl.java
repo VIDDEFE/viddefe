@@ -6,7 +6,9 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.viddefe.viddefe_api.auth.contracts.AccountService;
 import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.ApplicationSendEventDto;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationMeetingEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
@@ -37,6 +39,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
     private final PeopleReader peopleReader;
     private final NotificationEventPublisher notificatorPublisher;
     private final MeetingReader meetingReader;
+    private final AccountService accountService;
     private static final String TEMPLATE_ASSIGNED = """
     Hola {{name}} 👋
     
@@ -83,7 +86,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
 
         MinistryFunction saved = ministryFunctionRepository.save(entity);
 
-        sendNotification(
+        sendNotifications(
                 people.toDto(),
                 saved.getMeeting(),
                 role,
@@ -110,7 +113,7 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
         entity.setEventType(eventType);
 
         MinistryFunction saved = ministryFunctionRepository.save(entity);
-        sendNotification(
+        sendNotifications(
                 people.toDto(),
                 saved.getMeeting(),
                 role,
@@ -138,9 +141,9 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
         return ministryFunctionTypeReader.findAll().stream().map(MinistryFunctionTypes::toDto).toList();
     }
 
-    private void sendNotification(PeopleResDto person, Meeting meeting, MinistryFunctionTypes role, String template) {
+    private void sendNotifications(PeopleResDto person, Meeting meeting, MinistryFunctionTypes role, String template) {
         MeetingDto meetingDto = meeting.toDto();
-        NotificationMeetingEvent event = NotificationMeetingEvent.builder()
+        NotificationMeetingEvent eventWpp = NotificationMeetingEvent.builder()
                 .meetingId(meeting.getId())
                 .createdAt(Instant.now())
                 .personId(person.getId())
@@ -156,7 +159,29 @@ public class MinistryFunctionServiceImpl implements MinistryFunctionService {
                 )
                 .channels(Channels.WHATSAPP)
                 .build();
-        notificatorPublisher.publish(event);
+        
+        UUID accountId = accountService.getAccountIdByPeopleId(person.getId());
+
+        ApplicationSendEventDto eventApp = ApplicationSendEventDto.builder()
+                .meetingId(meeting.getId())
+                .createdAt(Instant.now())
+                .personId(accountId)
+                .subject("Tienes una función ministerial")
+                .template(template)
+                .priority(RabbitPriority.MEDIUM)
+                .variables(
+                        java.util.Map.of(
+                                "name", person.getFirstName() + " " + person.getLastName(),
+                                "date", meetingDto.getScheduledDate().toLocalDate().toString(),
+                                "eventName", meetingDto.getName(),
+                                "role", role.getName()
+                        )
+                )
+                .channels(Channels.APP)
+                .build();
+
+        notificatorPublisher.publish(eventWpp);
+        notificatorPublisher.publish(eventApp);
     }
 
 }

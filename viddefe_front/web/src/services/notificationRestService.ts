@@ -13,6 +13,7 @@ export interface UserNotificationResponse {
   status: 'PENDING' | 'SENT' | 'READ' | 'FAILED';
   readAt: string | null;
   createdAt: string;
+  message: string; // Added for frontend convenience (can be generated from template + variables)
   updatedAt: string;
 }
 

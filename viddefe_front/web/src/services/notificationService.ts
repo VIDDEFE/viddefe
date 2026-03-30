@@ -51,11 +51,11 @@ class NotificationServiceImpl {
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
-      const sseUrl = `${apiUrl}/notifications/stream/${clientId}`;
+      const sseUrl = `${apiUrl}/stream/${clientId}`;
       
       console.log('🔌 Connecting to SSE stream:', sseUrl);
       
-      this.eventSource = new EventSource(sseUrl);
+      this.eventSource = new EventSource(sseUrl, {withCredentials: true});
 
       // Handle incoming messages
       this.eventSource.onmessage = (event) => {

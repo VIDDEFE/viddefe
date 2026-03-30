@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.viddefe.viddefe_api.notifications.common.Channels;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,6 +15,7 @@ import com.viddefe.viddefe_api.churches.contracts.ChurchMemberShip;
 import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupMemberShipService;
 import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.ApplicationSendEventDto;
+import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
@@ -60,13 +60,13 @@ public class MeetingFacadeImpl implements MeetingFacade {
     private final ChurchMemberShip churchMemberShip;
 
     private static final String MEETING_CREATE_TEMPLATE = """
-        Hola, se ha creado una nueva reunion de {meetingType}. \
-        En la fecha {meetingDate} se llevará a cabo la reunión. ¡No te lo pierdas!.
+        Hola, se ha creado una nueva reunion de {{meetingType}}. \
+        En la fecha {{meetingDate}} se llevará a cabo la reunión. ¡No te lo pierdas!.
         """;
 
     private static final String MEETING_UPDATE_TEMPLATE = """
-            Hola, se ha actualizado la reunión de {meetingType}. \
-            La nueva fecha de la reunión es {meetingDate}. ¡No te lo pierdas!.
+            Hola, se ha actualizado la reunión de {{meetingType}}. \
+            La nueva fecha de la reunión es {{meetingDate}}. ¡No te lo pierdas!.
             """;
     // ==================== CREATE ====================
 
@@ -75,12 +75,12 @@ public class MeetingFacadeImpl implements MeetingFacade {
         return switch (eventType) {
             case TEMPLE_WORHSIP -> {
                 MeetingDto result = worshipService.createWorship(dto, contextId);
-                sendMeetingNotification(result);
+                sendMeetingNotification(result, MEETING_CREATE_TEMPLATE);
                 yield result;
             }
             case GROUP_MEETING -> {
                 MeetingDto result = groupMeetingService.createGroupMeeting(dto, contextId, churchId);
-                sendMeetingNotification(result);
+                sendMeetingNotification(result, MEETING_CREATE_TEMPLATE);
                 yield result;
             }
 
@@ -115,12 +115,12 @@ public class MeetingFacadeImpl implements MeetingFacade {
             case TEMPLE_WORHSIP ->{
 
                 MeetingDto result = worshipService.updateWorship(meetingId, dto, contextId);
-                sendMeetingNotification(result);
+                sendMeetingNotification(result, MEETING_UPDATE_TEMPLATE);
                 yield result;
             }
             case GROUP_MEETING ->{
                 MeetingDto result = groupMeetingService.updateGroupMeeting(dto, contextId, meetingId);
-                sendMeetingNotification(result);
+                sendMeetingNotification(result, MEETING_UPDATE_TEMPLATE);
                 yield result;
             }
         };
@@ -166,10 +166,7 @@ public class MeetingFacadeImpl implements MeetingFacade {
         return metricsReportingService.getAttendanceMetrics(contextId, eventType, startTime, endTime);
     }
 
-    private void sendMeetingNotification(MeetingDto meetingDto) {
-        String template = meetingDto.getEventType() == TopologyEventType.TEMPLE_WORHSIP
-        ? MEETING_CREATE_TEMPLATE
-        : MEETING_UPDATE_TEMPLATE;
+    private void sendMeetingNotification(MeetingDto meetingDto, String template) {
         
         List<UUID> peopleIds = switch (meetingDto.getEventType()) {
             case TEMPLE_WORHSIP -> churchMemberShip.getUserIdsByChurchId(meetingDto.getContextId());
@@ -182,6 +179,7 @@ public class MeetingFacadeImpl implements MeetingFacade {
         ApplicationSendEventDto notificationDto = ApplicationSendEventDto.builder()
                 .meetingId(meetingDto.getId())
                 .template(template)
+                .subject("Reunion Actualizada")
                 .variables(variables)
                 .peopleIdList(peopleIds)
                 .priority(RabbitPriority.MEDIUM)
