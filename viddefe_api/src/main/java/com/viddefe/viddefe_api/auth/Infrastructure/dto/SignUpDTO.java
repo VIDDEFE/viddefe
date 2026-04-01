@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.auth.Infrastructure.dto;
+package com.viddefe.viddefe_api.auth.infrastructure.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.Getter;

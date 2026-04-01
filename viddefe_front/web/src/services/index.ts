@@ -12,3 +12,5 @@ export * from './meetingService';
 export * from './groupMeetingService';
 export * from './ministryFunctionService';
 export * from './metricsService';
+export * from './notificationService';
+export * from './notificationRestService';

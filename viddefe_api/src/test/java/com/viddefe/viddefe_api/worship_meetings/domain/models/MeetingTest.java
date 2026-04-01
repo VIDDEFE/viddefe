@@ -1,7 +1,8 @@
 package com.viddefe.viddefe_api.worship_meetings.domain.models;
 
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsModel;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

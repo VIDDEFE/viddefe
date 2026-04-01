@@ -1,18 +1,20 @@
 package com.viddefe.viddefe_api.people.application;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.viddefe.viddefe_api.people.config.TypesPeople;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
 import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Implementación de solo lectura para consultas de personas.

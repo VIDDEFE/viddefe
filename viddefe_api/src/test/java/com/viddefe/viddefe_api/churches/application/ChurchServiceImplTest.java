@@ -1,8 +1,5 @@
 package com.viddefe.viddefe_api.churches.application;
 
-import com.viddefe.viddefe_api.StatesCities.application.StatesCitiesService;
-import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.churches.contracts.ChurchPastorService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchPastor;
@@ -12,6 +9,10 @@ import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDetailedResDto;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
 import com.viddefe.viddefe_api.people.contracts.ChurchMembershipService;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.statescities.application.StatesCitiesService;
+import com.viddefe.viddefe_api.statescities.domain.model.CitiesModel;
+import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

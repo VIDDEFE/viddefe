@@ -1,14 +1,16 @@
-package com.viddefe.viddefe_api.homeGroups.domain.model;
-
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupsRepository;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+package com.viddefe.viddefe_api.homegroups.domain.model;
 
 import java.util.List;
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupReader;
+import com.viddefe.viddefe_api.homegroups.domain.repository.HomeGroupsRepository;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

@@ -1,4 +1,4 @@
 @NamedInterface("models")
-package com.viddefe.viddefe_api.homeGroups.domain.model;
+package com.viddefe.viddefe_api.homegroups.domain.model;
 
 import org.springframework.modulith.NamedInterface;

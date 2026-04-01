@@ -1,12 +1,14 @@
-package com.viddefe.viddefe_api.homeGroups.application;
-
-import com.viddefe.viddefe_api.homeGroups.contracts.RolesStrategiesReader;
-import com.viddefe.viddefe_api.homeGroups.domain.model.RolesStrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.RolesStrategyRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+package com.viddefe.viddefe_api.homegroups.application;
 
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.viddefe.viddefe_api.homegroups.contracts.RolesStrategiesReader;
+import com.viddefe.viddefe_api.homegroups.domain.model.RolesStrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.repository.RolesStrategyRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

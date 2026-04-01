@@ -1,5 +1,6 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -7,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -21,11 +21,11 @@ import java.util.UUID;
  * - Los DTOs deben validar que la fecha incluya offset
  */
 @Service
-public class MeetingService {
+public class MeetingServiceImpl implements MeetingService {
 
     private final MeetingRepository repository;
 
-    public MeetingService(MeetingRepository repository) {
+    public MeetingServiceImpl(MeetingRepository repository) {
         this.repository = repository;
     }
 

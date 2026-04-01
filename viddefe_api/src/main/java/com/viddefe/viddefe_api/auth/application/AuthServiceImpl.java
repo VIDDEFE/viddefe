@@ -1,33 +1,35 @@
 package com.viddefe.viddefe_api.auth.application;
 
-import com.viddefe.viddefe_api.auth.Config.AuthFlowPastorEnum;
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.AuthProcessResponse;
+import java.util.List;
+
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.viddefe.viddefe_api.auth.config.AuthFlowPastorEnum;
 import com.viddefe.viddefe_api.auth.contracts.AuthService;
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInDTO;
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignInResDTO;
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.SignUpDTO;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
 import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
 import com.viddefe.viddefe_api.auth.domain.model.RolUserModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserPermissions;
 import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.AuthProcessResponse;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.SignInDTO;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.SignInResDTO;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.SignUpDTO;
 import com.viddefe.viddefe_api.churches.contracts.ChurchService;
 import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
-import com.viddefe.viddefe_api.common.Components.JwtUtil;
+import com.viddefe.viddefe_api.common.components.JwtUtil;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.contracts.PeopleWriter;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Servicio de autenticación refactorizado.

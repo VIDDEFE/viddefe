@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.StatesCities.infrastructure.dto;
+package com.viddefe.viddefe_api.statescities.infrastructure.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -5,8 +5,6 @@ import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationDto;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.WhatsappMessageDto;
 import com.viddefe.viddefe_api.notifications.common.Channels;
 import com.viddefe.viddefe_api.notifications.contracts.Notificator;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
-import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,18 +29,17 @@ public class WhatsappNotifierService implements Notificator {
     }
 
     @Async
-    @Override
-    @Retry(name = "whatsappSendRetry", fallbackMethod = "sendFallback")
-    @CircuitBreaker(name = "whatsappCircuitBreaker", fallbackMethod = "sendFallback")
     public void send(@Valid NotificationDto notificationDto) {
-        log.info("Queuing WhatsApp notification for: {}", notificationDto.getTo());
+        log.info("Queuing WhatsApp notification for: {}", notificationDto.toString());
 
         // Crear DTO con información de retry
-        WhatsappMessageDto messageDto = new WhatsappMessageDto(
-            notificationDto.getTo(),
-            notificationDto.getTemplate(),
-            notificationDto.getVariables()
-        );
+        WhatsappMessageDto messageDto = WhatsappMessageDto.builder()
+            .remitter(notificationDto.getRemitter())
+            .phoneNumber(notificationDto.getTo())
+            .template(notificationDto.getTemplate())
+            .variables(notificationDto.getVariables())
+            .notificationType(notificationDto.getNotificationType())
+            .build();
 
         // Enviar a la cola principal de WhatsApp
         rabbitTemplate.convertAndSend(

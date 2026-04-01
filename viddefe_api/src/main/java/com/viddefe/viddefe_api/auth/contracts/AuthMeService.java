@@ -1,11 +1,9 @@
 package com.viddefe.viddefe_api.auth.contracts;
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.UserInfo;
-import com.viddefe.viddefe_api.auth.domain.model.UserModel;
-
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+
+import com.viddefe.viddefe_api.auth.infrastructure.dto.UserInfo;
 
 /**
  * Service interface for retrieving authenticated user information.

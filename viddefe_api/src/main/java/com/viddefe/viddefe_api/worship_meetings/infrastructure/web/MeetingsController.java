@@ -1,23 +1,40 @@
 package com.viddefe.viddefe_api.worship_meetings.infrastructure.web;
 
-import com.viddefe.viddefe_api.common.Components.JwtUtil;
-import com.viddefe.viddefe_api.common.response.ApiResponse;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
-import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
-import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingFacade;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.PastOrPresent;
-import lombok.RequiredArgsConstructor;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.OffsetDateTime;
-import java.util.UUID;
+import com.viddefe.viddefe_api.common.components.JwtUtil;
+import com.viddefe.viddefe_api.common.response.ApiResponse;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingFacade;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MetricsAttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.OnCreate;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.OnUpdate;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.PastOrPresent;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Controlador REST centralizado para todas las reuniones (cultos y reuniones de grupo).

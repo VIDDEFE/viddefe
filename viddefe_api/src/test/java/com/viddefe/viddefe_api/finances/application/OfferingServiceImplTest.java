@@ -1,6 +1,5 @@
 package com.viddefe.viddefe_api.finances.application;
 
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.finances.contracts.OfferingTypeService;
 import com.viddefe.viddefe_api.finances.domain.model.OfferingType;
 import com.viddefe.viddefe_api.finances.domain.model.Offerings;
@@ -9,6 +8,8 @@ import com.viddefe.viddefe_api.finances.infrastructure.dto.CreateOfferingDto;
 import com.viddefe.viddefe_api.finances.infrastructure.dto.OfferingDto;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

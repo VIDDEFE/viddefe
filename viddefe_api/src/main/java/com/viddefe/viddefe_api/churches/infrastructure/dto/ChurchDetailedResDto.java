@@ -1,8 +1,9 @@
 package com.viddefe.viddefe_api.churches.infrastructure.dto;
 
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.CitiesDto;
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.CitiesDto;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

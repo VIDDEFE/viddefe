@@ -1,13 +1,15 @@
 package com.viddefe.viddefe_api.auth.domain.seeder;
 
-import com.viddefe.viddefe_api.auth.Config.ManageUsersPermission;
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.PermissionSeedRequest;
-import com.viddefe.viddefe_api.auth.contracts.PermissionService;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.viddefe.viddefe_api.auth.config.ManageUsersPermission;
+import com.viddefe.viddefe_api.auth.contracts.PermissionService;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.PermissionSeedRequest;
+
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

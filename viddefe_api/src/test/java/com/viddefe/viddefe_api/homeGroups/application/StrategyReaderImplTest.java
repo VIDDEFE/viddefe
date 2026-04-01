@@ -1,7 +1,5 @@
 package com.viddefe.viddefe_api.homeGroups.application;
 
-import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.StrategyRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +9,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.viddefe.viddefe_api.homegroups.application.StrategyReaderImpl;
+import com.viddefe.viddefe_api.homegroups.domain.model.StrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.repository.StrategyRepository;
 
 import java.util.Optional;
 import java.util.UUID;

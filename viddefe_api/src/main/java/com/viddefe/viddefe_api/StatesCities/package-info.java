@@ -2,6 +2,6 @@
         displayName = "StatesCities"
 )
 
-package com.viddefe.viddefe_api.StatesCities;
+package com.viddefe.viddefe_api.statescities;
 
 import org.springframework.modulith.ApplicationModule;

@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.homeGroups.configuration;
+package com.viddefe.viddefe_api.homegroups.configuration;
 
 import com.viddefe.viddefe_api.auth.contracts.PermissionEnum;
 

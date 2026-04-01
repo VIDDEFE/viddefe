@@ -1,23 +1,37 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
-import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
-import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
-import com.viddefe.viddefe_api.worship_meetings.contracts.*;
-import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingRepository;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.*;
-import lombok.RequiredArgsConstructor;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
+
+import com.viddefe.viddefe_api.churches.contracts.ChurchMemberShip;
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupMemberShipService;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.ApplicationSendEventDto;
+import com.viddefe.viddefe_api.notifications.common.Channels;
+import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
+import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
+import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.GroupMeetingService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingFacade;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MetricsReportingService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.WorshipService;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateAttendanceDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.CreateMeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MetricsAttendanceDto;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Facade que orquesta las operaciones de reuniones.
@@ -31,6 +45,7 @@ import java.util.stream.Collectors;
  *   <li>Manejo consistente de transacciones</li>
  * </ul>
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -40,16 +55,34 @@ public class MeetingFacadeImpl implements MeetingFacade {
     private final GroupMeetingService groupMeetingService;
     private final AttendanceService attendanceService;
     private final MetricsReportingService metricsReportingService;
+    private final NotificationEventPublisher notificationEventPublisher;
+    private final HomeGroupMemberShipService homeGroupMemberShipService;
+    private final ChurchMemberShip churchMemberShip;
 
+    private static final String MEETING_CREATE_TEMPLATE = """
+        Hola, se ha creado una nueva reunion de {{meetingType}}. \
+        En la fecha {{meetingDate}} se llevará a cabo la reunión. ¡No te lo pierdas!.
+        """;
+
+    private static final String MEETING_UPDATE_TEMPLATE = """
+            Hola, se ha actualizado la reunión de {{meetingType}}. \
+            La nueva fecha de la reunión es {{meetingDate}}. ¡No te lo pierdas!.
+            """;
     // ==================== CREATE ====================
 
     @Override
     public MeetingDto createMeeting(CreateMeetingDto dto, UUID contextId, TopologyEventType eventType, UUID churchId) {
         return switch (eventType) {
-            case TEMPLE_WORHSIP ->
-                 worshipService.createWorship( dto, contextId);
-            case GROUP_MEETING ->
-                groupMeetingService.createGroupMeeting(dto, contextId, churchId);
+            case TEMPLE_WORHSIP -> {
+                MeetingDto result = worshipService.createWorship(dto, contextId);
+                sendMeetingNotification(result, MEETING_CREATE_TEMPLATE);
+                yield result;
+            }
+            case GROUP_MEETING -> {
+                MeetingDto result = groupMeetingService.createGroupMeeting(dto, contextId, churchId);
+                sendMeetingNotification(result, MEETING_CREATE_TEMPLATE);
+                yield result;
+            }
 
         };
     }
@@ -79,10 +112,17 @@ public class MeetingFacadeImpl implements MeetingFacade {
     @Override
     public MeetingDto updateMeeting(CreateMeetingDto dto, UUID contextId, UUID meetingId, TopologyEventType eventType) {
         return switch (eventType) {
-            case TEMPLE_WORHSIP ->
-                    worshipService.updateWorship(meetingId, dto, contextId);
-            case GROUP_MEETING ->
-                groupMeetingService.updateGroupMeeting(dto, contextId, meetingId);
+            case TEMPLE_WORHSIP ->{
+
+                MeetingDto result = worshipService.updateWorship(meetingId, dto, contextId);
+                sendMeetingNotification(result, MEETING_UPDATE_TEMPLATE);
+                yield result;
+            }
+            case GROUP_MEETING ->{
+                MeetingDto result = groupMeetingService.updateGroupMeeting(dto, contextId, meetingId);
+                sendMeetingNotification(result, MEETING_UPDATE_TEMPLATE);
+                yield result;
+            }
         };
     }
 
@@ -90,9 +130,10 @@ public class MeetingFacadeImpl implements MeetingFacade {
 
     @Override
     public void deleteMeeting(UUID contextId, UUID meetingId, TopologyEventType eventType) {
-        switch (eventType) {
-            case TEMPLE_WORHSIP -> worshipService.deleteWorship(meetingId);
-            case GROUP_MEETING -> groupMeetingService.deleteGroupMeeting(contextId, meetingId);
+        if (eventType == TopologyEventType.TEMPLE_WORHSIP) {
+            worshipService.deleteWorship(meetingId);
+        } else  { // GROUP_MEETING
+            groupMeetingService.deleteGroupMeeting(contextId, meetingId);
         }
     }
 
@@ -123,5 +164,28 @@ public class MeetingFacadeImpl implements MeetingFacade {
 
     private MetricsAttendanceDto resolveMetricsByEventType(UUID contextId, TopologyEventType eventType, OffsetDateTime startTime, OffsetDateTime endTime) {
         return metricsReportingService.getAttendanceMetrics(contextId, eventType, startTime, endTime);
+    }
+
+    private void sendMeetingNotification(MeetingDto meetingDto, String template) {
+        
+        List<UUID> peopleIds = switch (meetingDto.getEventType()) {
+            case TEMPLE_WORHSIP -> churchMemberShip.getUserIdsByChurchId(meetingDto.getContextId());
+            case GROUP_MEETING -> homeGroupMemberShipService.getUserIdsInHomeGroup(meetingDto.getContextId());
+        };
+        Map<String, Object> variables = Map.of(
+                "meetingType", meetingDto.getEventType() == TopologyEventType.TEMPLE_WORHSIP ? "templo" : "grupo",
+                "meetingDate", meetingDto.getScheduledDate().toString()
+        );
+        ApplicationSendEventDto notificationDto = ApplicationSendEventDto.builder()
+                .meetingId(meetingDto.getId())
+                .template(template)
+                .subject("Reunion Actualizada")
+                .variables(variables)
+                .peopleIdList(peopleIds)
+                .priority(RabbitPriority.MEDIUM)
+                .createdAt(Instant.now())
+                .channels(Channels.APP)
+                .build();
+        notificationEventPublisher.publish(notificationDto);
     }
 }

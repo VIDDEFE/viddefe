@@ -1,6 +1,16 @@
 package com.viddefe.viddefe_api.auth.application;
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.InvitationDto;
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.viddefe.viddefe_api.auth.contracts.AccountService;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
 import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
@@ -8,21 +18,16 @@ import com.viddefe.viddefe_api.auth.domain.model.RolUserModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserPermissions;
 import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.InvitationDto;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationAccountEvent;
 import com.viddefe.viddefe_api.notifications.Infrastructure.dto.NotificationEvent;
 import com.viddefe.viddefe_api.notifications.common.Channels;
-import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitPriority;
 import com.viddefe.viddefe_api.notifications.contracts.NotificationEventPublisher;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
-import java.time.Instant;
-import java.util.*;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +44,8 @@ public class AccountServiceImpl implements AccountService {
     private final RolesUserService rolesUserService;
     private final PermissionService permissionService;
     private final NotificationEventPublisher notificationEventPublisher;
+    private final SecureRandom random = new SecureRandom();
+
 
     /**
      * Temporary one-time password.
@@ -63,15 +70,15 @@ public class AccountServiceImpl implements AccountService {
     public void invite(InvitationDto dtp, UUID churchId) {
         // Implementation goes here
         if((dtp.getEmail() != null && !dtp.getEmail().isBlank()) && userRepository.existsByEmail(dtp.getEmail())) {
-            throw new DataIntegrityViolationException("User with email already exists");
+            throw new IllegalArgumentException("User with email already exists");
         }else if((dtp.getPhone() != null && !dtp.getPhone().isBlank()) && userRepository.existsByPhone(dtp.getPhone())) {
-            throw new DataIntegrityViolationException("User with phone number already exists");
+            throw new IllegalArgumentException("User with phone number already exists");
         }else if(userRepository.existsUserByPeopleIdAndPeopleChurchId(
                 dtp.getPersonId(),
                 peopleReader.getPeopleById(dtp.getPersonId()).getChurch().getId()
         )){
-            throw new DataIntegrityViolationException("User for the selected person already exists in the church");
-        };
+            throw new IllegalArgumentException("User for the selected person already exists in the church");
+        }
 
         List<PermissionModel> permissionModels = permissionService.findByListNames(dtp.getPermissions());
 
@@ -88,16 +95,29 @@ public class AccountServiceImpl implements AccountService {
         userModel.setPassword(passwordEncoder.encode(temporaryPassword));
         userRepository.save(userModel);
         Channels channel = Channels.from(dtp.getChannel());
-        NotificationAccountEvent event = new NotificationAccountEvent();
-        event.setPriority(RabbitPriority.HIGH);
-        event.setSubject("Bienvenido a VidDefe!");
-        event.setChannels(channel);
-        event.setPersonId(person.getId());
-        event.setCreatedAt(Instant.now());
+        NotificationAccountEvent event =
+                NotificationAccountEvent.builder()
+                        .priority(RabbitPriority.HIGH)
+                        .subject("Bienvenido a VidDefe!")
+                        .channels(channel)
+                        .personId(person.getId())
+                        .createdAt(Instant.now())
+                        .template(resolveTemplate(dtp.getChannel()))
+                        .build();
         event.setVariables(resolveVariables(event, person, userModel, temporaryPassword));
-        String template = resolveTemplate(dtp.getChannel());
-        event.setTemplate(template);
         notificationEventPublisher.publish(event);
+
+    }
+
+    /**
+     * @param peopleId The unique identifier of the person whose account ID is to be retrieved.
+     * @return
+     */
+    @Override
+    public UUID getAccountIdByPeopleId(UUID peopleId) {
+       return userRepository.findByPeopleId(peopleId)
+               .orElseThrow(() -> new IllegalArgumentException("No account found for the given person ID"))
+               .getId();
     }
 
     public Map<String, Object> resolveVariables(NotificationEvent event, PeopleModel person, UserModel user, String temporaryPassword) {
@@ -130,7 +150,6 @@ public class AccountServiceImpl implements AccountService {
      *
      */
     private String generateRandomPassword() {
-        SecureRandom random = new SecureRandom();
         StringBuilder password = new StringBuilder();
 
         password.append(UPPER.charAt(random.nextInt(UPPER.length())));

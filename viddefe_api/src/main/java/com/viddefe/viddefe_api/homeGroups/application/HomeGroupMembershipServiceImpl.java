@@ -1,21 +1,25 @@
-package com.viddefe.viddefe_api.homeGroups.application;
+package com.viddefe.viddefe_api.homegroups.application;
 
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupMemberShipService;
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsPeopleMembers;
-import com.viddefe.viddefe_api.homeGroups.domain.model.serializable.HomeGroupPeopleMembersId;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupMembersRepository;
-import com.viddefe.viddefe_api.people.contracts.PeopleReader;
-import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupMemberShipService;
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupReader;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsModel;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsPeopleMembers;
+import com.viddefe.viddefe_api.homegroups.domain.model.serializable.HomeGroupPeopleMembersId;
+import com.viddefe.viddefe_api.homegroups.domain.repository.HomeGroupMembersRepository;
+import com.viddefe.viddefe_api.people.contracts.PeopleReader;
+import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -23,10 +27,24 @@ public class HomeGroupMembershipServiceImpl implements HomeGroupMemberShipServic
     private final HomeGroupMembersRepository homeGroupMembersRepository;
     private final HomeGroupReader homeGroupReader;
     private final PeopleReader peopleReader;
-    private void verifyMembershipExistence(HomeGroupPeopleMembersId membershipId) {
+    private void verifyMembershipExistence(@NonNull HomeGroupPeopleMembersId membershipId) {
         boolean exists = homeGroupMembersRepository.existsById(membershipId);
         if (!exists) return;
         throw new EntityNotFoundException("Miembro ya existente");
+    }
+
+    @Override
+    public List<UUID> getMemberIdsInHomeGroup(UUID homeGroupId) {
+        return homeGroupMembersRepository.findMemberIdsByHomeGroupId(homeGroupId);
+    }
+
+    /**
+     * @param homeGroupId
+     * @return
+     */
+    @Override
+    public List<UUID> getUserIdsInHomeGroup(UUID homeGroupId) {
+       return  homeGroupMembersRepository.findUserIdsInHomeGroupId(homeGroupId);
     }
 
     @Override

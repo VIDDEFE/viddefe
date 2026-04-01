@@ -1,9 +1,9 @@
-package com.viddefe.viddefe_api.homeGroups.contracts;
-
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.StrategyDto;
+package com.viddefe.viddefe_api.homegroups.contracts;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.StrategyDto;
 
 public interface StrategyService {
     /**

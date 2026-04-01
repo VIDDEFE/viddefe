@@ -1,16 +1,18 @@
 package com.viddefe.viddefe_api.homeGroups.application;
 
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
-import com.viddefe.viddefe_api.homeGroups.contracts.RolesStrategiesService;
-import com.viddefe.viddefe_api.homeGroups.contracts.StrategyReader;
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.HomeGroupsRepository;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.*;
+import com.viddefe.viddefe_api.homegroups.application.HomeGroupServiceImpl;
+import com.viddefe.viddefe_api.homegroups.contracts.RolesStrategiesService;
+import com.viddefe.viddefe_api.homegroups.contracts.StrategyReader;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsModel;
+import com.viddefe.viddefe_api.homegroups.domain.model.StrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.repository.HomeGroupsRepository;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.*;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

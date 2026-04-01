@@ -1,18 +1,22 @@
 package com.viddefe.viddefe_api.notifications.application;
 
-import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
-import com.viddefe.viddefe_api.notifications.Infrastructure.dto.WhatsappMessageDto;
-import com.viddefe.viddefe_api.notifications.common.ResolverMessage;
-import com.viddefe.viddefe_api.notifications.common.exceptions.NonRetryableWhatsappException;
-import com.viddefe.viddefe_api.notifications.common.exceptions.RetryableWhatsappException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Instant;
+
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.util.Map;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.FailureWhatsappMessageDto;
+import com.viddefe.viddefe_api.notifications.Infrastructure.dto.WhatsappMessageDto;
+import com.viddefe.viddefe_api.notifications.common.NotificationTypeEnum;
+import com.viddefe.viddefe_api.notifications.common.ResolverMessage;
+import com.viddefe.viddefe_api.notifications.common.exceptions.NonRetryableWhatsappException;
+import com.viddefe.viddefe_api.notifications.common.exceptions.RetryableWhatsappException;
+import com.viddefe.viddefe_api.notifications.config.SseFailureType;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Listener resiliente para mensajes de WhatsApp.
@@ -35,8 +39,9 @@ public class WhatsappMessageListener {
     @RabbitListener(queues = RabbitQueues.WHATSAPP_QUEUE, concurrency = "1-5")
     public void handleWhatsappMessage(WhatsappMessageDto messageDto) {
         try {
+            Integer retryCount = messageDto.getRetryCount() != null ? messageDto.getRetryCount() : 0;
             log.info("Processing WhatsApp message for: {} (attempt: {})",
-                     messageDto.getPhoneNumber(), messageDto.getRetryCount() + 1);
+                     messageDto.getPhoneNumber(), retryCount + 1);
 
             String message = ResolverMessage.resolveMessage(
                 messageDto.getTemplate(),
@@ -48,28 +53,31 @@ public class WhatsappMessageListener {
             log.info("WhatsApp message processed successfully for: {}", messageDto.getPhoneNumber());
 
         } catch (RetryableWhatsappException e) {
-            handleRetryableError(messageDto, e);
+            SseFailureType failureReason = resolveFailureReason(messageDto.getNotificationType(), e);
+            handleRetryableError(messageDto, e, failureReason);
         } catch (NonRetryableWhatsappException e) {
-            handleNonRetryableError(messageDto, e);
+            SseFailureType failureReason = resolveFailureReason(messageDto.getNotificationType(), e);
+            handleNonRetryableError(messageDto, failureReason);
         } catch (Exception e) {
             // Errores inesperados -> retry para ser conservadores
             log.warn("Unexpected error processing WhatsApp message, treating as retryable", e);
-            handleRetryableError(messageDto, e);
+            SseFailureType failureReason = resolveFailureReason(messageDto.getNotificationType(), e);
+            handleRetryableError(messageDto, e, failureReason);
+            sendToDlq(messageDto, SseFailureType.WHATSAPP_SERVICE_HEALTH);
         }
     }
 
-    private void handleRetryableError(WhatsappMessageDto messageDto, Exception e) {
+    private void handleRetryableError(WhatsappMessageDto messageDto, Exception e, SseFailureType reason) {
         if (messageDto.hasExceededMaxRetries(MAX_RETRY_COUNT)) {
-            log.error("Max retries exceeded for WhatsApp message to: {}. Sending to DLQ",
-                      messageDto.getPhoneNumber(), e);
-            sendToDlq(messageDto, "Max retries exceeded: " + e.getMessage());
+            sendToDlq(messageDto, reason);
             return;
         }
 
         messageDto.incrementRetry();
+        Integer retryCount = messageDto.getRetryCount();
 
         log.warn("Retryable error for WhatsApp message to: {}. Scheduling retry #{}",
-                 messageDto.getPhoneNumber(), messageDto.getRetryCount(), e);
+                 messageDto.getPhoneNumber(), retryCount, e);
 
         // Enviar a la cola de retry (con TTL)
         rabbitTemplate.convertAndSend(
@@ -79,25 +87,40 @@ public class WhatsappMessageListener {
         );
     }
 
-    private void handleNonRetryableError(WhatsappMessageDto messageDto, Exception e) {
-        log.error("Non-retryable error for WhatsApp message to: {}. Sending to DLQ",
-                  messageDto.getPhoneNumber(), e);
-        sendToDlq(messageDto, "Non-retryable error: " + e.getMessage());
+    private SseFailureType resolveFailureReason(NotificationTypeEnum notificationType, Exception e) {
+        if (e instanceof NonRetryableWhatsappException && e.getMessage().contains("Invalid phone number")) {
+            return SseFailureType.INVALID_PHONE_NUMBER;
+        }
+
+        return switch (notificationType) {
+            case ACCOUNT_CREATED -> SseFailureType.ACCOUNT_CREATION_FAILURE;
+            case MINISTRY_FUNCTION_REMINDER -> SseFailureType.MINISTRY_REMINDER_FAILURE;
+            default -> SseFailureType.WHATSAPP_SERVICE_HEALTH;
+        };
     }
 
-    private void sendToDlq(WhatsappMessageDto messageDto, String reason) {
+    private void handleNonRetryableError(WhatsappMessageDto messageDto, SseFailureType reason) {
+        sendToDlq(messageDto, reason);
+    }
+
+    private void sendToDlq(WhatsappMessageDto messageDto, SseFailureType reason) {
         // Agregar metadatos para debugging en DLQ
-        Map<String, Object> dlqMessage = Map.of(
-            "originalMessage", messageDto,
-            "failureReason", reason,
-            "failureTime", Instant.now().toString(),
-            "correlationId", messageDto.getCorrelationId()
-        );
+        FailureWhatsappMessageDto failureMessageDto = FailureWhatsappMessageDto.builder()
+                .toId(messageDto.getToId())
+                .remitter(messageDto.getRemitter())
+                .createdAt(Instant.now())
+                .correlationId(messageDto.getCorrelationId())
+                .lastRetryAt(messageDto.getLastRetryAt())
+                .originalEventId(messageDto.getOriginalEventId())
+                .notificationType(messageDto.getNotificationType())
+                .variables(messageDto.getVariables())
+                .sseFailureType(reason)
+                .build();
 
         rabbitTemplate.convertAndSend(
             RabbitQueues.WHATSAPP_DLX,
             RabbitQueues.WHATSAPP_DLQ_ROUTING_KEY,
-            dlqMessage
+                failureMessageDto
         );
 
         log.warn("WhatsApp message sent to DLQ. Phone: {}, Reason: {}",

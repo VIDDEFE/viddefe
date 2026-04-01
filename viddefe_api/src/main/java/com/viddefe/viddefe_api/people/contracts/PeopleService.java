@@ -1,14 +1,13 @@
 package com.viddefe.viddefe_api.people.contracts;
 
-import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
-import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
-import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
-import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
-import lombok.NonNull;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.UUID;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 
 public interface PeopleService {
     /**

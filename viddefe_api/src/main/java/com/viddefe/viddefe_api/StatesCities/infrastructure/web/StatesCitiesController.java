@@ -1,11 +1,10 @@
-package com.viddefe.viddefe_api.StatesCities.infrastructure.web;
+package com.viddefe.viddefe_api.statescities.infrastructure.web;
 
-import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
-import com.viddefe.viddefe_api.StatesCities.application.StatesCitiesService;
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.CitiesDto;
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
 import com.viddefe.viddefe_api.common.response.ApiResponse;
+import com.viddefe.viddefe_api.statescities.application.StatesCitiesService;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.CitiesDto;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

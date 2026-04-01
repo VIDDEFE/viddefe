@@ -1,9 +1,10 @@
-package com.viddefe.viddefe_api.homeGroups.domain.model;
+package com.viddefe.viddefe_api.homegroups.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateRolesStrategiesDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.base.AbstractRoleTreeDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.CreateRolesStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.RolesStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.base.AbstractRoleTreeDto;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

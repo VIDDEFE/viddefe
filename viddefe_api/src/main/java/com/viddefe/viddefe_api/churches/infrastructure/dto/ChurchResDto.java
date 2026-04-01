@@ -1,15 +1,15 @@
 package com.viddefe.viddefe_api.churches.infrastructure.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.CitiesDto;
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
-import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.util.UUID;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.CitiesDto;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter @Setter
 public class ChurchResDto {

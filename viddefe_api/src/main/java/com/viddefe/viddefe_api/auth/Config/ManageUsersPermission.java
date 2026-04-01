@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.auth.Config;
+package com.viddefe.viddefe_api.auth.config;
 
 import com.viddefe.viddefe_api.auth.contracts.PermissionEnum;
 
