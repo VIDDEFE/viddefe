@@ -1,9 +1,10 @@
-package com.viddefe.viddefe_api.homeGroups.infrastructure.web;
+package com.viddefe.viddefe_api.homegroups.infrastructure.web;
 
 import com.viddefe.viddefe_api.common.response.ApiResponse;
-import com.viddefe.viddefe_api.homeGroups.contracts.RolesStrategiesService;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateRolesStrategiesDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.contracts.RolesStrategiesService;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.CreateRolesStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.RolesStrategiesDto;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

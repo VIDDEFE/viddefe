@@ -1,7 +1,7 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupReader;
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupReader;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.GroupMeetingService;

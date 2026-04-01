@@ -1,15 +1,13 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
-import com.viddefe.viddefe_api.config.rabbit.RabbitQueues;
+import com.viddefe.viddefe_api.infrastructure.rabbit.config.RabbitQueues;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceQualityReader;
-import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceQuality;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceQualityPeople;
-import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.serializable.AttendanceQualityPeopleId;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceQualityPeopleRepository;
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceRepository;

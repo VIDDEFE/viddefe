@@ -1,16 +1,17 @@
 package com.viddefe.viddefe_api.auth.application;
 
-import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.UserInfo;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
 import com.viddefe.viddefe_api.auth.domain.model.PermissionModel;
 import com.viddefe.viddefe_api.auth.domain.model.RolUserModel;
 import com.viddefe.viddefe_api.auth.domain.model.UserModel;
 import com.viddefe.viddefe_api.auth.domain.repository.UserRepository;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.UserInfo;
 import com.viddefe.viddefe_api.churches.contracts.ChurchPastorService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+import com.viddefe.viddefe_api.statescities.domain.model.CitiesModel;
+import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,6 +1,6 @@
-package com.viddefe.viddefe_api.homeGroups.domain.model;
+package com.viddefe.viddefe_api.homegroups.domain.model;
 
-import com.viddefe.viddefe_api.homeGroups.domain.model.serializable.HomeGroupPeopleMembersId;
+import com.viddefe.viddefe_api.homegroups.domain.model.serializable.HomeGroupPeopleMembersId;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import jakarta.persistence.*;
 import lombok.*;

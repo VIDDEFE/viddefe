@@ -2,9 +2,11 @@ package com.viddefe.viddefe_api.homeGroups.application;
 
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
-import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.StrategyRepository;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.StrategyDto;
+import com.viddefe.viddefe_api.homegroups.application.StrategyServiceImpl;
+import com.viddefe.viddefe_api.homegroups.domain.model.StrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.repository.StrategyRepository;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.StrategyDto;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

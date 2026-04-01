@@ -1,8 +1,8 @@
-package com.viddefe.viddefe_api.homeGroups.contracts;
-
-import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
+package com.viddefe.viddefe_api.homegroups.contracts;
 
 import java.util.UUID;
+
+import com.viddefe.viddefe_api.homegroups.domain.model.StrategiesModel;
 
 public interface StrategyReader {
     /**

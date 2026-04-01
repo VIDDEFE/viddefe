@@ -18,7 +18,7 @@ public class MinistryFunction {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "ministry_function_type_id", nullable = false)
     private MinistryFunctionTypes ministryFunctionType;
 

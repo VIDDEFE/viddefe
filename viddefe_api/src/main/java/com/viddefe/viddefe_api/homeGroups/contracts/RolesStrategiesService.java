@@ -1,11 +1,11 @@
-package com.viddefe.viddefe_api.homeGroups.contracts;
-
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.CreateRolesStrategiesDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesDto;
-import com.viddefe.viddefe_api.homeGroups.infrastructure.dto.RolesStrategiesWithPeopleDto;
+package com.viddefe.viddefe_api.homegroups.contracts;
 
 import java.util.List;
 import java.util.UUID;
+
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.CreateRolesStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.RolesStrategiesDto;
+import com.viddefe.viddefe_api.homegroups.infrastructure.dto.RolesStrategiesWithPeopleDto;
 
 /**
  * Application service responsible for managing role hierarchies

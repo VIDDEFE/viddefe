@@ -1,11 +1,12 @@
 package com.viddefe.viddefe_api.people.domain.model;
 
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleTypeDto;
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
+import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

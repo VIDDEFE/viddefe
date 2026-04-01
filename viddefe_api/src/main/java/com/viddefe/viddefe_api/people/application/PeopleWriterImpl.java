@@ -1,7 +1,11 @@
 package com.viddefe.viddefe_api.people.application;
 
-import com.viddefe.viddefe_api.StatesCities.application.StatesCitiesService;
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
+import java.util.UUID;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;
@@ -11,14 +15,11 @@ import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
 import com.viddefe.viddefe_api.people.domain.model.PeopleTypeModel;
 import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
-import com.viddefe.viddefe_api.worship_meetings.domain.repository.AttendanceQualityPeopleRepository;
+import com.viddefe.viddefe_api.statescities.application.StatesCitiesService;
+import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.PersonCreatedQualityAttendanceEvent;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Implementación de escritura para operaciones de personas.

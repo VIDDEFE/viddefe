@@ -1,12 +1,14 @@
 package com.viddefe.viddefe_api.StatesCities.application;
 
-import com.viddefe.viddefe_api.StatesCities.domain.model.CitiesModel;
-import com.viddefe.viddefe_api.StatesCities.domain.model.StatesModel;
-import com.viddefe.viddefe_api.StatesCities.domain.repository.CitiesRepository;
-import com.viddefe.viddefe_api.StatesCities.domain.repository.StatesRepository;
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.CitiesDto;
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
 import com.viddefe.viddefe_api.common.exception.CustomExceptions;
+import com.viddefe.viddefe_api.statescities.application.StatesCitiesService;
+import com.viddefe.viddefe_api.statescities.domain.model.CitiesModel;
+import com.viddefe.viddefe_api.statescities.domain.model.StatesModel;
+import com.viddefe.viddefe_api.statescities.domain.repository.CitiesRepository;
+import com.viddefe.viddefe_api.statescities.domain.repository.StatesRepository;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.CitiesDto;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

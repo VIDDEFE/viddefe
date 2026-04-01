@@ -1,9 +1,10 @@
-package com.viddefe.viddefe_api.StatesCities.domain.model;
+package com.viddefe.viddefe_api.statescities.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

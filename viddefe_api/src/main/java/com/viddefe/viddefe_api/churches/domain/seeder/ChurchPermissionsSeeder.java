@@ -1,7 +1,7 @@
 package com.viddefe.viddefe_api.churches.domain.seeder;
 
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.PermissionSeedRequest;
 import com.viddefe.viddefe_api.auth.contracts.PermissionService;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.PermissionSeedRequest;
 import com.viddefe.viddefe_api.churches.configuration.ChurchPermissions;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;

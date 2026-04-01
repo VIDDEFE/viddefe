@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.auth.Config;
+package com.viddefe.viddefe_api.auth.config;
 
 public enum AuthFlowPastorEnum {
     REGISTER_PEOPLE,

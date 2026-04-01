@@ -1,5 +1,9 @@
 package com.viddefe.viddefe_api.worship_meetings.application;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.viddefe.viddefe_api.worship_meetings.configuration.TopologyEventType;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceQualityReader;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
@@ -10,11 +14,9 @@ import com.viddefe.viddefe_api.worship_meetings.domain.repository.MeetingTypeRep
 import com.viddefe.viddefe_api.worship_meetings.domain.repository.TopologyMeetingRepository;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.AttendanceQualityDto;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.MeetingTypeDto;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor

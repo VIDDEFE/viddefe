@@ -1,6 +1,6 @@
-package com.viddefe.viddefe_api.homeGroups.contracts;
+package com.viddefe.viddefe_api.homegroups.contracts;
 
-import com.viddefe.viddefe_api.homeGroups.domain.model.HomeGroupsModel;
+import com.viddefe.viddefe_api.homegroups.domain.model.HomeGroupsModel;
 import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
 
 import java.util.List;

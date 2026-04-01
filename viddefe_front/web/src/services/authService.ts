@@ -123,6 +123,7 @@ export interface RolUserInterface {
 
 export interface UserInfoInterface {
   user: string;
+  userId: string;
   person: PersonResponse;
   church: ChurchSummary;
   rolUser: RolUserInterface;

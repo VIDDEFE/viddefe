@@ -4,6 +4,7 @@ import com.viddefe.viddefe_api.churches.contracts.ChurchLookup;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.worship_meetings.configuration.MeetingTypeEnum;
 import com.viddefe.viddefe_api.worship_meetings.contracts.AttendanceService;
+import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingService;
 import com.viddefe.viddefe_api.worship_meetings.contracts.MeetingTypesService;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.Meeting;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.MeetingType;

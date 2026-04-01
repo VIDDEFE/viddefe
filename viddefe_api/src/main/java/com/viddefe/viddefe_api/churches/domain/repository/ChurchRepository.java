@@ -1,18 +1,19 @@
 package com.viddefe.viddefe_api.churches.domain.repository;
 
-import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
-import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
-import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
+import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchResDto;
+import com.viddefe.viddefe_api.worship_meetings.infrastructure.dto.EntityIdWithTotalPeople;
 
 public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
 
@@ -33,11 +34,11 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
             c.name,
             c.longitude,
             c.latitude,
-            new com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto(
+            new com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto(
                 s.id,
                 s.name
             ),
-            new com.viddefe.viddefe_api.StatesCities.infrastructure.dto.CitiesDto(
+            new com.viddefe.viddefe_api.statescities.infrastructure.dto.CitiesDto(
                 ci.id,
                 ci.name
             ),
@@ -53,7 +54,7 @@ public interface ChurchRepository extends JpaRepository<ChurchModel, UUID> {
                     pastor.typePerson.id,
                     pastor.typePerson.name
                 ),
-                new com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto(
+                new com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto(
                     s.id,
                     s.name
                 ),

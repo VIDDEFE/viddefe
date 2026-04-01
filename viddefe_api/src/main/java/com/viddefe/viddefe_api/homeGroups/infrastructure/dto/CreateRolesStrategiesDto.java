@@ -1,4 +1,4 @@
-package com.viddefe.viddefe_api.homeGroups.infrastructure.dto;
+package com.viddefe.viddefe_api.homegroups.infrastructure.dto;
 
 import lombok.Getter;
 

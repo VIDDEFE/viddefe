@@ -1,27 +1,38 @@
-package com.viddefe.viddefe_api.auth.Infrastructure.controller;
-
-import com.viddefe.viddefe_api.auth.Infrastructure.dto.*;
-import com.viddefe.viddefe_api.auth.contracts.AuthMeService;
-import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
-import com.viddefe.viddefe_api.common.response.ApiResponse;
-import com.viddefe.viddefe_api.common.Components.JwtUtil;
-import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
-import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
-import jakarta.servlet.http.Cookie;
-import com.viddefe.viddefe_api.auth.contracts.AuthService;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+package com.viddefe.viddefe_api.auth.infrastructure.controller;
 
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.viddefe.viddefe_api.auth.contracts.AuthMeService;
+import com.viddefe.viddefe_api.auth.contracts.AuthService;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.AuthProcessResponse;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.SignInDTO;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.SignInResDTO;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.SignUpDTO;
+import com.viddefe.viddefe_api.auth.infrastructure.dto.UserInfo;
+import com.viddefe.viddefe_api.churches.infrastructure.dto.ChurchDTO;
+import com.viddefe.viddefe_api.common.components.JwtUtil;
+import com.viddefe.viddefe_api.common.response.ApiResponse;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleDTO;
+import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
+
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")

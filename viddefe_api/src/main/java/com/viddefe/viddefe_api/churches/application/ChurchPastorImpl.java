@@ -1,5 +1,10 @@
 package com.viddefe.viddefe_api.churches.application;
 
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.viddefe.viddefe_api.churches.contracts.ChurchPastorService;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchModel;
 import com.viddefe.viddefe_api.churches.domain.model.ChurchPastor;
@@ -7,14 +12,10 @@ import com.viddefe.viddefe_api.churches.domain.repository.ChurchPastorRepository
 import com.viddefe.viddefe_api.people.contracts.ChurchMembershipService;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.domain.model.PeopleModel;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 /**
  * Servicio para gestionar la relación Pastor-Iglesia.
@@ -34,6 +35,8 @@ public class ChurchPastorImpl implements ChurchPastorService {
     private final ChurchPastorRepository churchPastorRepository;
     private final PeopleReader peopleReader;
     private final ChurchMembershipService churchMembershipService;
+
+    private static final String CHURCH_NO_PASTOR_MESSAGE = "Church has no assigned pastor";
 
     @Override
     @Transactional
@@ -57,7 +60,7 @@ public class ChurchPastorImpl implements ChurchPastorService {
     @Transactional
     public void removePastorFromChurch(@NonNull ChurchModel church) {
         ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
-                .orElseThrow(() -> new EntityNotFoundException("Church has no assigned pastor"));
+                .orElseThrow(() -> new EntityNotFoundException(CHURCH_NO_PASTOR_MESSAGE));
         
         UUID pastorId = churchPastor.getPastor().getId();
         
@@ -73,7 +76,7 @@ public class ChurchPastorImpl implements ChurchPastorService {
     public PeopleModel getPastorFromChurch(@NonNull ChurchModel church) {
         // Usa findByChurchWithPastorRelations para evitar N+1 al acceder a pastor.state y pastor.typePerson
         ChurchPastor churchPastor = churchPastorRepository.findByChurchWithPastorRelations(church)
-                .orElseThrow(() -> new EntityNotFoundException("Church has no assigned pastor"));
+                .orElseThrow(() -> new EntityNotFoundException(CHURCH_NO_PASTOR_MESSAGE));
         return churchPastor.getPastor();
     }
 
@@ -84,7 +87,7 @@ public class ChurchPastorImpl implements ChurchPastorService {
         peopleReader.getPeopleById(newPastorId);
         
         ChurchPastor churchPastor = churchPastorRepository.findByChurch(church)
-                .orElseThrow(() -> new EntityNotFoundException("Church has no assigned pastor"));
+                .orElseThrow(() -> new EntityNotFoundException(CHURCH_NO_PASTOR_MESSAGE));
         
         UUID oldPastorId = churchPastor.getPastor().getId();
         

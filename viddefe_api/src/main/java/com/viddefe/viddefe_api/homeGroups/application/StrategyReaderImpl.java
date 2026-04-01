@@ -1,13 +1,15 @@
-package com.viddefe.viddefe_api.homeGroups.application;
-
-import com.viddefe.viddefe_api.homeGroups.contracts.StrategyReader;
-import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
-import com.viddefe.viddefe_api.homeGroups.domain.repository.StrategyRepository;
-import jakarta.persistence.EntityNotFoundException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+package com.viddefe.viddefe_api.homegroups.application;
 
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.viddefe.viddefe_api.homegroups.contracts.StrategyReader;
+import com.viddefe.viddefe_api.homegroups.domain.model.StrategiesModel;
+import com.viddefe.viddefe_api.homegroups.domain.repository.StrategyRepository;
+
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

@@ -5,13 +5,12 @@ import {
   IconChurch,
   IconPeople,
   IconGroups,
-  IconEvents,
   IconMenu,
   IconClose,
   IconLogout,
   IconWorship,
 } from "../../components/icons";
-import { FiHome, FiUsers } from "react-icons/fi";
+import { FiHome, FiUsers, FiBell } from "react-icons/fi";
 
 // Estructura de menú con secciones para mejor organización
 interface MenuItem {
@@ -31,6 +30,7 @@ const menuSections: MenuSection[] = [
     title: "",
     items: [
       { path: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
+      { path: "/notifications", label: "Notifications", icon: <FiBell size={20} /> },
     ],
   },
   {
@@ -45,7 +45,6 @@ const menuSections: MenuSection[] = [
     items: [
       { path: "/churches", label: "Iglesias Hijas", icon: <IconChurch /> },
       { path: "/worships", label: "Cultos", icon: <IconWorship /> },
-      { path: "/events", label: "Eventos", icon: <IconEvents /> },
     ],
   },
   {

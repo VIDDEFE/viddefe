@@ -1,6 +1,5 @@
 package com.viddefe.viddefe_api.people.application;
 
-import com.viddefe.viddefe_api.StatesCities.infrastructure.dto.StatesDto;
 import com.viddefe.viddefe_api.people.contracts.PeopleReader;
 import com.viddefe.viddefe_api.people.contracts.PeopleService;
 import com.viddefe.viddefe_api.people.contracts.PeopleWriter;
@@ -10,6 +9,7 @@ import com.viddefe.viddefe_api.people.domain.repository.PeopleRepository;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleRowProjection;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleTypeDto;
+import com.viddefe.viddefe_api.statescities.infrastructure.dto.StatesDto;
 import com.viddefe.viddefe_api.worship_meetings.configuration.AttendanceQualityEnum;
 import com.viddefe.viddefe_api.worship_meetings.domain.models.AttendanceQuality;
 import lombok.NonNull;

@@ -1,7 +1,8 @@
-package com.viddefe.viddefe_api.homeGroups.domain.repository;
+package com.viddefe.viddefe_api.homegroups.domain.repository;
 
-import com.viddefe.viddefe_api.homeGroups.domain.model.StrategiesModel;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.viddefe.viddefe_api.homegroups.domain.model.StrategiesModel;
 
 import java.util.Optional;
 import java.util.UUID;

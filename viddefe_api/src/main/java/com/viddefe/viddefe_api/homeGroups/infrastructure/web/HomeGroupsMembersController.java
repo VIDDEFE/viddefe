@@ -1,7 +1,7 @@
-package com.viddefe.viddefe_api.homeGroups.infrastructure.web;
+package com.viddefe.viddefe_api.homegroups.infrastructure.web;
 
 import com.viddefe.viddefe_api.common.response.ApiResponse;
-import com.viddefe.viddefe_api.homeGroups.contracts.HomeGroupMemberShipService;
+import com.viddefe.viddefe_api.homegroups.contracts.HomeGroupMemberShipService;
 import com.viddefe.viddefe_api.people.infrastructure.dto.PeopleResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
